@@ -265,7 +265,7 @@ function ExerciseNav({ exercises, shownIdx, currentIdx, onSelect, onSelectSet, o
             // Superset purple container
             return (
               <div key={`g${gi}`} style={{
-                borderRadius: 14, overflow: "hidden",
+                borderRadius: 14, overflow: "visible",
                 border: "1px solid rgba(192,132,252,0.28)",
                 background: "rgba(192,132,252,0.045)",
                 boxShadow: "inset 3px 0 0 rgba(192,132,252,0.65)",
@@ -295,7 +295,7 @@ function ExerciseNav({ exercises, shownIdx, currentIdx, onSelect, onSelectSet, o
                           </div>
                         )}
                         <div style={{
-                          borderRadius: 10, overflow: "hidden",
+                          borderRadius: 10, overflow: "visible", position: "relative",
                           border: sel ? "1px solid rgba(96,165,250,0.6)" : "1px solid rgba(255,255,255,0.06)",
                           background: sel ? "rgba(96,165,250,0.10)" : "rgba(0,0,0,0.18)",
                           boxShadow: sel ? "0 6px 22px -10px rgba(59,130,246,0.6)" : "none",
