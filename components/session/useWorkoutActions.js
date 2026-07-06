@@ -1,5 +1,5 @@
 import { api } from "@/lib/db/api";
-import { SWAP_GROUPS, WORKOUTS } from "@/lib/legacy/shared";
+import { SWAP_GROUPS, WORKOUTS, TEST_MODE } from "@/lib/legacy/shared";
 import { applySwaps } from "@/lib/legacy/standards";
 import { saveSwaps, loadSkippedExercises, saveSkippedExercises, saveDeferred, saveBodyweight, saveSessionSets, serializeForSave, activateNextSet } from "@/lib/legacy/session-persistence";
 import { flattenTemplate, applyDeloadPrescription, transitionActiveSetAfterLog } from "@/lib/legacy/session-utils";
@@ -283,6 +283,7 @@ function useWorkoutActions({
   };
 
   const onFinishWorkout = (elapsedSec) => {
+    if (TEST_MODE) { window.location.href = "/"; return; }
     const payload = serializeForSave(exercises, workout.name, sessionId, startedAt, elapsedSec, sessionDate);
     api.save(payload).finally(() => {
       window.location.href = "/";
