@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { T, localDate } from "@/lib/legacy/shared";
 import { EXERCISE_MUSCLES, getMuscleImpact, calcSet1RM, decodeStageScore } from "@/lib/legacy/standards";
-import { VolumeBar } from "./VolumeBar";
 import { Sparkline } from "./Sparkline";
 
 // ─── file: workout-session-stats-pane.js ───
@@ -27,7 +26,7 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
   if (!exercise) return null;
   const today = localDate();
   const todayMs = Date.parse(today + 'T00:00:00Z');
-  const sevenDaysAgoMs = todayMs - 7 * 86400000;
+  const windowStartMs = todayMs - 14 * 86400000;
   
   const [tip, setTip] = useState(null);
   const showTip = (e, content) => {
@@ -42,19 +41,19 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
 
   const muscleInfo = EXERCISE_MUSCLES[exercise.name] || { primary: [], secondary: [] };
 
-  const muscleSets7d = {};
-  (muscleInfo.primary || []).forEach(m => muscleSets7d[m] = []);
-  (muscleInfo.secondary || []).forEach(m => muscleSets7d[m] = []);
+  const muscleSets14d = {};
+  (muscleInfo.primary || []).forEach(m => muscleSets14d[m] = []);
+  (muscleInfo.secondary || []).forEach(m => muscleSets14d[m] = []);
   for (const sess of (history || [])) {
     if (!sess.date || sess.date === today) continue;
     const sessMs = Date.parse(sess.date + 'T00:00:00Z');
-    if (sessMs <= sevenDaysAgoMs || sessMs > todayMs) continue;
+    if (sessMs <= windowStartMs || sessMs > todayMs) continue;
     for (const st of (sess.sets || [])) {
       if (st.set_type !== 'working') continue;
       const mm = EXERCISE_MUSCLES[st.exercise];
       if (!mm) continue;
       for (const muscle of (mm.primary || [])) {
-        if (muscle in muscleSets7d) muscleSets7d[muscle].push({
+        if (muscle in muscleSets14d) muscleSets14d[muscle].push({
           date: sess.date, isToday: false,
           exercise: st.exercise,
           weight: +st.weight_lb || 0,
@@ -63,7 +62,7 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
         });
       }
       for (const muscle of (mm.secondary || [])) {
-        if (muscle in muscleSets7d) muscleSets7d[muscle].push({
+        if (muscle in muscleSets14d) muscleSets14d[muscle].push({
           date: sess.date, isToday: false,
           exercise: st.exercise,
           weight: +st.weight_lb || 0,
@@ -86,7 +85,7 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
                     : e.bandAddon ? (s.weight || 0) + bs
                     : (s.weight || 0);
       for (const muscle of (em.primary || [])) {
-        if (muscle in muscleSets7d) muscleSets7d[muscle].push({
+        if (muscle in muscleSets14d) muscleSets14d[muscle].push({
           date: chartTodayDate, isToday: true,
           exercise: e.name,
           weight,
@@ -95,7 +94,7 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
         });
       }
       for (const muscle of (em.secondary || [])) {
-        if (muscle in muscleSets7d) muscleSets7d[muscle].push({
+        if (muscle in muscleSets14d) muscleSets14d[muscle].push({
           date: chartTodayDate, isToday: true,
           exercise: e.name,
           weight,
@@ -106,7 +105,7 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
     }
   }
 
-  Object.values(muscleSets7d).forEach(arr => arr.sort((a, b) => a.date.localeCompare(b.date)));
+  Object.values(muscleSets14d).forEach(arr => arr.sort((a, b) => a.date.localeCompare(b.date)));
 
   const stat = statHistory || {};
   const lookupIsAssist = exercise.name === "Pull-Ups" || exercise.name === "Dips" || exercise.name === "Dead Hang + Scap Pulls" || exercise.name === "Hanging Knee Raise";
@@ -207,38 +206,7 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
       <div style={{ marginBottom: 12 }}>
         <div style={{ color: T.faint, fontFamily: T.mono, fontSize: 9, fontWeight: 800, letterSpacing: 1.0, marginBottom: 4 }}>STATS</div>
         <div style={{ color: T.strong, fontSize: 16, fontWeight: 800, letterSpacing: -0.3, lineHeight: 1.2 }}>{exercise.name}</div>
-        {(primaryList.length > 0 || secondaryList.length > 0) && (
-          <div style={{ marginTop: 5, display: "flex", flexWrap: "wrap", gap: 4 }}>
-            {primaryList.map(m => (
-              <span key={m} style={{
-                color: T.bandsText, background: "rgba(192,132,252,0.12)",
-                border: "1px solid rgba(192,132,252,0.25)",
-                fontFamily: T.mono, fontSize: 9, fontWeight: 800, letterSpacing: 0.4,
-                padding: "2px 6px", borderRadius: 4, textTransform: "uppercase",
-              }}>{m.replace("_", " ")}</span>
-            ))}
-            {secondaryList.map(m => (
-              <span key={m} style={{
-                color: T.muted, background: "rgba(255,255,255,0.03)",
-                border: "1px dashed rgba(255,255,255,0.15)",
-                fontFamily: T.mono, fontSize: 9, fontWeight: 800, letterSpacing: 0.4,
-                padding: "2px 6px", borderRadius: 4, textTransform: "uppercase",
-              }}>{m.replace("_", " ")} ({Math.round(getMuscleImpact(exercise.name, m, false) * 100)}%)</span>
-            ))}
-          </div>
-        )}
       </div>
-
-      {(primaryList.length > 0 || secondaryList.length > 0) && (
-        <Section label="HARD SETS · LAST 7 DAYS">
-          {primaryList.map(m => (
-            <VolumeBar key={m} exerciseName={exercise.name} muscle={m} events={muscleSets7d[m] || []} isPrimary={true} showTip={showTip} hideTip={hideTip} />
-          ))}
-          {secondaryList.map(m => (
-            <VolumeBar key={m} exerciseName={exercise.name} muscle={m} events={muscleSets7d[m] || []} isPrimary={false} showTip={showTip} hideTip={hideTip} />
-          ))}
-        </Section>
-      )}
 
       <Section label="PROGRESS · OVER LAST 30 DAYS">
         <Sparkline exerciseName={exercise.name} data={ormHist} valueKey="orm" color="#60A5FA"
@@ -249,6 +217,38 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
           showTip={showTip} hideTip={hideTip} />
         <Sparkline exerciseName={exercise.name} data={volHist} valueKey="vol" color="#34D399" label="VOLUME" fmt={v => `${Math.round(v).toLocaleString()} lb`} showTip={showTip} hideTip={hideTip} />
       </Section>
+
+      {(primaryList.length > 0 || secondaryList.length > 0) && (
+        <Section label="MUSCLE LOAD · SETS/WK · 14 DAYS">
+          {[...primaryList.map(m => ({ m, isPrimary: true })), ...secondaryList.map(m => ({ m, isPrimary: false }))].map(({ m, isPrimary }) => {
+            const events = muscleSets14d[m] || [];
+            const weekly = events.reduce((a, ev) => a + (ev.weightage || 0), 0) / 2;
+            const lo = 10, hi = 20, max = 25;
+            const color = weekly < lo ? "#F87171" : weekly <= hi ? "#34D399" : "#FBBF24";
+            const pct = Math.min(weekly / max, 1) * 100;
+            const impact = isPrimary ? null : Math.round(getMuscleImpact(exercise.name, m, false) * 100);
+            return (
+              <div key={m}
+                onMouseEnter={(e) => showTip(e, `${events.length} sets in 14 days · target ${lo}–${hi}/wk`)}
+                onMouseLeave={hideTip}
+                style={{ display: "flex", alignItems: "center", gap: 8, padding: "3.5px 0" }}>
+                <span style={{
+                  width: 108, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                  color: isPrimary ? T.text : T.faint, fontFamily: T.mono, fontSize: 9.5, fontWeight: isPrimary ? 800 : 600,
+                  letterSpacing: 0.4, textTransform: "uppercase",
+                }}>{m.replace("_", " ")}{impact != null ? ` ·${impact}%` : ""}</span>
+                <div style={{ flex: 1, height: 6, borderRadius: 3, background: "rgba(255,255,255,0.05)", position: "relative", overflow: "hidden" }}>
+                  <div style={{ position: "absolute", left: `${lo / max * 100}%`, width: `${(hi - lo) / max * 100}%`, top: 0, bottom: 0, background: "rgba(255,255,255,0.07)" }} />
+                  <div style={{ position: "absolute", left: 0, width: `${pct}%`, top: 0, bottom: 0, borderRadius: 3, background: color, opacity: isPrimary ? 0.9 : 0.55 }} />
+                </div>
+                <span style={{ width: 34, flexShrink: 0, textAlign: "right", color, fontFamily: T.mono, fontSize: 10.5, fontWeight: 800 }}>
+                  {weekly ? weekly.toFixed(1) : "0"}
+                </span>
+              </div>
+            );
+          })}
+        </Section>
+      )}
 
       {hasPRs && (
         <Section label="PRS">
