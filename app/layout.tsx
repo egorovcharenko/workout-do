@@ -5,7 +5,6 @@ import { AuthProvider } from "@/lib/firebase/auth";
 export const metadata: Metadata = {
   title: "Workout Do",
   description: "Workout tracker",
-  icons: { icon: "/favicon.png" },
 };
 
 export const viewport: Viewport = {

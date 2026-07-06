@@ -10,6 +10,7 @@ import {
   type Auth,
 } from "firebase/auth";
 import {
+  getFirestore,
   initializeFirestore,
   memoryLocalCache,
   type Firestore,
@@ -62,9 +63,17 @@ export function db(): Firestore {
   // persistentLocalCache can store "doc doesn't exist" tombstones on
   // sign-out/sign-in churn and never recover — memory cache pays a
   // small first-paint cost in exchange for never lying.
-  _db = initializeFirestore(firebaseApp(), {
-    localCache: memoryLocalCache(),
-  });
+  //
+  // The catch handles dev HMR: module re-eval resets _db to null while the
+  // firebase app instance (and its Firestore) survives, so initialize*
+  // throws "already exists" — fall back to the existing instance.
+  try {
+    _db = initializeFirestore(firebaseApp(), {
+      localCache: memoryLocalCache(),
+    });
+  } catch {
+    _db = getFirestore(firebaseApp());
+  }
   return _db;
 }
 
@@ -73,15 +82,20 @@ export function auth(): Auth {
   // Explicit persistence chain + redirect resolver so Safari ITP can't
   // wipe pending-redirect state mid-flight. Falls through IDB →
   // localStorage → in-memory.
+  // try/catch: same dev-HMR story as db() — auth/already-initialized.
   if (typeof window !== "undefined") {
-    _auth = initializeAuth(firebaseApp(), {
-      persistence: [
-        indexedDBLocalPersistence,
-        browserLocalPersistence,
-        inMemoryPersistence,
-      ],
-      popupRedirectResolver: browserPopupRedirectResolver,
-    });
+    try {
+      _auth = initializeAuth(firebaseApp(), {
+        persistence: [
+          indexedDBLocalPersistence,
+          browserLocalPersistence,
+          inMemoryPersistence,
+        ],
+        popupRedirectResolver: browserPopupRedirectResolver,
+      });
+    } catch {
+      _auth = getAuth(firebaseApp());
+    }
     return _auth;
   }
   _auth = getAuth(firebaseApp());

@@ -104,7 +104,10 @@ export async function saveMeasurement(
     notes: data.notes ?? null,
   };
   for (const f of MEASUREMENT_FIELDS) {
-    if (data[f] != null) docData[f] = Number(data[f]);
+    // Guard against ""→0 and junk→NaN reaching Firestore (NaN is storable
+    // and would poison min/max/chart math); store only finite numbers.
+    const n = Number(data[f]);
+    if (data[f] != null && data[f] !== ("" as unknown) && Number.isFinite(n)) docData[f] = n;
   }
   const ref = doc(measurementsCol(uid));
   await setDoc(ref, docData);

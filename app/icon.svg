@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Workout Do favicon: bold W over a barbell bar, app dark + accent palette -->
+  <rect width="64" height="64" rx="14" fill="#0B0F14"/>
+  <text x="32" y="40" text-anchor="middle" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="34" font-weight="800" fill="#3B82F6">W</text>
+  <!-- barbell: bar + plates -->
+  <rect x="12" y="49" width="40" height="3.5" rx="1.75" fill="#E5E7EB"/>
+  <rect x="16" y="45.5" width="5" height="10.5" rx="2" fill="#60A5FA"/>
+  <rect x="43" y="45.5" width="5" height="10.5" rx="2" fill="#60A5FA"/>
+</svg>
