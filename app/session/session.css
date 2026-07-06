@@ -1,0 +1,95 @@
+/* Reset + dark theme — these tokens come from the design handoff README. */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body, #root {
+  margin: 0; padding: 0;
+  height: 100%;
+  background: #0B0F14;
+  color: #E5E7EB;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  overscroll-behavior-y: none;
+}
+body { color-scheme: dark; }
+button { font-family: inherit; }
+/* Hide native scrollbars on horizontal scrollers */
+.scroll-row::-webkit-scrollbar { display: none; }
+.scroll-row { scrollbar-width: none; }
+/* Thin, subtle scrollbars everywhere else — the chunky OS default looks bad
+   on the dark panes (nav pane, stats pane, the scrolling session column). */
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.24); }
+* { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.14) transparent; }
+/* Edge-fade nudge animations (rep strip) */
+@keyframes repNudgeR { 0%, 80%, 100% { transform: translateY(-50%); } 88% { transform: translate(3px, -50%); } 94% { transform: translate(-1px, -50%); } }
+@keyframes repNudgeL { 0%, 80%, 100% { transform: translateY(-50%); } 88% { transform: translate(-3px, -50%); } 94% { transform: translate(1px, -50%); } }
+/* Rest-done halo (matches the shell's flashRestDone) */
+@keyframes rest-done-flash {
+  0% { opacity: 0; }
+  8% { opacity: 1; }
+  25% { opacity: 0.55; }
+  40% { opacity: 1; }
+  60% { opacity: 0.55; }
+  75% { opacity: 1; }
+  92% { opacity: 0.45; }
+  100% { opacity: 0; }
+}
+/* Logged-rep micro-pulse */
+@keyframes set-pulse {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+/* Two-column layout when the viewport is wide enough for a stats sidebar.
+   Below the breakpoint the layout falls back to a single mobile column —
+   the sidebar is hidden via display:none so its computations are skipped
+   too (StatsPane is still rendered but its container collapses). */
+.session-shell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100%;
+}
+.session-main { width: 100%; max-width: 448px; padding-bottom: 60px; }
+/* The exercise list lives in the LEFT pane on wide screens and as a
+   horizontal strip at the top of the column on mobile — mutually exclusive. */
+.exercise-nav-pane { display: none; }
+.exercise-nav-strip { display: block; }
+.stats-pane-wrap { display: none; }
+@media (min-width: 900px) {
+  .session-shell {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 20px;
+    padding: 0 20px;
+  }
+  .session-main { flex-shrink: 0; }
+  .exercise-nav-strip { display: none; }
+  .exercise-nav-pane {
+    display: block;
+    /* Grow to consume the free horizontal space instead of sitting cramped at
+       a fixed 268px — capped so the cards stay readable on ultrawide screens. */
+    flex: 1 1 320px;
+    min-width: 300px;
+    max-width: 520px;
+    position: sticky;
+    top: 16px;
+    margin-top: 64px; /* align with the first card, past the header row */
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+  }
+}
+/* Stats column joins as the third pane when there's room. */
+@media (min-width: 1240px) {
+  .stats-pane-wrap {
+    display: block;
+    width: 300px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 16px;
+    margin-top: 64px;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+  }
+}

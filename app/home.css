@@ -1,0 +1,203 @@
+  * { -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f9fafb; margin: 0; }
+  /* Markdown styling for exercise notes — keep it tight (no big margins). */
+  .ex-note p { margin: 0 0 4px; }
+  .ex-note p:last-child { margin-bottom: 0; }
+  .ex-note ul, .ex-note ol { margin: 4px 0; padding-left: 18px; }
+  .ex-note li { margin: 1px 0; }
+  .ex-note strong { font-weight: 700; color: #78350f; }
+  .ex-note em { font-style: italic; }
+  .ex-note code { background: #fef3c7; padding: 1px 4px; border-radius: 3px; font-size: 0.85em; font-family: monospace; }
+  .ex-note a { color: #b45309; text-decoration: underline; }
+  .ex-note h1, .ex-note h2, .ex-note h3 { font-size: 13px; font-weight: 700; margin: 6px 0 2px; color: #78350f; }
+  .ex-note blockquote { border-left: 2px solid #fcd34d; padding-left: 8px; margin: 4px 0; color: #92400e; opacity: 0.85; }
+  .weight-btn { min-width: 32px; padding: 2px 6px; border-radius: 6px; font-size: 11px; font-weight: 600; border: none; cursor: pointer; transition: all 0.15s; }
+  .reps-btn { width: 36px; height: 36px; border-radius: 50%; font-size: 13px; font-weight: 700; border: none; cursor: pointer; transition: all 0.15s; display:inline-flex; align-items:center; justify-content:center; }
+  .set-btn { width: 32px; height: 32px; border-radius: 50%; font-weight: 700; font-size: 12px; border: none; cursor: pointer; transition: all 0.2s; }
+  .card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; transition: all 0.3s; overflow: hidden; }
+  .scroll-row { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; max-width: 100%; }
+  .scroll-row::-webkit-scrollbar { display: none; }
+  .card.done { background: #f0fdf4; border-color: #bbf7d0; }
+  .timer-circle { transition: stroke-dashoffset 1s linear; }
+  .save-pulse { animation: pulse 0.6s ease-out; }
+  @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+  /* Loading skeletons — shown until /api data arrives, so the page never
+     paints default/stale values (e.g. deload OFF) as if they were answers.
+     Authored light like the rest of the page; the #app invert darkens it. */
+  .shimmer { position: relative; overflow: hidden; background: #e5e7eb; border-radius: 10px; }
+  .shimmer::after {
+    content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
+    animation: shimmer 1.4s infinite;
+  }
+  @keyframes shimmer { 100% { transform: translateX(100%); } }
+
+  /* ---------- Dark mode (always on) ---------- */
+  /*
+     Strategy: invert luminance globally, preserve hue, mute saturation.
+     NOTE: body background is propagated to the HTML/canvas by CSS, so a
+     filter on body never reaches the page bg. Instead we:
+       1. Set html + body bg explicitly to the dark color we want (no filter).
+       2. Apply the filter to #app (the actual content wrapper).
+       3. Unshift media/emoji inside #app so they render as authored.
+  */
+  :root { color-scheme: dark; }
+  html, body { background: #18191c; }
+  #app {
+    filter: invert(0.92) hue-rotate(180deg) saturate(0.78);
+    max-width: 600px;
+    width: 100%;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: #f9fafb;
+  }
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+  @media (min-width: 768px) {
+    .dashboard-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+  }
+  #app img, #app video, #app svg, #app iframe, #app embed, #app object, #app [data-noinvert] {
+    filter: invert(1) hue-rotate(180deg) saturate(1.28);
+  }
+  [data-noinvert] img, [data-noinvert] video, [data-noinvert] svg, [data-noinvert] iframe, [data-noinvert] [data-noinvert] {
+    filter: none !important;
+  }
+
+  /* ---------- Celebration animations ---------- */
+  #celebration-layer { position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden; }
+  .ce-particle { position: absolute; will-change: transform, opacity; }
+
+  @keyframes ce-confetti {
+    0% { transform: translate(-50%,-50%) rotate(0deg); opacity: 1; }
+    100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--rot)); opacity: 0; }
+  }
+  @keyframes ce-fall {
+    0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0.2; }
+  }
+  @keyframes ce-shake {
+    0%,100% { transform: translateX(0) rotate(0); }
+    15% { transform: translateX(-12px) rotate(-1.5deg); }
+    30% { transform: translateX(12px) rotate(1.5deg); }
+    45% { transform: translateX(-9px) rotate(-1deg); }
+    60% { transform: translateX(9px) rotate(1deg); }
+    75% { transform: translateX(-4px) rotate(-0.4deg); }
+    90% { transform: translateX(4px) rotate(0.4deg); }
+  }
+  .ce-shaking #app { animation: ce-shake 0.55s cubic-bezier(.36,.07,.19,.97) both; }
+  @keyframes ce-bigtext {
+    0% { transform: translate(-50%,-50%) scale(0.2) rotate(-10deg); opacity: 0; }
+    25% { transform: translate(-50%,-50%) scale(1.3) rotate(2deg); opacity: 1; }
+    55% { transform: translate(-50%,-50%) scale(1) rotate(-2deg); opacity: 1; }
+    100% { transform: translate(-50%,-55%) scale(1.5) rotate(0); opacity: 0; }
+  }
+  @keyframes ce-bubble {
+    0% { transform: translate(-50%,-50%) scale(0); opacity: 0; }
+    35% { transform: translate(-50%,-50%) scale(1.15) rotate(-3deg); opacity: 1; }
+    55% { transform: translate(-50%,-50%) scale(1) rotate(2deg); opacity: 1; }
+    80% { transform: translate(-50%,-50%) scale(1) rotate(-1deg); opacity: 1; }
+    100% { transform: translate(-50%,-50%) scale(0.6); opacity: 0; }
+  }
+  @keyframes ce-firework {
+    0% { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+    100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.4); opacity: 0; }
+  }
+  @keyframes ce-bounce {
+    0% { transform: translate(-50%, -120vh) rotate(0); opacity: 1; }
+    55% { transform: translate(-50%, 0) rotate(380deg); opacity: 1; }
+    70% { transform: translate(-50%, -40px) rotate(360deg); }
+    85% { transform: translate(-50%, 0) rotate(360deg); }
+    100% { transform: translate(-50%, -8px) rotate(360deg); opacity: 0; }
+  }
+  @keyframes ce-cannonL {
+    0% { transform: translate(-120%, -50%) rotate(0); opacity: 1; }
+    100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--rot)); opacity: 0; }
+  }
+  @keyframes ce-cannonR {
+    0% { transform: translate(120%, -50%) rotate(0); opacity: 1; }
+    100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--rot)); opacity: 0; }
+  }
+  @keyframes ce-flameUp {
+    0% { transform: translate(-50%, 0) scale(0.6); opacity: 0; }
+    20% { opacity: 1; }
+    100% { transform: translate(calc(-50% + var(--dx)), calc(-50% - 60vh)) scale(1.2); opacity: 0; }
+  }
+  @keyframes ce-slotPop {
+    0% { transform: translate(-50%,-50%) scale(0); opacity: 0; }
+    100% { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+  }
+
+  /* ---------- Per-set subtle animations (quick, anchored to button) ---------- */
+  @keyframes set-ring {
+    0% { transform: translate(-50%,-50%) scale(0.4); opacity: 0.7; }
+    100% { transform: translate(-50%,-50%) scale(2.2); opacity: 0; }
+  }
+  @keyframes set-mini-burst {
+    0% { transform: translate(-50%,-50%); opacity: 1; }
+    100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))); opacity: 0; }
+  }
+  @keyframes set-popup-up {
+    0% { transform: translate(-50%, 0) scale(0.6); opacity: 0; }
+    25% { transform: translate(-50%, -8px) scale(1.1); opacity: 1; }
+    100% { transform: translate(-50%, -38px) scale(1); opacity: 0; }
+  }
+  @keyframes set-check {
+    0% { transform: translate(-50%,-50%) scale(0) rotate(-25deg); opacity: 0; }
+    40% { transform: translate(-50%,-50%) scale(1.4) rotate(0); opacity: 1; }
+    100% { transform: translate(-50%,-50%) scale(1) rotate(0); opacity: 0; }
+  }
+  @keyframes set-ripple {
+    0% { transform: translate(-50%,-50%) scale(0); opacity: 0.5; }
+    100% { transform: translate(-50%,-50%) scale(3); opacity: 0; }
+  }
+  @keyframes set-sparkle {
+    0% { transform: translate(-50%,-50%) scale(0) rotate(0); opacity: 0; }
+    50% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1) rotate(180deg); opacity: 1; }
+    100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.4) rotate(360deg); opacity: 0; }
+  }
+  @keyframes set-pop-shrink {
+    0% { transform: translate(-50%,-50%) scale(0); opacity: 0.8; }
+    35% { transform: translate(-50%,-50%) scale(1.4); opacity: 0.7; }
+    100% { transform: translate(-50%,-50%) scale(0); opacity: 0; }
+  }
+  @keyframes set-arrow-up {
+    0% { transform: translate(-50%, 0); opacity: 0; }
+    20% { transform: translate(-50%, -10px); opacity: 1; }
+    100% { transform: translate(-50%, -42px); opacity: 0; }
+  }
+  @keyframes set-star {
+    0% { transform: translate(-50%,-50%) scale(0) rotate(-45deg); opacity: 0; }
+    50% { transform: translate(-50%,-50%) scale(1.3) rotate(0); opacity: 1; }
+    100% { transform: translate(-50%,-50%) scale(0.7) rotate(45deg); opacity: 0; }
+  }
+  @keyframes set-flash {
+    0% { transform: translate(-50%,-50%) scale(0.6); opacity: 0; }
+    25% { transform: translate(-50%,-50%) scale(1.2); opacity: 0.8; }
+    100% { transform: translate(-50%,-50%) scale(2); opacity: 0; }
+  }
+  @keyframes rest-done-flash {
+    /* 2-second glow with a triple-pulse heartbeat — stays loud enough to
+       catch your eye even if you're looking down at the picker. */
+    0%   { opacity: 0; }
+    8%   { opacity: 1; }
+    25%  { opacity: 0.55; }
+    40%  { opacity: 1; }
+    60%  { opacity: 0.55; }
+    75%  { opacity: 1; }
+    92%  { opacity: 0.45; }
+    100% { opacity: 0; }
+  }
+  @keyframes rest-done-go {
+    0% { transform: translate(-50%,-50%) scale(0.4); opacity: 0; }
+    25% { transform: translate(-50%,-50%) scale(1.15); opacity: 1; }
+    70% { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+    100% { transform: translate(-50%,-55%) scale(1.2); opacity: 0; }
+  }
