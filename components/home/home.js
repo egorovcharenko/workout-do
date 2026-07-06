@@ -9,6 +9,7 @@ import {
   isDeloadActive,
   deloadDaysLeft,
   estimateTemplateWorkoutDuration,
+  parseWorkoutPlan,
 } from "@/lib/legacy/shared";
 import { EXERCISE_MUSCLES } from "@/lib/legacy/standards";
 import { loadSkippedExercises } from "@/lib/legacy/session-persistence";
@@ -122,6 +123,148 @@ function renderWorkoutCard(w, isSuggested, isOngoing, logged, expected, pct) {
 
 // Skeleton mirroring the home layout (deload strip, workout cards, calendar,
 // summary cards) so the first paint never shows default values as answers.
+// ---- Planned-workout queue ("Plan") ----------------------------------------
+// The queue lives in settings.workout_plan (see lib/legacy/shared.js). Home
+// shows it as an ordered card above the workout list; the front entry becomes
+// the suggested "up next" workout instead of the fixed rotation.
+
+const escapeHtml = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+// Resolve a user-typed workout token to a WORKOUTS entry: exact name/id first
+// (legacy names accepted), then name minus the "Main:"/"Micro:" prefix, then a
+// unique substring among the program workouts.
+function resolvePlanWorkout(token) {
+  const t = token.trim().toLowerCase();
+  if (!t) return null;
+  const legacyKey = Object.keys(LEGACY_WORKOUT_NAMES).find(k => k.toLowerCase() === t);
+  const canonName = legacyKey ? LEGACY_WORKOUT_NAMES[legacyKey] : null;
+  let w = WORKOUTS.find(x => x.name.toLowerCase() === t || x.id.toLowerCase() === t || (canonName && x.name === canonName));
+  if (w) return w;
+  const program = WORKOUTS.filter(x => x.program);
+  w = program.find(x => x.name.toLowerCase().replace(/^(main|micro):\s*/, "") === t);
+  if (w) return w;
+  const subs = program.filter(x => x.name.toLowerCase().includes(t));
+  return subs.length === 1 ? subs[0] : null;
+}
+
+// Expected working-set count for a workout template (1/exercise on deload).
+function planExpectedWorkingSets(w, isDeload) {
+  let n = 0;
+  w.exercises.forEach(ex => {
+    const subs = ex.supersetExercises ? ex.supersetExercises.length : 1;
+    n += (isDeload ? 1 : ex.sets) * subs;
+  });
+  return n;
+}
+
+// Drop plan entries satisfied by a completed session: any non-active session
+// (the day passed) consumes a matching entry outright; a still-active
+// (today's) session consumes one only once all template working sets are
+// logged. Sessions older than the entry's added-timestamp never consume it.
+async function reconcileWorkoutPlan() {
+  const remaining = parseWorkoutPlan(window.USER_SETTINGS || {});
+  if (!remaining.length) return;
+  const activeIds = new Set((state._activeSessions || []).map(s => s.id));
+  const sessions = (state.history || []).filter(s => (s.sets || []).some(x => x.reps));
+  let changed = false;
+  // Oldest first so each session consumes the earliest matching entry.
+  for (const sess of sessions.slice().reverse()) {
+    const name = LEGACY_WORKOUT_NAMES[sess.workout_name] || sess.workout_name;
+    let finished = !activeIds.has(sess.id);
+    if (!finished) {
+      const w = WORKOUTS.find(x => x.name === name);
+      const logged = (sess.sets || []).filter(x => x.reps && x.set_type !== "warmup").length;
+      finished = !!w && logged >= planExpectedWorkingSets(w, !!sess.is_deload);
+    }
+    if (!finished) continue;
+    const ts = sess.started_at ? Date.parse(sess.started_at) : Date.parse(sess.date + "T23:59:59");
+    const idx = remaining.findIndex(e =>
+      (LEGACY_WORKOUT_NAMES[e.workout] || e.workout) === name && (!e.added || Date.parse(e.added) <= ts));
+    if (idx !== -1) { remaining.splice(idx, 1); changed = true; }
+  }
+  if (!changed) return;
+  window.USER_SETTINGS.workout_plan = JSON.stringify(remaining);
+  try {
+    await api.saveSettings({ workout_plan: window.USER_SETTINGS.workout_plan });
+  } catch (e) { console.error("[PLAN] failed to save reconciled plan:", e); }
+}
+
+function renderPlanCard() {
+  const entries = parseWorkoutPlan(window.USER_SETTINGS || {});
+  const rows = entries.map((e, i) => {
+    const first = i === 0;
+    return `
+      <div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;${i > 0 ? 'border-top:1px solid #f3f4f6' : ''}">
+        <span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;font-family:ui-monospace,Menlo,monospace;${first ? 'background:#dbeafe;color:#1d4ed8' : 'background:#f3f4f6;color:#9ca3af'}">${i + 1}</span>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:baseline;gap:6px">
+            <span style="font-size:13px;font-weight:700;color:${first ? '#1d4ed8' : '#111827'}">${escapeHtml(e.workout)}</span>
+            ${first ? '<span style="font-size:9px;font-weight:800;color:#1d4ed8;opacity:0.7;letter-spacing:0.5px;font-family:ui-monospace,Menlo,monospace">UP NEXT</span>' : ''}
+          </div>
+          ${e.note ? `<div style="font-size:11.5px;color:#6b7280;line-height:1.45;margin-top:1px">${escapeHtml(e.note)}</div>` : ''}
+        </div>
+      </div>`;
+  }).join("");
+  return `
+    <div class="card" style="padding:12px 14px;margin-bottom:10px;background:white;border:1px solid #e5e7eb">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${entries.length ? '4px' : '0'}">
+        <span style="font-size:13px;font-weight:800;color:#374151">📋 Plan</span>
+        <button onclick="openPlanEditor()" style="border:0;cursor:pointer;font-weight:800;font-size:11px;letter-spacing:0.5px;padding:5px 12px;border-radius:9999px;font-family:ui-monospace,Menlo,monospace;background:#f3f4f6;color:#6b7280">EDIT</button>
+      </div>
+      ${entries.length ? rows : '<div style="font-size:11px;color:#9ca3af;margin-top:4px">No planned workouts — following the standard rotation. Tap EDIT to queue workouts with notes.</div>'}
+    </div>`;
+}
+
+function renderPlanEditor() {
+  const entries = parseWorkoutPlan(window.USER_SETTINGS || {});
+  const text = entries.map(e => e.note ? `${e.workout} -- ${e.note}` : e.workout).join("\n");
+  const names = WORKOUTS.filter(w => w.program).map(w => w.name).join(" · ");
+  return `
+    <div onclick="if(event.target===this)closePlanEditor()" style="position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px">
+      <div style="background:white;border-radius:16px;padding:16px;width:100%;max-width:560px;max-height:85vh;display:flex;flex-direction:column;gap:10px">
+        <span style="font-size:15px;font-weight:800;color:#111827">Edit plan</span>
+        <span style="font-size:11px;color:#6b7280;line-height:1.5">One workout per line, in order: <b>Workout name -- note</b>. The note shows on the home card and inside the session. Workouts: ${names}</span>
+        <textarea id="planEditorText" spellcheck="false" style="width:100%;min-height:220px;resize:vertical;border:1px solid #e5e7eb;border-radius:10px;padding:10px;font-size:12.5px;line-height:1.5;font-family:ui-monospace,Menlo,monospace;color:#111827;outline:none;box-sizing:border-box">${escapeHtml(text)}</textarea>
+        <div id="planEditorError" style="font-size:11px;color:#dc2626;display:none"></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button onclick="closePlanEditor()" style="border:0;cursor:pointer;font-weight:700;font-size:12px;padding:8px 16px;border-radius:10px;background:#f3f4f6;color:#374151">Cancel</button>
+          <button onclick="savePlanEditor()" style="border:0;cursor:pointer;font-weight:800;font-size:12px;padding:8px 16px;border-radius:10px;background:#2563eb;color:white">Save plan</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function openPlanEditor() { state.planEditorOpen = true; render(); }
+function closePlanEditor() { state.planEditorOpen = false; render(); }
+async function savePlanEditor() {
+  const ta = document.getElementById("planEditorText");
+  if (!ta) return;
+  const prev = parseWorkoutPlan(window.USER_SETTINGS || {});
+  const entries = [];
+  for (const line of ta.value.split("\n").map(l => l.trim()).filter(Boolean)) {
+    const sepMatch = line.match(/\s+(--|—)\s+/);
+    const token = sepMatch ? line.slice(0, sepMatch.index) : line;
+    const note = sepMatch ? line.slice(sepMatch.index + sepMatch[0].length).trim() : "";
+    const w = resolvePlanWorkout(token);
+    if (!w) {
+      const err = document.getElementById("planEditorError");
+      if (err) { err.style.display = "block"; err.textContent = `Unknown workout: "${token.trim()}"`; }
+      return;
+    }
+    // Keep the original added-timestamp for entries that survive an edit, so
+    // reconcile still sees sessions completed since they were first planned.
+    const kept = prev.find(p => p.workout === w.name && (p.note || "") === note && !entries.some(e => e.id === p.id));
+    entries.push(kept || { id: `p${Date.now()}-${entries.length}`, workout: w.name, note, added: new Date().toISOString() });
+  }
+  window.USER_SETTINGS = window.USER_SETTINGS || {};
+  window.USER_SETTINGS.workout_plan = JSON.stringify(entries);
+  state.planEditorOpen = false;
+  render();
+  try {
+    await api.saveSettings({ workout_plan: window.USER_SETTINGS.workout_plan });
+  } catch (e) { console.error("[PLAN] failed to save plan:", e); }
+}
+
 function renderHomeSkeleton() {
   const dateStr = new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
   const card = (h, inner) => `
@@ -210,6 +353,13 @@ function renderHome() {
     const map = { 'Main: Squat': 'main-a', 'Micro: Arms': 'micro-arms', 'Main: Deadlift': 'main-b', 'Micro: Delts & Traps': 'micro-delts' };
     nextW = byId(map[nextName]) || byId('main-a');
   }
+  // A non-empty plan overrides the rotation: its front entry is up next.
+  const planEntries = parseWorkoutPlan(window.USER_SETTINGS || {});
+  if (planEntries.length) {
+    const planName = LEGACY_WORKOUT_NAMES[planEntries[0].workout] || planEntries[0].workout;
+    const planW = WORKOUTS.find(x => x.name === planName);
+    if (planW) nextW = planW;
+  }
 
   let activeWorkout = nextW;
   let isOngoing = false;
@@ -257,6 +407,7 @@ function renderHome() {
 
   const workoutListHTML = `
   ${deloadCardHTML}
+  ${renderPlanCard()}
   <div style="display:flex;flex-direction:column;margin-bottom:8px;">
     ${workoutsHTML}
   </div>
@@ -286,6 +437,7 @@ function renderHome() {
       ${renderWorkoutSummaryCard()}
       ${renderMeasurementsCard()}
     </div>
+    ${state.planEditorOpen ? renderPlanEditor() : ''}
   </div>
 `;
 }
@@ -310,4 +462,8 @@ export {
   renderHomeSkeleton,
   renderHome,
   toggleDeload,
+  reconcileWorkoutPlan,
+  openPlanEditor,
+  closePlanEditor,
+  savePlanEditor,
 };

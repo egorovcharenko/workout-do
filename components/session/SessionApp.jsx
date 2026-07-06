@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { api } from "@/lib/db/api";
 import {
-  TEST_MODE, T, GRIP_LABELS, WORKOUTS, localDate, SWAP_GROUPS, isDeloadActive,
+  TEST_MODE, T, GRIP_LABELS, WORKOUTS, localDate, SWAP_GROUPS, isDeloadActive, planEntryForWorkout,
 } from "@/lib/legacy/shared";
 import { applySwaps } from "@/lib/legacy/standards";
 import {
@@ -272,6 +272,11 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
           <div className="exercise-nav-strip">
             {nav("strip")}
           </div>
+          {(() => { const pe = planEntryForWorkout(workout.name);
+            return pe && pe.note ? ( <div style={{ margin: "10px 16px 2px", padding: "9px 12px", borderRadius: 12, background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.25)", color: T.text, fontSize: 12.5, lineHeight: 1.45 }}>
+                <span style={{ color: T.accentLight, fontFamily: T.mono, fontSize: 10, fontWeight: 800, letterSpacing: 1, display: "block", marginBottom: 2 }}>📋 PLAN NOTE</span>
+                {pe.note}
+              </div> ) : null; })()}
           {shownIdx === null && isFinished ? ( <WorkoutCompleteScreen
               workoutName={workout.name}
               elapsedSec={elapsed}

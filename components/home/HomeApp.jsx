@@ -32,6 +32,9 @@ import {
   renderHomeSkeleton,
   renderHome,
   toggleDeload,
+  openPlanEditor,
+  closePlanEditor,
+  savePlanEditor,
 } from "./home";
 import { getExDurs, renderSessionList } from "./history";
 import {
@@ -82,6 +85,9 @@ function initHomeApp() {
     renderHomeSkeleton,
     renderHome,
     toggleDeload,
+    openPlanEditor,
+    closePlanEditor,
+    savePlanEditor,
     // workout-ui-history.js
     getExDurs,
     renderSessionList,
