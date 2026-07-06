@@ -69,26 +69,29 @@ function renderWorkoutCard(w, isSuggested, isOngoing, logged, expected, pct) {
   const deloadPill = deloadOn
     ? `<span style="font-size:8px;font-weight:800;letter-spacing:0.5px;color:#b45309;background:#fef3c7;border:1px solid #fcd34d;padding:2px 5px;border-radius:5px;font-family:ui-monospace,Menlo,monospace;vertical-align:middle;margin-right:5px">DELOAD</span>`
     : '';
-  const exerciseEntries = [];
-  w.exercises.forEach(ex => {
-    if (ex.supersetExercises) {
-      ex.supersetExercises.forEach(sub => exerciseEntries.push(sub));
-    } else {
-      exerciseEntries.push(ex);
-    }
-  });
-
-  const rowsHTML = exerciseEntries.map(ex => {
+  const rowHTML = ex => {
     const s = state.lastSession[`${ex.name}|working|1`] || state.lastSession[`${ex.name}|working|2`] || state.lastSession[`${ex.name}|working|3`];
     const weightVal = s ? (s.weight_lb || '—') : '—', repsVal = s ? (s.reps || '—') : '—';
     const valLabel = s ? `${weightVal}lb × ${repsVal}` : '—';
-    const name = ex.name;
     return `
     <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;gap:6px">
-      <span style="color:${isSuggested ? '#4b5563' : '#374151'};font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</span>
+      <span style="color:${isSuggested ? '#4b5563' : '#374151'};font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ex.name}</span>
       <span style="color:${isSuggested ? '#4b5563' : '#6b7280'};font-family:ui-monospace,Menlo,monospace;flex-shrink:0">${valLabel}</span>
     </div>
   `;
+  };
+
+  // Superset sub-exercises stay grouped behind a purple bracket (same accent
+  // as the session view) instead of flattening into the plain list.
+  const rowsHTML = w.exercises.map(ex => {
+    if (ex.supersetExercises) {
+      return `
+    <div style="display:flex;flex-direction:column;gap:4px;border-left:2px solid #c084fc;padding-left:7px">
+      ${ex.supersetExercises.map(rowHTML).join("")}
+    </div>
+  `;
+    }
+    return rowHTML(ex);
   }).join("");
 
   const bgStyle = isSuggested
