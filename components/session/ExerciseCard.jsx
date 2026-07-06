@@ -14,6 +14,7 @@ function ExerciseCard({ exercise, supersetTag, embedded, rest, onRestAdd, onRest
 
   useEffect(() => {
     setShowAllFamilies(false);
+    setShowVariants(false);
   }, [exercise.name]);
 
   const swapGroup = getSwapGroup(exercise.name);
@@ -72,6 +73,20 @@ function ExerciseCard({ exercise, supersetTag, embedded, rest, onRestAdd, onRest
               (~{Math.round(estimateExerciseDuration(exercise) / 60)} min)
             </span>
           </h2>
+          {hasVariants && (
+            <button
+              onClick={() => setShowVariants(v => !v)}
+              title="Swap variant"
+              style={{
+                flexShrink: 0, width: 30, height: 28, padding: 0, borderRadius: 7,
+                display: "inline-flex", alignItems: "center", justifyContent: "center",
+                fontFamily: "inherit", fontSize: 13, cursor: "pointer",
+                border: `1px solid ${showVariants ? "rgba(96,165,250,0.6)" : T.cardBorder}`,
+                background: showVariants ? "rgba(96,165,250,0.15)" : "rgba(255,255,255,0.03)",
+                color: showVariants ? T.accentLight : T.faint,
+              }}
+            >⇄</button>
+          )}
         </div>
       )}
       {!embedded && exercise.note && (
@@ -93,7 +108,7 @@ function ExerciseCard({ exercise, supersetTag, embedded, rest, onRestAdd, onRest
 
 
 
-      {hasVariants && (!embedded || showVariants) && (
+      {hasVariants && showVariants && (
         <div style={{ marginTop: 12 }}>
           <div style={{
             display: "flex", alignItems: "center", gap: 6, marginBottom: 7,
