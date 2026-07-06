@@ -9,7 +9,7 @@ import {
   loadSwaps, saveSwaps, loadSkippedExercises, loadDeferred, applyDeferredOrder,
   loadSessionSets, serializeForSave, autoSavePayload, hydrateToday, activateNextSet,
 } from "@/lib/legacy/session-persistence";
-import { flattenTemplate, applyDeloadPrescription } from "@/lib/legacy/session-utils";
+import { flattenTemplate, applyDeloadPrescription, applyPlanPrescription } from "@/lib/legacy/session-utils";
 import "./icons";
 import { useWorkoutTimers } from "./useWorkoutTimers";
 import { useWorkoutActions } from "./useWorkoutActions";
@@ -86,6 +86,9 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
         if (hasNewSwap) saveSwaps(workout.name, activeDate, swapMap);
         setSwaps(swapMap); let exs = flattenTemplate(applySwaps(workout, swapMap), last || {}, hints || {});
         if (window.SESSION_DELOAD) exs = applyDeloadPrescription(exs);
+        // Planned prescriptions (concrete weights/reps/extra exercises from
+        // the plan queue) win over both hints and the deload transform.
+        exs = applyPlanPrescription(exs, planEntryForWorkout(workout.name));
         const savedSetsMap = loadSessionSets(workout.name, activeDate);
         if (savedSetsMap && Object.keys(savedSetsMap).length) {
           const templateNames = new Set(exs.map(ex => ex.name));

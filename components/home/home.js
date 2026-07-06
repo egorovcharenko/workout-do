@@ -10,6 +10,7 @@ import {
   deloadDaysLeft,
   estimateTemplateWorkoutDuration,
   parseWorkoutPlan,
+  SWAP_GROUPS,
 } from "@/lib/legacy/shared";
 import { EXERCISE_MUSCLES } from "@/lib/legacy/standards";
 import { loadSkippedExercises } from "@/lib/legacy/session-persistence";
@@ -147,6 +148,89 @@ function resolvePlanWorkout(token) {
   return subs.length === 1 ? subs[0] : null;
 }
 
+// ---- Plan prescription text format ----------------------------------------
+// A workout line may be followed by indented exercise lines carrying concrete
+// targets, which the session pre-fills (see applyPlanPrescription):
+//   Main: Squat -- rebuild starts
+//     Barbell Bench Press: 155x4, 140x8x3
+//     + Lat Pulldown: 70x10x3
+// Set tokens: WxR (one set), WxRxS (S sets), bare R (reps only, weight from
+// history). "+" adds an exercise that isn't in the template.
+
+function resolveLibraryExercise(token) {
+  const t = token.trim().toLowerCase();
+  const all = [];
+  SWAP_GROUPS.forEach(g => g.exercises.forEach(e => all.push(e.name)));
+  const exact = all.find(n => n.toLowerCase() === t);
+  if (exact) return exact;
+  const subs = all.filter(n => n.toLowerCase().includes(t));
+  return subs.length === 1 ? subs[0] : null;
+}
+
+function parsePlanSetTokens(setsStr) {
+  const sets = [];
+  for (const tok of setsStr.split(",").map(s => s.trim()).filter(Boolean)) {
+    let m;
+    if ((m = tok.match(/^(\d+(?:\.\d+)?)\s*x\s*(\d+)\s*x\s*(\d+)$/i))) {
+      for (let i = 0; i < +m[3]; i++) sets.push({ w: +m[1], r: +m[2] });
+    } else if ((m = tok.match(/^(\d+(?:\.\d+)?)\s*x\s*(\d+)$/i))) {
+      sets.push({ w: +m[1], r: +m[2] });
+    } else if ((m = tok.match(/^(\d+)$/))) {
+      sets.push({ w: null, r: +m[1] });
+    } else {
+      return { error: `Can't parse set "${tok}" — use weight x reps (155x5), weight x reps x sets (140x8x3), or bare reps (8)` };
+    }
+  }
+  return { sets };
+}
+
+function parsePlanItemLine(line, entry) {
+  const add = line.startsWith("+");
+  const body = add ? line.slice(1).trim() : line;
+  const ci = body.indexOf(":");
+  if (ci === -1) return { error: `Exercise line needs "Name: sets" — got "${line}"` };
+  const nameToken = body.slice(0, ci).trim();
+  const parsed = parsePlanSetTokens(body.slice(ci + 1).trim());
+  if (parsed.error) return parsed;
+  let name = nameToken;
+  if (add) {
+    name = resolveLibraryExercise(nameToken) || nameToken;
+  } else {
+    const w = WORKOUTS.find(x => x.name === entry.workout);
+    const all = [];
+    if (w) w.exercises.forEach(ex => ex.supersetExercises ? ex.supersetExercises.forEach(s => all.push(s.name)) : all.push(ex.name));
+    const exact = all.find(n => n.toLowerCase() === nameToken.toLowerCase());
+    const subs = all.filter(n => n.toLowerCase().includes(nameToken.toLowerCase()));
+    if (exact) name = exact;
+    else if (subs.length === 1) name = subs[0];
+    else return { error: `"${nameToken}" is not in ${entry.workout}${subs.length ? ` (ambiguous: ${subs.join(", ")})` : ""}. Prefix with + to add a new exercise.` };
+  }
+  return { item: { name, add: add || undefined, sets: parsed.sets } };
+}
+
+// Compact set-list display/serialization: equal consecutive weighted sets
+// collapse to WxRxN; reps-only sets never collapse (8x3 would read as 8 lb).
+function compressPlanSets(sets) {
+  const out = [];
+  let i = 0;
+  while (i < sets.length) {
+    let j = i;
+    while (j + 1 < sets.length && sets[j + 1].w === sets[i].w && sets[j + 1].r === sets[i].r) j++;
+    const n = j - i + 1;
+    const s = sets[i];
+    if (s.w != null) out.push(n > 1 ? `${s.w}x${s.r}x${n}` : `${s.w}x${s.r}`);
+    else out.push(Array(n).fill(String(s.r)).join(", "));
+    i = j + 1;
+  }
+  return out.join(", ");
+}
+
+function planEntryToText(e) {
+  const lines = [e.note ? `${e.workout} -- ${e.note}` : e.workout];
+  (e.items || []).forEach(it => lines.push(`  ${it.add ? "+ " : ""}${it.name}: ${compressPlanSets(it.sets)}`));
+  return lines.join("\n");
+}
+
 // Expected working-set count for a workout template (1/exercise on deload).
 function planExpectedWorkingSets(w, isDeload) {
   let n = 0;
@@ -202,6 +286,7 @@ function renderPlanCard() {
             ${first ? '<span style="font-size:9px;font-weight:800;color:#1d4ed8;opacity:0.7;letter-spacing:0.5px;font-family:ui-monospace,Menlo,monospace">UP NEXT</span>' : ''}
           </div>
           ${e.note ? `<div style="font-size:11.5px;color:#6b7280;line-height:1.45;margin-top:1px">${escapeHtml(e.note)}</div>` : ''}
+          ${(e.items && e.items.length) ? `<div style="font-size:10.5px;color:#9ca3af;font-family:ui-monospace,Menlo,monospace;line-height:1.5;margin-top:2px">${e.items.map(it => escapeHtml(`${it.add ? '+ ' : ''}${it.name} ${compressPlanSets(it.sets)}`)).join('<br>')}</div>` : ''}
         </div>
       </div>`;
   }).join("");
@@ -217,13 +302,13 @@ function renderPlanCard() {
 
 function renderPlanEditor() {
   const entries = parseWorkoutPlan(window.USER_SETTINGS || {});
-  const text = entries.map(e => e.note ? `${e.workout} -- ${e.note}` : e.workout).join("\n");
+  const text = entries.map(planEntryToText).join("\n");
   const names = WORKOUTS.filter(w => w.program).map(w => w.name).join(" · ");
   return `
     <div onclick="if(event.target===this)closePlanEditor()" style="position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px">
       <div style="background:white;border-radius:16px;padding:16px;width:100%;max-width:560px;max-height:85vh;display:flex;flex-direction:column;gap:10px">
         <span style="font-size:15px;font-weight:800;color:#111827">Edit plan</span>
-        <span style="font-size:11px;color:#6b7280;line-height:1.5">One workout per line, in order: <b>Workout name -- note</b>. The note shows on the home card and inside the session. Workouts: ${names}</span>
+        <span style="font-size:11px;color:#6b7280;line-height:1.5">One workout per line, in order: <b>Workout name -- note</b>. Indented lines prescribe exact sets the session pre-fills: <b>&nbsp;&nbsp;Bench: 155x4, 140x8x3</b> (weight x reps x sets). <b>+ Name</b> adds an exercise not in the template. Workouts: ${names}</span>
         <textarea id="planEditorText" spellcheck="false" style="width:100%;min-height:220px;resize:vertical;border:1px solid #e5e7eb;border-radius:10px;padding:10px;font-size:12.5px;line-height:1.5;font-family:ui-monospace,Menlo,monospace;color:#111827;outline:none;box-sizing:border-box">${escapeHtml(text)}</textarea>
         <div id="planEditorError" style="font-size:11px;color:#dc2626;display:none"></div>
         <div style="display:flex;gap:8px;justify-content:flex-end">
@@ -239,23 +324,38 @@ function closePlanEditor() { state.planEditorOpen = false; render(); }
 async function savePlanEditor() {
   const ta = document.getElementById("planEditorText");
   if (!ta) return;
+  const showError = (msg) => {
+    const err = document.getElementById("planEditorError");
+    if (err) { err.style.display = "block"; err.textContent = msg; }
+  };
   const prev = parseWorkoutPlan(window.USER_SETTINGS || {});
   const entries = [];
-  for (const line of ta.value.split("\n").map(l => l.trim()).filter(Boolean)) {
+  for (const raw of ta.value.split("\n")) {
+    if (!raw.trim()) continue;
+    // Indented line = exercise prescription for the workout above it.
+    if (/^\s/.test(raw)) {
+      if (!entries.length) { showError(`Exercise line "${raw.trim()}" has no workout line above it`); return; }
+      const entry = entries[entries.length - 1];
+      const res = parsePlanItemLine(raw.trim(), entry);
+      if (res.error) { showError(res.error); return; }
+      (entry.items = entry.items || []).push(res.item);
+      continue;
+    }
+    const line = raw.trim();
     const sepMatch = line.match(/\s+(--|—)\s+/);
     const token = sepMatch ? line.slice(0, sepMatch.index) : line;
     const note = sepMatch ? line.slice(sepMatch.index + sepMatch[0].length).trim() : "";
     const w = resolvePlanWorkout(token);
-    if (!w) {
-      const err = document.getElementById("planEditorError");
-      if (err) { err.style.display = "block"; err.textContent = `Unknown workout: "${token.trim()}"`; }
-      return;
-    }
-    // Keep the original added-timestamp for entries that survive an edit, so
-    // reconcile still sees sessions completed since they were first planned.
-    const kept = prev.find(p => p.workout === w.name && (p.note || "") === note && !entries.some(e => e.id === p.id));
-    entries.push(kept || { id: `p${Date.now()}-${entries.length}`, workout: w.name, note, added: new Date().toISOString() });
+    if (!w) { showError(`Unknown workout: "${token.trim()}"`); return; }
+    entries.push({ id: `p${Date.now()}-${entries.length}`, workout: w.name, note, added: new Date().toISOString() });
   }
+  // Keep the original id/added-timestamp for entries that survive an edit, so
+  // reconcile still sees sessions completed since they were first planned.
+  const sig = (e) => `${e.workout}|${e.note || ""}|${JSON.stringify(e.items || [])}`;
+  entries.forEach((e, i) => {
+    const kept = prev.find(p => sig(p) === sig(e) && !entries.some((e2, j) => j < i && e2.id === p.id));
+    if (kept) { e.id = kept.id; e.added = kept.added; }
+  });
   window.USER_SETTINGS = window.USER_SETTINGS || {};
   window.USER_SETTINGS.workout_plan = JSON.stringify(entries);
   state.planEditorOpen = false;
