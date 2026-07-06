@@ -78,6 +78,19 @@ function ExerciseCard({ exercise, supersetTag, embedded, rest, onRestAdd, onRest
         <p style={{ margin: "6px 0 0", color: T.muted, fontSize: 12, lineHeight: 1.4 }}>{exercise.note}</p>
       )}
 
+      {(() => { const dn = exercise.deload && (exercise.sets.find(s => s.deloadNormal) || {}).deloadNormal;
+        return dn ? (
+          <div style={{
+            display: "flex", alignItems: "baseline", gap: 8, padding: "7px 12px", marginTop: 10,
+            background: "rgba(251,191,36,0.07)", border: "1px solid rgba(251,191,36,0.3)", borderRadius: 10,
+          }}>
+            <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, fontFamily: T.mono, color: T.amber }}>DELOAD −20%</span>
+            <span style={{ fontFamily: T.mono, fontSize: 12, color: T.muted }}>
+              normal: {dn.weight != null ? `${dn.weight} lb × ` : ""}{dn.sets} set{dn.sets > 1 ? "s" : ""}
+            </span>
+          </div>
+        ) : null; })()}
+
 
 
       {hasVariants && (!embedded || showVariants) && (
