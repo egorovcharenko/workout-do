@@ -60,6 +60,18 @@ function ActiveSetBlock({ exercise, set, totalWork, totalWarmup, warmupPos, onPi
         )}
       </div>
 
+      {set.kind !== "warmup" && set.deloadNormal && (
+        <div style={{
+          display: "flex", alignItems: "baseline", gap: 8, padding: "7px 12px", marginBottom: 10,
+          background: "rgba(251,191,36,0.07)", border: "1px solid rgba(251,191,36,0.3)", borderRadius: 10,
+        }}>
+          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, fontFamily: T.mono, color: T.amber }}>DELOAD −20%</span>
+          <span style={{ fontFamily: T.mono, fontSize: 12, color: T.muted }}>
+            normal: {set.deloadNormal.weight != null ? `${set.deloadNormal.weight} lb × ` : ""}{set.deloadNormal.sets} set{set.deloadNormal.sets > 1 ? "s" : ""}
+          </span>
+        </div>
+      )}
+
       {hasLast && (
         <button
           onClick={onApplyLast}
