@@ -68,9 +68,11 @@
     const file = gifMap[name];
     if (!file) return fallback;
     
+    // The DB gifs are square with a white background; the media box isn't
+    // square, so contain letterboxes them — the bars must be white to blend.
     return `
-      <div style="display:flex;width:100%;height:100%;background:#090d16;align-items:center;justify-content:center;overflow:hidden">
-        <img src="${base}${file}" style="width:100%;height:100%;object-fit:contain;display:block;background:#090d16" />
+      <div style="display:flex;width:100%;height:100%;background:#fff;align-items:center;justify-content:center;overflow:hidden">
+        <img src="${base}${file}" style="width:100%;height:100%;object-fit:contain;display:block;background:#fff" />
       </div>
     `;
   };
