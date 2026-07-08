@@ -4,6 +4,11 @@ import { T, stageRank } from "@/lib/legacy/shared";
 // ─── file: workout-session-nav-chip.js ───
 
 function navSetDisplay(s, exercise) {
+  if (exercise.repsOnly) {
+    if (s.completed) return { repsOnly: true, reps: s.reps, state: "done", kind: s.kind };
+    if (s.active) return { repsOnly: true, reps: s.reps != null ? s.reps : s.lastReps, state: "current", kind: s.kind };
+    return { repsOnly: true, reps: s.lastReps != null ? s.lastReps : null, state: "upcoming", preview: true, kind: s.kind };
+  }
   if (exercise.stages) {
     const rank = (id) => stageRank(exercise.stages, id);
     const cur = rank(s.grip) > 0 ? `S${rank(s.grip)}` : null;
@@ -62,7 +67,9 @@ function SetChip({ d, k, onClick }) {
       fontStyle: d.preview ? "italic" : "normal", whiteSpace: "nowrap",
       cursor: onClick ? "pointer" : "default",
     }}>
-      {d.lb || "—"}<span style={{ color: box.xColor, fontWeight: 400, fontSize: 11 }}>×</span>{d.reps != null ? d.reps : "—"}
+      {d.repsOnly
+        ? (d.reps != null ? d.reps : "—")
+        : <>{d.lb || "—"}<span style={{ color: box.xColor, fontWeight: 400, fontSize: 11 }}>×</span>{d.reps != null ? d.reps : "—"}</>}
     </span>
   );
 }

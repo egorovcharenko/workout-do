@@ -72,7 +72,7 @@ function renderWorkoutCard(w, isSuggested, isOngoing, logged, expected, pct) {
   const rowHTML = ex => {
     const s = state.lastSession[`${ex.name}|working|1`] || state.lastSession[`${ex.name}|working|2`] || state.lastSession[`${ex.name}|working|3`];
     const weightVal = s ? (s.weight_lb || '—') : '—', repsVal = s ? (s.reps || '—') : '—';
-    const valLabel = s ? `${weightVal}lb × ${repsVal}` : '—';
+    const valLabel = !s ? '—' : ex.repsOnly ? `${repsVal} reps` : `${weightVal}lb × ${repsVal}`;
     return `
     <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;gap:6px">
       <span style="color:${isSuggested ? '#4b5563' : '#374151'};font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ex.name}</span>
@@ -235,11 +235,21 @@ function planEntryToText(e) {
 }
 
 // Expected working-set count for a workout template (1/exercise on deload).
-function planExpectedWorkingSets(w, isDeload) {
+// Skipped exercises are excluded, mirroring getExpectedSets in renderHome — a
+// finished session that skipped a lift logs fewer working sets than the raw
+// template, and the plan must still count it as done.
+function planExpectedWorkingSets(w, isDeload, skipped) {
   let n = 0;
   w.exercises.forEach(ex => {
-    const subs = ex.supersetExercises ? ex.supersetExercises.length : 1;
-    n += (isDeload ? 1 : ex.sets) * subs;
+    if (ex.supersetExercises) {
+      ex.supersetExercises.forEach(sub => {
+        if (skipped && skipped.has(sub.name)) return;
+        n += isDeload ? 1 : ex.sets;
+      });
+    } else {
+      if (skipped && skipped.has(ex.name)) return;
+      n += (isDeload ? 1 : ex.sets);
+    }
   });
   return n;
 }
@@ -260,8 +270,9 @@ async function reconcileWorkoutPlan() {
     let finished = !activeIds.has(sess.id);
     if (!finished) {
       const w = WORKOUTS.find(x => x.name === name);
+      const skipped = loadSkippedExercises(name, sess.date);
       const logged = (sess.sets || []).filter(x => x.reps && x.set_type !== "warmup").length;
-      finished = !!w && logged >= planExpectedWorkingSets(w, !!sess.is_deload);
+      finished = !!w && logged >= planExpectedWorkingSets(w, !!sess.is_deload, skipped);
     }
     if (!finished) continue;
     const ts = sess.started_at ? Date.parse(sess.started_at) : Date.parse(sess.date + "T23:59:59");

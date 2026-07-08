@@ -173,6 +173,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
                   isBandsOnly: isBandOnly,
                   bandAddon: official ? !!official.bandAddon : false,
                   assist: isAssist,
+                  repsOnly: official ? !!official.repsOnly : false,
                   isBarbell: official ? (official.equipment === "barbell" || official.name.includes("Barbell") || official.name === "Standing Overhead Press") : (name.toLowerCase().includes("barbell")),
                   equipment: official ? (official.equipment || null) : null,
                   sets: saved,
@@ -339,6 +340,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
               const s = done[done.length - 1];
               if (!s) return null;
               const bandSum = (s.bands || []).reduce((a, b) => a + b, 0);
+              if (m.e.repsOnly) return `${s.reps} reps`;
               let w; if (m.e.assist) w = bandSum ? `BW −${bandSum}` : "BW";
               else if (m.e.isBandsOnly) w = bandSum ? `${bandSum} lb band` : "band";
               else w = `${s.weight || 0} lb`;

@@ -35,13 +35,17 @@ function renderWorkoutSummaryCard() {
     });
   };
 
+  const _assist = (n) => n === "Pull-Ups" || n === "Dips" || n === "Dead Hang + Scap Pulls";
+  const _repsOnly = (n) => n === "Hanging Knee Raise";
+
   const exerciseSummary = {};
   (latest.sets || []).forEach(set => {
     if (set.set_type !== 'working' || !set.reps) return;
     const ex = set.exercise;
     const r = parseInt(set.reps) || 0;
     const w = parseFloat(set.weight_lb) || 0;
-    const vol = r * w;
+    // Reps-only rows carry no tonnage (older ones saved bodyweight in weight_lb).
+    const vol = _repsOnly(ex) ? 0 : r * w;
     addMus(ex, vol);
 
     if (!exerciseSummary[ex]) {
@@ -51,7 +55,7 @@ function renderWorkoutSummaryCard() {
     sum.totalVol += vol;
     sum.setsCount++;
     const est = calcSet1RM(ex, w, r, set.bands_json, set.grip);
-    const isAssist = ex === "Pull-Ups" || ex === "Dips" || ex === "Dead Hang + Scap Pulls" || ex === "Hanging Knee Raise";
+    const isAssist = ex === "Pull-Ups" || ex === "Dips" || ex === "Dead Hang + Scap Pulls";
     if (sum.best1RM === 0 && isAssist) sum.best1RM = -Infinity;
     if (est > sum.best1RM) {
       sum.bestW = w;
@@ -72,7 +76,7 @@ function renderWorkoutSummaryCard() {
   const historyData = sameWorkoutHistory.map(s => {
     let vol = 0;
     (s.sets || []).forEach(set => {
-      if (set.set_type === 'working' && set.reps) {
+      if (set.set_type === 'working' && set.reps && !_repsOnly(set.exercise)) {
         vol += (parseInt(set.reps) || 0) * (parseFloat(set.weight_lb) || 0);
       }
     });
@@ -80,7 +84,6 @@ function renderWorkoutSummaryCard() {
     return { date: s.date, volume: vol };
   });
 
-  const _assist = (n) => n === "Pull-Ups" || n === "Dips" || n === "Dead Hang + Scap Pulls" || n === "Hanging Knee Raise";
   const exList = Object.entries(exerciseSummary).map(([exName, sum]) => {
     const perSession = [];
     history.forEach(s => {
@@ -175,7 +178,8 @@ function renderWorkoutSummaryCard() {
     }));
     const poly = xy.map(c => `${c.x},${c.y}`).join(' ');
     const dots = xy.map((c, i) => {
-      const tip = `${mmdd(data[i].date)} · ${Math.round(data[i].value)} lb est 1RM`.replace(/'/g, "\\'");
+      const unit = _repsOnly(exName) ? 'reps' : 'lb est 1RM';
+      const tip = `${mmdd(data[i].date)} · ${Math.round(data[i].value)} ${unit}`.replace(/'/g, "\\'");
       const isLast = i === xy.length - 1;
       return `<circle cx="${c.x}" cy="${c.y}" r="${isLast ? 2 : 1.5}" fill="#a78bfa"/>`
         + `<circle cx="${c.x}" cy="${c.y}" r="7" fill="transparent" style="cursor:pointer"`
@@ -239,7 +243,9 @@ function renderWorkoutSummaryCard() {
         ${dt ? `<span style="min-width:36px;text-align:right;color:${dc};font-family:${MONO};font-size:12px;font-weight:800">${dt}</span>` : `<span style="width:36px"></span>`}
       </div>
     </div>
-    <div style="margin-top:3px;color:#6B7280;font-size:10.5px;font-family:${MONO}">Top <span style="color:#D1D5DB;font-weight:700">${fmtW(e.sum.bestW)}×${e.sum.bestR}</span> · 1RM ${Math.round(e.sum.best1RM)} · ${e.sum.setsCount} sets</div>
+    <div style="margin-top:3px;color:#6B7280;font-size:10.5px;font-family:${MONO}">${_repsOnly(e.exName)
+      ? `Top <span style="color:#D1D5DB;font-weight:700">${e.sum.bestR} reps</span> · ${e.sum.setsCount} sets`
+      : `Top <span style="color:#D1D5DB;font-weight:700">${fmtW(e.sum.bestW)}×${e.sum.bestR}</span> · 1RM ${Math.round(e.sum.best1RM)} · ${e.sum.setsCount} sets`}</div>
   </div>`;
   }).join('');
 

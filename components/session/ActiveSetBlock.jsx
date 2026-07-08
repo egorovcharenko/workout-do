@@ -19,7 +19,9 @@ function ActiveSetBlock({ exercise, set, totalWork, totalWarmup, warmupPos, onPi
   const lastTotal = isBW ? Math.max(0, lastBaseW - lastBandTotal) : (lastBaseW + lastBandTotal);
 
   const stages = exercise.stages || null;
-  const matchesLast = stages
+  const matchesLast = exercise.repsOnly
+    ? set.lastReps != null
+    : stages
     ? (set.lastReps != null && set.grip === set.lastGrip)
     : (set.lastReps != null) &&
       baseW === lastBaseW &&
@@ -77,13 +79,19 @@ function ActiveSetBlock({ exercise, set, totalWork, totalWarmup, warmupPos, onPi
           <div style={{ display: "flex", alignItems: "baseline", gap: 8, minWidth: 0 }}>
             <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, fontFamily: T.mono, opacity: 0.75 }}>LAST</span>
             <span style={{ fontFamily: T.mono, fontSize: 14, fontWeight: 700, color: "#DBEAFE" }}>
-              {stages ? (stageLabel(stages, set.lastGrip) || "—") : (lastBaseW || "—")}
-              {!stages && lastBands.length > 0 && (
-                <span style={{ color: T.bands }}> {isBW ? "−" : "+"} {lastBands.join("+")}</span>
+              {exercise.repsOnly ? (
+                <>{set.lastReps || "—"}<span style={{ color: T.faint, fontWeight: 500 }}> reps</span></>
+              ) : (
+                <>
+                  {stages ? (stageLabel(stages, set.lastGrip) || "—") : (lastBaseW || "—")}
+                  {!stages && lastBands.length > 0 && (
+                    <span style={{ color: T.bands }}> {isBW ? "−" : "+"} {lastBands.join("+")}</span>
+                  )}
+                  <span style={{ color: T.faint, fontWeight: 500 }}> × </span>
+                  {set.lastReps || "—"}
+                  {!stages && isBW && set.lastGrip && <span style={{ color: T.muted, fontWeight: 500 }}> · {GRIP_LABELS[set.lastGrip]?.label || set.lastGrip}</span>}
+                </>
               )}
-              <span style={{ color: T.faint, fontWeight: 500 }}> × </span>
-              {set.lastReps || "—"}
-              {!stages && isBW && set.lastGrip && <span style={{ color: T.muted, fontWeight: 500 }}> · {GRIP_LABELS[set.lastGrip]?.label || set.lastGrip}</span>}
             </span>
             {lastBandTotal > 0 && (
               <span style={{ color: T.faint, fontFamily: T.mono, fontSize: 11 }}>({lastTotal}lb)</span>
@@ -113,7 +121,7 @@ function ActiveSetBlock({ exercise, set, totalWork, totalWarmup, warmupPos, onPi
         />
       )}
 
-      {!exercise.isBandsOnly && !stages && (
+      {!exercise.isBandsOnly && !stages && !exercise.repsOnly && (
         <WeightStepper
           value={baseW}
           last={lastBaseW || null}

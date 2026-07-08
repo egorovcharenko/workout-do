@@ -108,7 +108,8 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
   Object.values(muscleSets14d).forEach(arr => arr.sort((a, b) => a.date.localeCompare(b.date)));
 
   const stat = statHistory || {};
-  const lookupIsAssist = exercise.name === "Pull-Ups" || exercise.name === "Dips" || exercise.name === "Dead Hang + Scap Pulls" || exercise.name === "Hanging Knee Raise";
+  const isRepsOnly = !!exercise.repsOnly;
+  const lookupIsAssist = exercise.name === "Pull-Ups" || exercise.name === "Dips" || exercise.name === "Dead Hang + Scap Pulls";
   const histByDate = {};
   (history || []).forEach(sess => {
     if (!sess.date) return;
@@ -128,7 +129,11 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
       const displayW = lookupIsAssist ? -bandSum : w;
       if (displayW > mw) mw = displayW;
       if (r > mr) mr = r;
-      if (w > 0 && r > 0) {
+      if (isRepsOnly) {
+        // reps-only: 1RM slot holds reps; weight/volume are meaningless
+        // (older rows saved bodyweight in weight_lb).
+        if (r > 0 && orm > mo) mo = orm;
+      } else if (w > 0 && r > 0) {
         if (orm > mo) mo = orm;
         sv += w * r;
       }
@@ -158,6 +163,10 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
             : exercise.bandAddon ? (s.weight || 0) + bs
             : (s.weight || 0);
     const r = parseInt(s.reps) || 0;
+    if (isRepsOnly) {
+      if (r > 0 && r > todayOrm) todayOrm = r;
+      return;
+    }
     if (r > 0 && w > 0) {
       const isAssist = exercise.assist;
       let o;
@@ -210,12 +219,13 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
 
       <Section label="PROGRESS · OVER LAST 30 DAYS">
         <Sparkline exerciseName={exercise.name} data={ormHist} valueKey="orm" color="#60A5FA"
-          label={exercise.stages ? "STAGE" : "1RM EST"}
+          label={exercise.stages ? "STAGE" : isRepsOnly ? "TOP REPS" : "1RM EST"}
           fmt={exercise.stages
             ? (v => { const d = decodeStageScore(v); return `S${d.stage} · ${d.reps} reps`; })
+            : isRepsOnly ? (v => `${Math.round(v)} reps`)
             : (v => `${Math.round(v)} lb`)}
           showTip={showTip} hideTip={hideTip} />
-        <Sparkline exerciseName={exercise.name} data={volHist} valueKey="vol" color="#34D399" label="VOLUME" fmt={v => `${Math.round(v).toLocaleString()} lb`} showTip={showTip} hideTip={hideTip} />
+        {!isRepsOnly && <Sparkline exerciseName={exercise.name} data={volHist} valueKey="vol" color="#34D399" label="VOLUME" fmt={v => `${Math.round(v).toLocaleString()} lb`} showTip={showTip} hideTip={hideTip} />}
       </Section>
 
       {(primaryList.length > 0 || secondaryList.length > 0) && (
@@ -252,12 +262,12 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
 
       {hasPRs && (
         <Section label="PRS">
-          {(exercise.assist ? bestOrm !== -Infinity : bestOrm > 0) && (
+          {!isRepsOnly && (exercise.assist ? bestOrm !== -Infinity : bestOrm > 0) && (
             exercise.stages
               ? <KV k="Best stage" v={(() => { const d = decodeStageScore(bestOrm); const st = exercise.stages[d.stage - 1]; return `${st ? st.label : `S${d.stage}`} × ${d.reps}`; })()} />
               : <KV k="1RM est" v={`${Math.round(bestOrm)} lb`} />
           )}
-          {!exercise.stages && (exercise.assist ? bestWt !== -Infinity : bestWt > 0) && <KV k="Top weight" v={`${bestWt} lb`} />}
+          {!isRepsOnly && !exercise.stages && (exercise.assist ? bestWt !== -Infinity : bestWt > 0) && <KV k="Top weight" v={`${bestWt} lb`} />}
           {bestReps > 0 && <KV k="Top reps" v={String(bestReps)} />}
           {bestVol > 0 && <KV k="Top volume" v={`${bestVol.toLocaleString()} lb`} />}
         </Section>

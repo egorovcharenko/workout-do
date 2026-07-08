@@ -56,18 +56,22 @@ function buildMotivatePayload(exercise, sid, sessionDate, history, statHistory) 
     );
     let histMaxWt = 0, histMaxReps = 0, histMaxOrm = 0;
     const histByDate = {};
+    // Reps-only: older rows saved bodyweight in weight_lb, so weight/volume
+    // history is meaningless (new rows save 0) — keep only reps and the
+    // reps-based 1RM score, or the trend reads as a permanent volume crash.
+    const repsOnly = !!exercise.repsOnly;
     histSessions.forEach(sess => {
       let mw = 0, mr = 0, mo = 0, sv = 0;
       sess.sets.forEach(st => {
         if (st.exercise !== subName || st.set_type !== 'working') return;
         const w = +st.weight_lb || 0;
         const r = parseInt(st.reps) || 0;
-        if (w > mw) mw = w; if (mw > histMaxWt) histMaxWt = mw;
+        if (!repsOnly) { if (w > mw) mw = w; if (mw > histMaxWt) histMaxWt = mw; }
         if (r > mr) mr = r; if (mr > histMaxReps) histMaxReps = mr;
           const o = calcSet1RM(subName, w, r, st.bands_json, st.grip);
           if (o > mo) mo = o;
           if (mo > histMaxOrm) histMaxOrm = mo;
-          sv += w * r;
+          if (!repsOnly) sv += w * r;
       });
       histByDate[sess.date] = { date: sess.date, orm: mo, wt: mw, reps: mr, vol: sv };
     });
@@ -103,6 +107,7 @@ function buildMotivatePayload(exercise, sid, sessionDate, history, statHistory) 
     const curReps = workingSets.reduce((m, s) => Math.max(m, parseInt(s.reps) || 0), 0);
     const curOrm  = workingSets.reduce((m, s) => {
       const reps = parseInt(s.reps) || 0;
+      if (exercise.repsOnly) return reps > 0 ? Math.max(m, reps) : m;
       const bs = (s.bands || []).reduce((a, b) => a + b, 0);
       const w = exercise.assist ? Math.max(0, (s.bodyweight || 0) - bs)
               : exercise.isBandsOnly ? bs

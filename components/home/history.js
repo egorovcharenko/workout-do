@@ -32,10 +32,15 @@ function renderSessionList() {
   };
 
   const assistExerciseNames = new Set();
+  const repsOnlyExerciseNames = new Set();
   WORKOUTS.forEach(w => {
     w.exercises.forEach(ex => {
       if (ex.assist) assistExerciseNames.add(ex.name);
-      if (ex.supersetExercises) ex.supersetExercises.forEach(s => { if (s.assist) assistExerciseNames.add(s.name); });
+      if (ex.repsOnly) repsOnlyExerciseNames.add(ex.name);
+      if (ex.supersetExercises) ex.supersetExercises.forEach(s => {
+        if (s.assist) assistExerciseNames.add(s.name);
+        if (s.repsOnly) repsOnlyExerciseNames.add(s.name);
+      });
     });
   });
 
@@ -44,7 +49,9 @@ function renderSessionList() {
   [...history].reverse().forEach(s => {
     let vol = 0;
     s.sets.forEach(st => {
-      if (st.set_type === 'working') vol += (st.weight_lb || 0) * (parseInt(st.reps) || 0);
+      // Reps-only rows carry no tonnage; older ones saved bodyweight in
+      // weight_lb, which would inflate the trend against new zero-weight rows.
+      if (st.set_type === 'working' && !repsOnlyExerciseNames.has(st.exercise)) vol += (st.weight_lb || 0) * (parseInt(st.reps) || 0);
     });
     if (!workoutVolTrend[s.workout_name]) workoutVolTrend[s.workout_name] = [];
     workoutVolTrend[s.workout_name].push(vol);
@@ -92,7 +99,7 @@ function renderSessionList() {
         byEx[st.exercise].push(st);
         if (st.set_type === "working") {
           const r = parseInt(st.reps) || 0;
-          const w = st.weight_lb || 0;
+          const w = repsOnlyExerciseNames.has(st.exercise) ? 0 : (st.weight_lb || 0);
           totalReps += r;
           totalVol += w * r;
         }
@@ -134,7 +141,7 @@ function renderSessionList() {
             const subSummaries = subNames.map(n => {
               const ws = (byEx[n] || []).filter(st => st.set_type === "working");
               const reps = ws.map(st => parseInt(st.reps) || 0).filter(r => r > 0).join('·');
-              const maxW = Math.max(0, ...ws.map(st => st.weight_lb || 0));
+              const maxW = repsOnlyExerciseNames.has(n) ? 0 : Math.max(0, ...ws.map(st => st.weight_lb || 0));
               const subDur = durs[n] ? ` (${Math.round(durs[n]/60)}m)` : '';
               return `<span style="font-size:10px;color:#6b7280;font-family:monospace">${n.split(' ').pop()}${subDur}: ${reps}${maxW > 0 ? ` @ ${maxW}lb` : ''}</span>`;
             }).join('<br>');
@@ -151,7 +158,7 @@ function renderSessionList() {
           seen.add(ex);
           const workingSets = sets.filter(st => st.set_type === "working");
           if (workingSets.length === 0) return;
-          const maxWeight = Math.max(...workingSets.map(st => st.weight_lb || 0));
+          const maxWeight = repsOnlyExerciseNames.has(ex) ? 0 : Math.max(...workingSets.map(st => st.weight_lb || 0));
           const repsList = workingSets.map(st => parseInt(st.reps) || 0).filter(r => r > 0);
           const weightStr = maxWeight > 0 ? `@ ${maxWeight}lb` : "";
           const repsDisplay = repsList.join('·');
@@ -183,7 +190,7 @@ function renderSessionList() {
       s.sets.forEach(st => {
         if (st.set_type !== 'working') return;
         const r = parseInt(st.reps) || 0;
-        const wt = st.weight_lb || 0;
+        const wt = repsOnlyExerciseNames.has(st.exercise) ? 0 : (st.weight_lb || 0);
         if (r <= 0 || wt <= 0) return;
         const m = EXERCISE_MUSCLES[st.exercise];
         if (!m) return;
@@ -217,7 +224,8 @@ function renderSessionList() {
           const m = {};
           sets.forEach(st => {
             if (st.set_type !== 'working') return;
-            const isAssist = st.exercise === "Pull-Ups" || st.exercise === "Dips" || st.exercise === "Dead Hang + Scap Pulls" || st.exercise === "Hanging Knee Raise";
+            const isAssist = st.exercise === "Pull-Ups" || st.exercise === "Dips" || st.exercise === "Dead Hang + Scap Pulls";
+            const isRepsOnly = st.exercise === "Hanging Knee Raise";
             if (!m[st.exercise]) m[st.exercise] = { vol: 0, reps: 0, maxW: isAssist ? -Infinity : 0, best1RM: -Infinity };
             const r = parseInt(st.reps) || 0;
             const w = st.weight_lb || 0;
@@ -228,11 +236,11 @@ function renderSessionList() {
                 if (Array.isArray(b)) bandSum = b.reduce((a, x) => a + (+x || 0), 0);
               } catch(e){}
             }
-            m[st.exercise].vol += w * r;
+            m[st.exercise].vol += isRepsOnly ? 0 : w * r;
             m[st.exercise].reps += r;
-            const displayW = isAssist ? -bandSum : w;
+            const displayW = isRepsOnly ? 0 : isAssist ? -bandSum : w;
             m[st.exercise].maxW = Math.max(m[st.exercise].maxW, displayW);
-            if (w > 0 && r > 0) m[st.exercise].best1RM = Math.max(m[st.exercise].best1RM, calcSet1RM(st.exercise, w, r, st.bands_json, st.grip));
+            if ((isRepsOnly || w > 0) && r > 0) m[st.exercise].best1RM = Math.max(m[st.exercise].best1RM, calcSet1RM(st.exercise, w, r, st.bands_json, st.grip));
           });
           return m;
         }
@@ -243,11 +251,12 @@ function renderSessionList() {
           const prev = prevByEx[ex];
           if (!prev) return;
           const shortName = ex.split(' ').pop();
-          const isAssist = ex === "Pull-Ups" || ex === "Dips" || ex === "Dead Hang + Scap Pulls" || ex === "Hanging Knee Raise";
+          const isAssist = ex === "Pull-Ups" || ex === "Dips" || ex === "Dead Hang + Scap Pulls";
+          const isRepsOnly = ex === "Hanging Knee Raise";
           const hasPrev = isAssist ? prev.best1RM > -Infinity : prev.best1RM > 0;
           if (cur.best1RM > prev.best1RM && hasPrev) {
             const diff = Math.round(cur.best1RM - prev.best1RM);
-            if (diff > 0) { prs.push(`💪 ${shortName}: +${diff}lb e1RM`); return; }
+            if (diff > 0) { prs.push(isRepsOnly ? `💪 ${shortName}: +${diff} reps` : `💪 ${shortName}: +${diff}lb e1RM`); return; }
           }
           if (cur.maxW > prev.maxW) {
             prs.push(`🏆 ${shortName}: +${cur.maxW - prev.maxW}lb weight`);

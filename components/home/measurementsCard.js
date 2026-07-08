@@ -79,7 +79,8 @@ function renderMeasurementsCard() {
       if (st.set_type !== 'working' || !st.reps) return;
       const w = parseFloat(st.weight_lb) || 0;
       const r = parseInt(st.reps) || 0;
-      if (w <= 0 || r <= 0) return;
+      const repsOnly = st.exercise === 'Hanging Knee Raise';
+      if ((w <= 0 && !repsOnly) || r <= 0) return;
       const orm = calcSet1RM(st.exercise, w, r, st.bands_json, st.grip);
       if (!exerciseDates[st.exercise]) exerciseDates[st.exercise] = {};
       if (exerciseDates[st.exercise][sess.date] === undefined || orm > exerciseDates[st.exercise][sess.date]) {

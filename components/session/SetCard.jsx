@@ -31,7 +31,7 @@ function SetCard({ s, idx, exercise, onReopenSet }) {
   // stage rank first, then reps.
   const curRank = stages ? stageRank(stages, s.grip || s.lastGrip) : 0;
   const lastRank = stages ? stageRank(stages, s.lastGrip) : 0;
-  const wDelta = stages ? (lastRank > 0 ? curRank - lastRank : 0) : totalLb - prev;
+  const wDelta = exercise.repsOnly ? 0 : stages ? (lastRank > 0 ? curRank - lastRank : 0) : totalLb - prev;
   const rDelta = s.lastReps != null && s.reps != null ? s.reps - s.lastReps : 0;
   const isFlat = wDelta === 0 && rDelta === 0;
   const isDown = wDelta < 0 || (wDelta === 0 && rDelta < 0);
@@ -73,6 +73,14 @@ function SetCard({ s, idx, exercise, onReopenSet }) {
         const isPreview = s.reps == null && s.lastReps != null;
         const repText = s.reps ?? s.lastReps ?? "—";
         const repColor = isPreview ? T.muted : (s.completed || isCurrent) ? T.strong : T.faint;
+        if (exercise.repsOnly) {
+          return (
+            <div style={{ display: "flex", alignItems: "baseline", gap: 3, fontFamily: T.mono }}>
+              <span style={{ color: repColor, fontSize: 16, fontWeight: 700, letterSpacing: -0.3, fontStyle: isPreview ? "italic" : "normal" }}>{repText}</span>
+              <span style={{ color: T.disabled, fontSize: 10 }}>reps</span>
+            </div>
+          );
+        }
         return (
           <div style={{ display: "flex", alignItems: "baseline", gap: 2, fontFamily: T.mono }}>
             <span style={{ color: (s.completed || isCurrent) ? T.strong : T.faint, fontSize: 16, fontWeight: 700, letterSpacing: -0.3 }}>{stages ? (curRank > 0 ? `S${curRank}` : "—") : totalLb}</span>

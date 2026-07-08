@@ -68,6 +68,7 @@ const SL_EXERCISE_MAP = {
 // Effective lifted weight in lb for one set, mirroring serializeForSave().
 function _setWeightLb(ex, s) {
   const bandSum = (s.bands || []).reduce((a, b) => a + b, 0);
+  if (ex.repsOnly) return 0; // reps-only → bodyweight movement, no added weight
   if (ex.assist) return 0; // assisted/bodyweight → log as bodyweight (0 added) on SL
   if (ex.isBandsOnly) return bandSum;
   if (ex.bandAddon) return (s.weight || 0) + bandSum;

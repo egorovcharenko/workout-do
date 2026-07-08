@@ -26,7 +26,7 @@ function Sparkline({ exerciseName, data, valueKey, color, label, fmt, showTip, h
     if (day) day.value = +d[valueKey] || 0;
   });
 
-  const isAssist = exerciseName === "Pull-Ups" || exerciseName === "Dips" || exerciseName === "Dead Hang + Scap Pulls" || exerciseName === "Hanging Knee Raise";
+  const isAssist = exerciseName === "Pull-Ups" || exerciseName === "Dips" || exerciseName === "Dead Hang + Scap Pulls";
   const isValidVal = (v) => v != null && (isAssist ? v > -1000 : v > 0);
 
   const historicalVals = days.filter(d => isValidVal(d.value)).map(d => d.value);
