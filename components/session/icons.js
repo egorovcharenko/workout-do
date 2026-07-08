@@ -7,9 +7,9 @@
   
   const gifMap = {
     // Core Exercises
-    "Pull-Ups": "lats/assisted-pull-up.gif",
+    "Pull-Ups": "lats/pull-up.gif",
     "Band Bicep Curls": "biceps/band-alternating-biceps-curl.gif",
-    "Band Romanian Deadlift": "glutes/dumbbell-romanian-deadlift.gif",
+    "Band Romanian Deadlift": "glutes/band-stiff-leg-deadlift.gif",
     "Band Row": "upper-back/band-one-arm-standing-low-row.gif",
     "Band Squat": "glutes/band-squat.gif",
     "Band Torso Rotation": "abs/band-horizontal-pallof-press.gif",
@@ -24,8 +24,8 @@
     "Cable Torso Rotation": "abs/cable-twist.gif",
     // No dragon flag in the gif DB — bench lying leg raise is the closest.
     "Dragon Fly Progression": "abs/lying-leg-raise-flat-bench.gif",
-    "Calf Raises": "calves/barbell-standing-calf-raise.gif",
-    "Dips": "triceps/weighted-tricep-dips.gif",
+    "Calf Raises": "calves/dumbbell-standing-calf-raise.gif",
+    "Dips": "triceps/triceps-dip.gif",
     "Dumbbell Bent-Over Rows": "upper-back/dumbbell-bent-over-row.gif",
     "Dumbbell Bicep Curls": "biceps/dumbbell-alternate-biceps-curl.gif",
     "Dumbbell Flat Bench Press": "pectorals/dumbbell-bench-press.gif",
@@ -36,19 +36,19 @@
     "Cable Face Pulls": "delts/cable-standing-rear-delt-row-with-rope.gif",
     "Face Pulls": "delts/cable-standing-rear-delt-row-with-rope.gif",
     "Goblet Squat": "glutes/kettlebell-goblet-squat.gif",
-    "Hanging Knee Raise": "abs/assisted-hanging-knee-raise-with-throw-down.gif",
+    "Hanging Knee Raise": "abs/hanging-leg-hip-raise.gif",
     "Incline Barbell Press": "pectorals/barbell-incline-bench-press.gif",
     "Incline DB Curls": "biceps/dumbbell-incline-biceps-curl.gif",
     "Incline Dumbbell Press": "pectorals/dumbbell-incline-bench-press.gif",
     "Lat Pulldown": "lats/cable-bar-lateral-pulldown.gif",
     "Lunges": "glutes/dumbbell-lunge.gif",
     "Overhead Dumbbell Press": "delts/dumbbell-standing-overhead-press.gif",
-    "Overhead Tricep Extension": "triceps/cable-high-pulley-overhead-tricep-extension.gif",
+    "Overhead Tricep Extension": "triceps/dumbbell-standing-triceps-extension.gif",
     "Pallof Press": "abs/band-horizontal-pallof-press.gif",
     "Reverse Flyes": "delts/dumbbell-reverse-fly.gif",
     "Seated Overhead Press": "delts/barbell-seated-overhead-press.gif",
     "Single-Arm Cable Lateral Raise": "delts/cable-lateral-raise.gif",
-    "Single-Arm Dumbbell Rows": "upper-back/one-arm-dumbbell-row.gif",
+    "Single-Arm Dumbbell Rows": "upper-back/dumbbell-one-arm-bent-over-row.gif",
     "Single-Leg DB RDL": "glutes/dumbbell-single-leg-deadlift.gif",
     // "close-grip military press" is the DB's standard shoulder-width barbell OHP.
     "Standing Overhead Press": "delts/barbell-standing-close-grip-military-press.gif"
