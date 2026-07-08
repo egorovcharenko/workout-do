@@ -22,6 +22,8 @@
     "Bent-Over Barbell Rows": "upper-back/barbell-bent-over-row.gif",
     "Bulgarian Split Squat": "quads/dumbbell-single-leg-split-squat.gif",
     "Cable Torso Rotation": "abs/cable-twist.gif",
+    // No dragon flag in the gif DB — bench lying leg raise is the closest.
+    "Dragon Fly Progression": "abs/lying-leg-raise-flat-bench.gif",
     "Calf Raises": "calves/barbell-standing-calf-raise.gif",
     "Dips": "triceps/weighted-tricep-dips.gif",
     "Dumbbell Bent-Over Rows": "upper-back/dumbbell-bent-over-row.gif",
@@ -38,6 +40,7 @@
     "Incline Barbell Press": "pectorals/barbell-incline-bench-press.gif",
     "Incline DB Curls": "biceps/dumbbell-incline-biceps-curl.gif",
     "Incline Dumbbell Press": "pectorals/dumbbell-incline-bench-press.gif",
+    "Lat Pulldown": "lats/cable-bar-lateral-pulldown.gif",
     "Lunges": "glutes/dumbbell-lunge.gif",
     "Overhead Dumbbell Press": "delts/dumbbell-standing-overhead-press.gif",
     "Overhead Tricep Extension": "triceps/cable-high-pulley-overhead-tricep-extension.gif",
@@ -47,7 +50,8 @@
     "Single-Arm Cable Lateral Raise": "delts/cable-lateral-raise.gif",
     "Single-Arm Dumbbell Rows": "upper-back/one-arm-dumbbell-row.gif",
     "Single-Leg DB RDL": "glutes/dumbbell-single-leg-deadlift.gif",
-    "Standing Overhead Press": "delts/dumbbell-standing-overhead-press.gif"
+    // "close-grip military press" is the DB's standard shoulder-width barbell OHP.
+    "Standing Overhead Press": "delts/barbell-standing-close-grip-military-press.gif"
   };
 
   const fallback = `
