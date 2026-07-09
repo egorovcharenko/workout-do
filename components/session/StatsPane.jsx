@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { T, localDate } from "@/lib/legacy/shared";
-import { EXERCISE_MUSCLES, getMuscleImpact, calcSet1RM, decodeStageScore } from "@/lib/legacy/standards";
+import { EXERCISE_MUSCLES, getMuscleImpact, calcSet1RM, decodeStageScore, isAssistExercise } from "@/lib/legacy/standards";
 import { Sparkline } from "./Sparkline";
 
 // ─── file: workout-session-stats-pane.js ───
@@ -109,7 +109,7 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
 
   const stat = statHistory || {};
   const isRepsOnly = !!exercise.repsOnly;
-  const lookupIsAssist = exercise.name === "Pull-Ups" || exercise.name === "Dips" || exercise.name === "Dead Hang + Scap Pulls";
+  const lookupIsAssist = isAssistExercise(exercise.name);
   const histByDate = {};
   (history || []).forEach(sess => {
     if (!sess.date) return;

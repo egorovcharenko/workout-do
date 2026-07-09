@@ -10,6 +10,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/client";
+import { isAssistExercise, isRepsOnlyExercise } from "@/lib/legacy/standards";
 import { log } from "@/lib/log";
 import type {
   HintMap,
@@ -246,7 +247,7 @@ export async function get1RMHistory(uid: string): Promise<{
       push(repsRaw, key, reps);
 
       // Reps-only exercise: graded on reps (mirrors calcSet1RM).
-      if (set.exercise === "Hanging Knee Raise") {
+      if (isRepsOnlyExercise(set.exercise)) {
         push(ormRaw, key, reps);
         continue;
       }
@@ -258,7 +259,7 @@ export async function get1RMHistory(uid: string): Promise<{
       }
       const w = set.weight_lb ? Number(set.weight_lb) : 0;
       if (w > 0) {
-        const isAssist = ["Pull-Ups", "Dips", "Dead Hang + Scap Pulls"].includes(set.exercise);
+        const isAssist = isAssistExercise(set.exercise);
         let bandSum = 0;
         if (set.bands_json) {
           try {

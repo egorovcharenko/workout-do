@@ -4,6 +4,8 @@ import {
   EXERCISE_MUSCLES,
   getMuscleImpact,
   calcSet1RM,
+  isAssistExercise,
+  isRepsOnlyExercise,
 } from "@/lib/legacy/standards";
 import { state } from "./state";
 import { MUSCLE_GROUPS } from "./shell";
@@ -35,8 +37,8 @@ function renderWorkoutSummaryCard() {
     });
   };
 
-  const _assist = (n) => n === "Pull-Ups" || n === "Dips" || n === "Dead Hang + Scap Pulls";
-  const _repsOnly = (n) => n === "Hanging Knee Raise";
+  const _assist = isAssistExercise;
+  const _repsOnly = isRepsOnlyExercise;
 
   const exerciseSummary = {};
   (latest.sets || []).forEach(set => {
@@ -55,7 +57,7 @@ function renderWorkoutSummaryCard() {
     sum.totalVol += vol;
     sum.setsCount++;
     const est = calcSet1RM(ex, w, r, set.bands_json, set.grip);
-    const isAssist = ex === "Pull-Ups" || ex === "Dips" || ex === "Dead Hang + Scap Pulls";
+    const isAssist = _assist(ex);
     if (sum.best1RM === 0 && isAssist) sum.best1RM = -Infinity;
     if (est > sum.best1RM) {
       sum.bestW = w;

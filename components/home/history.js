@@ -6,6 +6,8 @@ import {
   EXERCISE_MUSCLES,
   getMuscleImpact,
   calcSet1RM,
+  isAssistExercise,
+  isRepsOnlyExercise,
 } from "@/lib/legacy/standards";
 import { state } from "./state";
 import { formatTime, MUSCLE_GROUPS } from "./shell";
@@ -224,8 +226,8 @@ function renderSessionList() {
           const m = {};
           sets.forEach(st => {
             if (st.set_type !== 'working') return;
-            const isAssist = st.exercise === "Pull-Ups" || st.exercise === "Dips" || st.exercise === "Dead Hang + Scap Pulls";
-            const isRepsOnly = st.exercise === "Hanging Knee Raise";
+            const isAssist = isAssistExercise(st.exercise);
+            const isRepsOnly = isRepsOnlyExercise(st.exercise);
             if (!m[st.exercise]) m[st.exercise] = { vol: 0, reps: 0, maxW: isAssist ? -Infinity : 0, best1RM: -Infinity };
             const r = parseInt(st.reps) || 0;
             const w = st.weight_lb || 0;
@@ -251,8 +253,8 @@ function renderSessionList() {
           const prev = prevByEx[ex];
           if (!prev) return;
           const shortName = ex.split(' ').pop();
-          const isAssist = ex === "Pull-Ups" || ex === "Dips" || ex === "Dead Hang + Scap Pulls";
-          const isRepsOnly = ex === "Hanging Knee Raise";
+          const isAssist = isAssistExercise(ex);
+          const isRepsOnly = isRepsOnlyExercise(ex);
           const hasPrev = isAssist ? prev.best1RM > -Infinity : prev.best1RM > 0;
           if (cur.best1RM > prev.best1RM && hasPrev) {
             const diff = Math.round(cur.best1RM - prev.best1RM);

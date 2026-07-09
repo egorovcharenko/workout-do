@@ -1,5 +1,6 @@
 "use client";
 import { T, localDate } from "@/lib/legacy/shared";
+import { isAssistExercise } from "@/lib/legacy/standards";
 
 // ─── file: workout-session-sparkline.js ───
 
@@ -26,7 +27,7 @@ function Sparkline({ exerciseName, data, valueKey, color, label, fmt, showTip, h
     if (day) day.value = +d[valueKey] || 0;
   });
 
-  const isAssist = exerciseName === "Pull-Ups" || exerciseName === "Dips" || exerciseName === "Dead Hang + Scap Pulls";
+  const isAssist = isAssistExercise(exerciseName);
   const isValidVal = (v) => v != null && (isAssist ? v > -1000 : v > 0);
 
   const historicalVals = days.filter(d => isValidVal(d.value)).map(d => d.value);

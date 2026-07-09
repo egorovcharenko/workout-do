@@ -1,6 +1,6 @@
 // ─── file: workout-ui-home-measurements-card.js ───
 
-import { EXERCISE_MUSCLES, calcSet1RM } from "@/lib/legacy/standards";
+import { EXERCISE_MUSCLES, calcSet1RM, isRepsOnlyExercise } from "@/lib/legacy/standards";
 import { state } from "./state";
 import {
   renderMeasurementSparkline,
@@ -79,7 +79,7 @@ function renderMeasurementsCard() {
       if (st.set_type !== 'working' || !st.reps) return;
       const w = parseFloat(st.weight_lb) || 0;
       const r = parseInt(st.reps) || 0;
-      const repsOnly = st.exercise === 'Hanging Knee Raise';
+      const repsOnly = isRepsOnlyExercise(st.exercise);
       if ((w <= 0 && !repsOnly) || r <= 0) return;
       const orm = calcSet1RM(st.exercise, w, r, st.bands_json, st.grip);
       if (!exerciseDates[st.exercise]) exerciseDates[st.exercise] = {};
@@ -267,7 +267,7 @@ function renderMeasurementsCard() {
 
       const renderedExercises = g.exercises.map(ex => {
         const color = exColors[ex.name];
-        const isRepsOnly = ex.name === 'Hanging Knee Raise';
+        const isRepsOnly = isRepsOnlyExercise(ex.name);
         const unit = isRepsOnly ? 'reps' : 'lb';
         const sign = ex.diffLb > 0 ? '+' : '';
         const diffColor = ex.diffLb > 0 ? '#10b981' : ex.diffLb < 0 ? '#ef4444' : '#9ca3af';
