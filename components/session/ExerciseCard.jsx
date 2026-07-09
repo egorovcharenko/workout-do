@@ -256,10 +256,10 @@ function ExerciseCard({ exercise, supersetTag, embedded, rest, onRestAdd, onRest
           onApplyLast={() => {
             if (exercise.mode === "bodyweight") {
               onPickBodyweight(activeIdx, activeSet.lastBodyweight || 175);
-              if (activeSet.lastGrip) onPickGrip(activeIdx, activeSet.lastGrip);
-            } else if (!exercise.isBandsOnly) {
+            } else if (!exercise.isBandsOnly && !exercise.repsOnly) {
               onPickWeight(activeIdx, activeSet.lastWeight || 0);
             }
+            if (exercise.grips && activeSet.lastGrip) onPickGrip(activeIdx, activeSet.lastGrip);
             onClearBands(activeIdx);
             (activeSet.lastBands || []).forEach(b => onToggleBand(activeIdx, b));
           }}

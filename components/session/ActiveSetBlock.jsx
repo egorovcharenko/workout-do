@@ -20,7 +20,7 @@ function ActiveSetBlock({ exercise, set, totalWork, totalWarmup, warmupPos, onPi
 
   const stages = exercise.stages || null;
   const matchesLast = exercise.repsOnly
-    ? set.lastReps != null
+    ? (set.lastReps != null && (!exercise.grips || set.grip === set.lastGrip))
     : stages
     ? (set.lastReps != null && set.grip === set.lastGrip)
     : (set.lastReps != null) &&
@@ -80,7 +80,10 @@ function ActiveSetBlock({ exercise, set, totalWork, totalWarmup, warmupPos, onPi
             <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, fontFamily: T.mono, opacity: 0.75 }}>LAST</span>
             <span style={{ fontFamily: T.mono, fontSize: 14, fontWeight: 700, color: "#DBEAFE" }}>
               {exercise.repsOnly ? (
-                <>{set.lastReps || "—"}<span style={{ color: T.faint, fontWeight: 500 }}> reps</span></>
+                <>
+                  {set.lastReps || "—"}<span style={{ color: T.faint, fontWeight: 500 }}> reps</span>
+                  {exercise.grips && set.lastGrip && <span style={{ color: T.muted, fontWeight: 500 }}> · {GRIP_LABELS[set.lastGrip]?.label || set.lastGrip}</span>}
+                </>
               ) : (
                 <>
                   {stages ? (stageLabel(stages, set.lastGrip) || "—") : (lastBaseW || "—")}

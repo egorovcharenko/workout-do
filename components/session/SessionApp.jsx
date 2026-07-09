@@ -157,7 +157,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
                   }
                 }
                 const isAssist = official ? !!official.assist : false;
-                const isBandOnly = official ? (official.equipment === "band" && !official.bandAddon && !isAssist) : (name.toLowerCase().includes("band") && !isAssist);
+                const isBandOnly = official ? (official.equipment === "band" && !official.bandAddon && !isAssist && !official.repsOnly) : (name.toLowerCase().includes("band") && !isAssist);
                 
                 exs.push({
                   id: `custom-${name}`,
