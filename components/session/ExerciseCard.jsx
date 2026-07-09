@@ -7,7 +7,7 @@ import { ActiveSetBlock } from "./ActiveSetBlock";
 
 // ─── file: workout-session-exercise-card.js ───
 
-function ExerciseCard({ exercise, supersetTag, embedded, rest, onRestAdd, onRestSkip, onRestToggle, onPickWeight, onPickBodyweight, onPickGrip, onToggleBand, onClearBands, onLogReps, onSkipWarmup, onSkipExercise, onDeferExercise, onSwapExercise, onReopenSet, onAddSet, onRemoveSet, onRemoveWarmup }) {
+function ExerciseCard({ exercise, sessionTimes, supersetTag, embedded, rest, onRestAdd, onRestSkip, onRestToggle, onPickWeight, onPickBodyweight, onPickGrip, onToggleBand, onClearBands, onLogReps, onSkipWarmup, onSkipExercise, onDeferExercise, onSwapExercise, onReopenSet, onAddSet, onRemoveSet, onRemoveWarmup }) {
   const [showAllFamilies, setShowAllFamilies] = useState(false);
   const [showVariants, setShowVariants] = useState(false);
   const currentFamilyName = getSwapGroupName(exercise.name) || "Other";
@@ -233,7 +233,8 @@ function ExerciseCard({ exercise, supersetTag, embedded, rest, onRestAdd, onRest
         WebkitOverflowScrolling: "touch",
       }}>
         {exercise.sets.map((s, i) => (
-          <SetCard key={i} s={s} idx={i} exercise={exercise} onReopenSet={onReopenSet} />
+          <SetCard key={i} s={s} idx={i} exercise={exercise} onReopenSet={onReopenSet}
+            dur={sessionTimes && s.logged_at ? sessionTimes.bySet[s.logged_at] : null} />
         ))}
       </div>
 

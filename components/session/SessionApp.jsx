@@ -9,7 +9,7 @@ import {
   loadSwaps, saveSwaps, loadSkippedExercises, loadDeferred, applyDeferredOrder,
   loadSessionSets, serializeForSave, autoSavePayload, hydrateToday, activateNextSet,
 } from "@/lib/legacy/session-persistence";
-import { flattenTemplate, applyDeloadPrescription, applyPlanPrescription } from "@/lib/legacy/session-utils";
+import { flattenTemplate, applyDeloadPrescription, applyPlanPrescription, computeSessionTimes } from "@/lib/legacy/session-utils";
 import "./icons";
 import { useWorkoutTimers } from "./useWorkoutTimers";
 import { useWorkoutActions } from "./useWorkoutActions";
@@ -243,8 +243,10 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
       </div> ); }
   const shownIdx = (focusIdx != null && exercises[focusIdx]) ? focusIdx : (isFinished ? null : currentIdx);
   const shownExercise = shownIdx !== null ? exercises[shownIdx] : null;
+  const sessionTimes = computeSessionTimes(exercises, startedAt);
   const nav = (variant) => ( <ExerciseNav
       exercises={exercises}
+      sessionTimes={sessionTimes}
       shownIdx={shownIdx}
       currentIdx={currentIdx}
       onSelect={onSelectExercise}
@@ -294,6 +296,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
             const posInGroup = combined ? group.findIndex(g => g.idx === i) + 1 : null;
             const supersetTag = ex.superset ? `${ex.superset}${ex.supersetPos || posInGroup || ''}` : null;
             const card = ( <ExerciseCard exercise={ex}
+                sessionTimes={sessionTimes}
                 supersetTag={supersetTag}
                 embedded={combined}
                 rest={rest}

@@ -11,7 +11,11 @@ import { ExerciseNavRow } from "./ExerciseNavRow";
 // Tapping a row focuses that exercise in the center column; the App's onSelect
 // also activates the exercise's next set so you can log it.
 
-function ExerciseNav({ exercises, shownIdx, currentIdx, onSelect, onSelectSet, onSwapExercise, onAddExercise, variant, isFinished }) {
+function ExerciseNav({ exercises, sessionTimes, shownIdx, currentIdx, onSelect, onSelectSet, onSwapExercise, onAddExercise, variant, isFinished }) {
+  const spentMin = (i) => {
+    const sec = sessionTimes && sessionTimes.byExercise ? sessionTimes.byExercise[i] : null;
+    return sec >= 60 ? Math.round(sec / 60) : null;
+  };
   const [swapOpenIdx, setSwapOpenIdx] = useState(null);
   const [showAllFamilies, setShowAllFamilies] = useState(false);
   const [showAddLibrary, setShowAddLibrary] = useState(false);
@@ -167,7 +171,7 @@ function ExerciseNav({ exercises, shownIdx, currentIdx, onSelect, onSelectSet, o
                   <span style={{ color: STATUS_COLOR[m.status], fontSize: 10, flexShrink: 0 }}>{STATUS_GLYPH[m.status]}</span>
                   {m.tag && <span style={{ color: T.bands, fontFamily: T.mono, fontSize: 9, fontWeight: 800 }}>{m.tag}</span>}
                   <span style={{ marginLeft: "auto", fontFamily: T.mono, fontSize: 9, color: m.status === "done" ? T.green : T.faint }}>
-                    (~{Math.round(estimateExerciseDuration(e) / 60)}m) {m.doneWork}/{m.totalWork}
+                    (~{Math.round(estimateExerciseDuration(e) / 60)}m{spentMin(i) ? ` · ${spentMin(i)}m` : ""}) {m.doneWork}/{m.totalWork}
                   </span>
                 </div>
                 <div style={{
@@ -250,6 +254,7 @@ function ExerciseNav({ exercises, shownIdx, currentIdx, onSelect, onSelectSet, o
                 <ExerciseNavRow
                   i={i}
                   exercises={exercises}
+                  sessionTimes={sessionTimes}
                   shownIdx={shownIdx}
                   currentIdx={currentIdx}
                   onSelect={onSelect}
@@ -304,6 +309,7 @@ function ExerciseNav({ exercises, shownIdx, currentIdx, onSelect, onSelectSet, o
                           <ExerciseNavRow
                             i={i}
                             exercises={exercises}
+                            sessionTimes={sessionTimes}
                             shownIdx={shownIdx}
                             currentIdx={currentIdx}
                             onSelect={onSelect}

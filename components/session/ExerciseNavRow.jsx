@@ -4,7 +4,7 @@ import { navSetDisplay, SetChip } from "./NavChip";
 
 // ─── file: workout-session-nav-row.js ───
 
-function ExerciseNavRow({ i, exercises, shownIdx, currentIdx, onSelect, onSelectSet, onSwapExercise, swapOpenIdx, setSwapOpenIdx, showAllFamilies, setShowAllFamilies }) {
+function ExerciseNavRow({ i, exercises, sessionTimes, shownIdx, currentIdx, onSelect, onSelectSet, onSwapExercise, swapOpenIdx, setSwapOpenIdx, showAllFamilies, setShowAllFamilies }) {
   const e = exercises[i];
   const doneWork = e.sets.filter(s => s.completed).length;
   const allDone = e.sets.length > 0 && e.sets.every(s => s.completed);
@@ -100,7 +100,10 @@ function ExerciseNavRow({ i, exercises, shownIdx, currentIdx, onSelect, onSelect
           }}>
             {e.name}
             <span style={{ fontSize: 11, color: T.faint, fontWeight: 500, marginLeft: 6, fontFamily: T.mono }}>
-              (~{Math.round(estimateExerciseDuration(e) / 60)} min)
+              (~{Math.round(estimateExerciseDuration(e) / 60)} min{(() => {
+                const sec = sessionTimes && sessionTimes.byExercise ? sessionTimes.byExercise[i] : null;
+                return sec >= 60 ? ` · ${Math.round(sec / 60)}m` : "";
+              })()})
             </span>
           </span>
         </div>

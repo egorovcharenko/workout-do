@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { T, stageRank } from "@/lib/legacy/shared";
+import { fmtSetDuration } from "@/lib/legacy/session-utils";
 
 // ─── file: workout-session-set-card.js ───
 
@@ -16,7 +17,7 @@ function setStripLabel(s, allSets) {
   return `SET ${s.idx}`;
 }
 
-function SetCard({ s, idx, exercise, onReopenSet }) {
+function SetCard({ s, idx, exercise, onReopenSet, dur }) {
   const isBW = exercise.mode === "bodyweight";
   const isAssist = exercise.assist;
   const isBandsOnly = exercise.isBandsOnly;
@@ -90,7 +91,10 @@ function SetCard({ s, idx, exercise, onReopenSet }) {
         );
       })()}
       {s.completed ? (
-        <span style={{ color: deltaColor, fontFamily: T.mono, fontSize: 10, fontWeight: 700 }}>{deltaText}</span>
+        <span style={{ color: deltaColor, fontFamily: T.mono, fontSize: 10, fontWeight: 700 }}>
+          {deltaText}
+          {dur != null && <span style={{ color: T.disabled, fontWeight: 500, fontSize: 9 }}> · {fmtSetDuration(dur)}</span>}
+        </span>
       ) : isCurrent ? (
         <span style={{ color: isWarm ? T.amber : T.accentLight, fontFamily: T.mono, fontSize: 10, fontWeight: 700 }}>● now</span>
       ) : (
