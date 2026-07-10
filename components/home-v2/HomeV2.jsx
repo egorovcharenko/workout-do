@@ -249,8 +249,7 @@ function HomeV2() {
         <section className={styles.intro}>
           <div>
             <p className={styles.eyebrow}>{formatDate(localDate(), { weekday: "long", month: "long", day: "numeric" })}</p>
-            <h1>Ready when you are, {firstName}.</h1>
-            <p>Keep the streak honest. One focused session at a time.</p>
+            <h1>Training overview</h1>
           </div>
           <button
             type="button"
@@ -280,9 +279,7 @@ function HomeV2() {
                 <div>
                   <p className={styles.workoutType}>{view.featured.kind === "micro" ? "Micro session" : "Main session"}</p>
                   <h2>{view.featured.name.replace(/^(Main|Micro):\s*/, "")}</h2>
-                  <p className={styles.featureNote}>
-                    {view.plan[0]?.note || (view.deload ? "Light work. Crisp reps. Leave fresh." : view.featured.warmup)}
-                  </p>
+                  {view.plan[0]?.note && <p className={styles.featureNote}>{view.plan[0].note}</p>}
                 </div>
                 <Link href={`/session?w=${view.featured.id}`} className={styles.startButton}>
                   <span>{view.resumable ? "Resume" : "Start workout"}</span>
@@ -347,7 +344,7 @@ function HomeV2() {
                       {session.is_deload ? <span className={styles.deloadBadge}>Deload</span> : <span className={styles.check}>✓</span>}
                     </div>
                   );
-                }) : <div className={styles.emptyState}>Your completed sessions will appear here.</div>}
+                }) : <div className={styles.emptyState}>No completed sessions.</div>}
               </div>
             </section>
           </div>
@@ -372,7 +369,6 @@ function HomeV2() {
                   </div>
                 ))}
               </div>
-              <p className={styles.cardFootnote}>Show up, log the work, move forward.</p>
             </section>
 
             <section className={styles.bodyCard}>
