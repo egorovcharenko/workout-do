@@ -9,6 +9,7 @@ import {
 } from "@/lib/legacy/standards";
 import { state } from "./state";
 import { MUSCLE_GROUPS } from "./shell";
+import { latestSessionDeltaPercent, trainingPoints } from "@/lib/deload-progress";
 
 function renderWorkoutSummaryCard() {
   const history = state.history || [];
@@ -83,7 +84,7 @@ function renderWorkoutSummaryCard() {
       }
     });
     if (vol > maxSessionVol) maxSessionVol = vol;
-    return { date: s.date, volume: vol };
+    return { date: s.date, volume: vol, isDeload: !!s.is_deload };
   });
 
   const exList = Object.entries(exerciseSummary).map(([exName, sum]) => {
@@ -98,29 +99,30 @@ function renderWorkoutSummaryCard() {
           if (est > best) { best = est; bw = w; br = r; }
         }
       });
-      if (has) perSession.push({ date: s.date, value: best, w: bw, r: br });
+      if (has) perSession.push({ date: s.date, value: best, w: bw, r: br, isDeload: !!s.is_deload });
     });
     perSession.reverse();
-    const today1RM = perSession.length ? perSession[perSession.length - 1].value : sum.best1RM;
-    const prior1RM = perSession.length > 1 ? perSession[perSession.length - 2].value : null;
-    const priors = perSession.slice(0, -1);
+    const latestPoint = perSession[perSession.length - 1];
+    const today1RM = latestPoint ? latestPoint.value : sum.best1RM;
+    const latestIsDeload = !!latestPoint?.isDeload;
+    const normalPoints = trainingPoints(perSession);
+    const priors = latestIsDeload ? normalPoints : normalPoints.slice(0, -1);
     const priorMax = priors.length ? Math.max(...priors.map(p => p.value)) : (_assist(exName) ? -Infinity : 0);
     const prevBest = priors.length ? priors.reduce((m, p) => p.value > m.value ? p : m, priors[0]) : null;
     const isAssist = _assist(exName);
-    const isPR = today1RM > priorMax && (isAssist ? today1RM > -Infinity : today1RM > 0);
-    const deltaPct = (prior1RM != null && (isAssist ? prior1RM > -Infinity : prior1RM > 0))
-      ? Math.round(((today1RM - prior1RM) / Math.abs(prior1RM || 1)) * 100)
-      : null;
-    return { exName, sum, isPR, deltaPct, prevBest, sparkPts: perSession.slice(-6) };
+    const isPR = !latestIsDeload && today1RM > priorMax && (isAssist ? today1RM > -Infinity : today1RM > 0);
+    const deltaPct = latestSessionDeltaPercent(perSession);
+    return { exName, sum, isPR, deltaPct, prevBest, sparkPts: perSession.slice(-6), latestIsDeload };
   });
 
   const totalSets = exList.reduce((n, e) => n + e.sum.setsCount, 0);
   const numLifts = exList.length;
   const upCount = exList.filter(e => e.deltaPct != null && e.deltaPct > 0).length;
   const downCount = exList.filter(e => e.deltaPct != null && e.deltaPct < 0).length;
-  const latestVol = historyData.length ? historyData[historyData.length - 1].volume : 0;
-  const prevVol = historyData.length > 1 ? historyData[historyData.length - 2].volume : 0;
-  const netTrend = prevVol > 0 ? Math.round(((latestVol - prevVol) / prevVol) * 100) : null;
+  const normalVolumes = trainingPoints(historyData);
+  const latestVol = normalVolumes.length ? normalVolumes[normalVolumes.length - 1].volume : 0;
+  const prevVol = normalVolumes.length > 1 ? normalVolumes[normalVolumes.length - 2].volume : 0;
+  const netTrend = latest.is_deload ? null : prevVol > 0 ? Math.round(((latestVol - prevVol) / prevVol) * 100) : null;
 
   const weekAnchorMs = Date.parse(latest.date + 'T00:00:00');
   const weekStartMs = weekAnchorMs - 6 * 86400000;
@@ -178,12 +180,15 @@ function renderWorkoutSummaryCard() {
       x: pad + (i / (data.length - 1)) * (w - pad * 2),
       y: pad + (1 - (p.value - mn) / rng) * (h - pad * 2),
     }));
-    const poly = xy.map(c => `${c.x},${c.y}`).join(' ');
+    const poly = xy.filter((_, i) => !data[i].isDeload).map(c => `${c.x},${c.y}`).join(' ');
     const dots = xy.map((c, i) => {
       const unit = _repsOnly(exName) ? 'reps' : 'lb est 1RM';
-      const tip = `${mmdd(data[i].date)} · ${Math.round(data[i].value)} ${unit}`.replace(/'/g, "\\'");
+      const tip = `${mmdd(data[i].date)} · ${Math.round(data[i].value)} ${unit}${data[i].isDeload ? ' · DELOAD' : ''}`.replace(/'/g, "\\'");
       const isLast = i === xy.length - 1;
-      return `<circle cx="${c.x}" cy="${c.y}" r="${isLast ? 2 : 1.5}" fill="#a78bfa"/>`
+      const dot = data[i].isDeload
+        ? `<circle cx="${c.x}" cy="${c.y}" r="2" fill="#0B0F14" stroke="#FBBF24" stroke-width="1" opacity="0.8"/>`
+        : `<circle cx="${c.x}" cy="${c.y}" r="${isLast ? 2 : 1.5}" fill="#a78bfa"/>`;
+      return dot
         + `<circle cx="${c.x}" cy="${c.y}" r="7" fill="transparent" style="cursor:pointer"`
         + ` onmouseenter="sparkTip(event,'${tip}')" onmouseleave="sparkTip()" onclick="sparkTip(event,'${tip}',true)"></circle>`;
     }).join('');
@@ -192,7 +197,7 @@ function renderWorkoutSummaryCard() {
       const goalY = pad + (1 - (goalVal - mn) / rng) * (h - pad * 2);
       goalLine = `<line x1="${pad}" y1="${goalY}" x2="${w - pad}" y2="${goalY}" stroke="rgba(239, 68, 68, 0.45)" stroke-width="0.8" stroke-dasharray="1.5,1.5" />`;
     }
-    return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="flex-shrink:0;overflow:visible">${goalLine}<polyline points="${poly}" fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>${dots}</svg>`;
+    return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="flex-shrink:0;overflow:visible">${goalLine}${trainingPoints(data).length > 1 ? `<polyline points="${poly}" fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>` : ''}${dots}</svg>`;
   };
 
   const bars = historyData.map(h => {
@@ -200,11 +205,11 @@ function renderWorkoutSummaryCard() {
     const isLatest = h.date === latest.date;
     const dl = mmdd(h.date);
     const vStr = h.volume >= 1000 ? `${(h.volume / 1000).toFixed(1)}k` : Math.round(h.volume);
-    const tip = `${dl} · ${Math.round(h.volume).toLocaleString()} lb volume`;
+    const tip = `${dl} · ${Math.round(h.volume).toLocaleString()} lb volume${h.isDeload ? ' · DELOAD' : ''}`;
     return `<div title="${tip}" style="flex:1;display:flex;flex-direction:column;align-items:center;cursor:pointer">
-    <span style="font-size:9px;font-family:${MONO};color:${isLatest ? '#a78bfa' : '#9CA3AF'};margin-bottom:4px;font-weight:${isLatest ? '800' : '500'}">${vStr}</span>
+    <span style="font-size:9px;font-family:${MONO};color:${h.isDeload ? '#FBBF24' : isLatest ? '#a78bfa' : '#9CA3AF'};margin-bottom:4px;font-weight:${isLatest ? '800' : '500'}">${h.isDeload ? 'DL' : vStr}</span>
     <div style="height:44px;width:100%;display:flex;align-items:end;justify-content:center;margin-bottom:4px">
-      <div style="width:16px;height:${Math.max(8, pct)}%;background:${isLatest ? '#a78bfa' : 'rgba(255,255,255,0.2)'};border-radius:3px"></div>
+      <div style="width:16px;height:${Math.max(8, pct)}%;background:${h.isDeload ? 'rgba(251,191,36,0.28)' : isLatest ? '#a78bfa' : 'rgba(255,255,255,0.2)'};border:${h.isDeload ? '1px dashed rgba(251,191,36,0.7)' : '0'};border-radius:3px"></div>
     </div>
     <span style="font-size:9px;font-family:${MONO};color:${isLatest ? '#a78bfa' : '#6B7280'};font-weight:${isLatest ? '800' : '500'}">${dl}</span>
   </div>`;
@@ -242,7 +247,7 @@ function renderWorkoutSummaryCard() {
       </div>
       <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
         ${spark(e.sparkPts, e.exName)}
-        ${dt ? `<span style="min-width:36px;text-align:right;color:${dc};font-family:${MONO};font-size:12px;font-weight:800">${dt}</span>` : `<span style="width:36px"></span>`}
+        ${e.latestIsDeload ? `<span style="min-width:50px;text-align:right;color:#FBBF24;font-family:${MONO};font-size:9px;font-weight:800">DELOAD</span>` : dt ? `<span style="min-width:36px;text-align:right;color:${dc};font-family:${MONO};font-size:12px;font-weight:800">${dt}</span>` : `<span style="width:36px"></span>`}
       </div>
     </div>
     <div style="margin-top:3px;color:#6B7280;font-size:10.5px;font-family:${MONO}">${_repsOnly(e.exName)
@@ -255,7 +260,7 @@ function renderWorkoutSummaryCard() {
   <div data-noinvert style="margin-bottom:12px;overflow:hidden;background:#0B0F14;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:12px 12px 14px">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:12px">
       <div style="min-width:140px;flex:1">
-        <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;letter-spacing:0.08em;color:#C4B5FD;background:rgba(139,92,246,0.16);border:1px solid rgba(139,92,246,0.35);padding:4px 10px;border-radius:99px;font-family:${MONO}">✓ DONE</span>
+        <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;letter-spacing:0.08em;color:${latest.is_deload ? '#FBBF24' : '#C4B5FD'};background:${latest.is_deload ? 'rgba(251,191,36,0.12)' : 'rgba(139,92,246,0.16)'};border:1px solid ${latest.is_deload ? 'rgba(251,191,36,0.35)' : 'rgba(139,92,246,0.35)'};padding:4px 10px;border-radius:99px;font-family:${MONO}">${latest.is_deload ? 'DELOAD WEEK' : '✓ DONE'}</span>
         <h3 style="font-size:24px;font-weight:800;color:#F3F4F6;margin:6px 0 2px;letter-spacing:-0.02em;line-height:1.05">${name}</h3>
         <span style="font-size:12px;color:#6B7280;font-family:${MONO}">${dateStr}</span>
       </div>
@@ -275,7 +280,7 @@ function renderWorkoutSummaryCard() {
       ${historyData.length > 1 ? `
         <div style="width:180px;flex-shrink:0;display:flex;flex-direction:column;gap:6px">
           <div style="font-size:8px;font-weight:800;letter-spacing:0.08em;color:#6B7280;font-family:${MONO};text-align:right">
-            VOL TREND: <span style="color:${netColor};font-weight:800">${netTrend == null ? '—' : `${netTrend > 0 ? '+' : ''}${netTrend}%`}</span>
+            VOL TREND: <span style="color:${latest.is_deload ? '#FBBF24' : netColor};font-weight:800">${latest.is_deload ? 'DELOAD · NOT COMPARED' : netTrend == null ? '—' : `${netTrend > 0 ? '+' : ''}${netTrend}%`}</span>
           </div>
           <div style="display:flex;gap:6px;align-items:end">${bars}</div>
         </div>

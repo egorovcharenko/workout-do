@@ -218,10 +218,10 @@ export async function getActiveSessions(uid: string): Promise<
 
 /** /api/1rm-history equivalent — same math as the old Python, in TS. */
 export async function get1RMHistory(uid: string): Promise<{
-  orm: Record<string, { date: string; orm: number }[]>;
-  reps: Record<string, { date: string; reps: number }[]>;
-  vol: Record<string, { date: string; vol: number }[]>;
-  wt: Record<string, { date: string; wt: number }[]>;
+  orm: Record<string, { date: string; orm: number; is_deload: boolean }[]>;
+  reps: Record<string, { date: string; reps: number; is_deload: boolean }[]>;
+  vol: Record<string, { date: string; vol: number; is_deload: boolean }[]>;
+  wt: Record<string, { date: string; wt: number; is_deload: boolean }[]>;
 }> {
   const all = await fetchAllSessions(uid);
   // Oldest-first, like the SQL's ORDER BY date ASC.
@@ -231,6 +231,7 @@ export async function get1RMHistory(uid: string): Promise<{
   const repsRaw = new Map<string, number[]>();
   const wtRaw = new Map<string, number[]>();
   const volRaw = new Map<string, number>();
+  const deloadByKey = new Map<string, boolean>();
   const push = (m: Map<string, number[]>, k: string, v: number) => {
     const arr = m.get(k);
     if (arr) arr.push(v);
@@ -245,6 +246,7 @@ export async function get1RMHistory(uid: string): Promise<{
       const reps = parseInt(repsStr, 10);
       if (reps <= 0) continue;
       const key = `${set.exercise}\u0000${s.date}`;
+      if (!deloadByKey.has(key) || !s.is_deload) deloadByKey.set(key, !!s.is_deload);
       push(repsRaw, key, reps);
 
       // Reps-only exercise: graded on reps (mirrors calcSet1RM).
@@ -287,26 +289,26 @@ export async function get1RMHistory(uid: string): Promise<{
   }
 
   const groupMax = (m: Map<string, number[]>, field: string) => {
-    const out: Record<string, { date: string; [k: string]: number | string }[]> = {};
+    const out: Record<string, { date: string; [k: string]: number | string | boolean }[]> = {};
     for (const [key, vals] of m) {
       const [ex, date] = key.split("\u0000");
-      (out[ex] ??= []).push({ date, [field]: Math.max(...vals) });
+      (out[ex] ??= []).push({ date, [field]: Math.max(...vals), is_deload: deloadByKey.get(key) ?? false });
     }
     for (const ex of Object.keys(out)) out[ex].sort((a, b) => String(a.date).localeCompare(String(b.date)));
     return out;
   };
-  const vol: Record<string, { date: string; vol: number }[]> = {};
+  const vol: Record<string, { date: string; vol: number; is_deload: boolean }[]> = {};
   for (const [key, v] of volRaw) {
     const [ex, date] = key.split("\u0000");
-    (vol[ex] ??= []).push({ date, vol: Math.round(v) });
+    (vol[ex] ??= []).push({ date, vol: Math.round(v), is_deload: deloadByKey.get(key) ?? false });
   }
   for (const ex of Object.keys(vol)) vol[ex].sort((a, b) => a.date.localeCompare(b.date));
 
   return {
-    orm: groupMax(ormRaw, "orm") as Record<string, { date: string; orm: number }[]>,
-    reps: groupMax(repsRaw, "reps") as Record<string, { date: string; reps: number }[]>,
+    orm: groupMax(ormRaw, "orm") as Record<string, { date: string; orm: number; is_deload: boolean }[]>,
+    reps: groupMax(repsRaw, "reps") as Record<string, { date: string; reps: number; is_deload: boolean }[]>,
     vol,
-    wt: groupMax(wtRaw, "wt") as Record<string, { date: string; wt: number }[]>,
+    wt: groupMax(wtRaw, "wt") as Record<string, { date: string; wt: number; is_deload: boolean }[]>,
   };
 }
 

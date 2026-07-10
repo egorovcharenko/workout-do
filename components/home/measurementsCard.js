@@ -2,6 +2,7 @@
 
 import { EXERCISE_MUSCLES, calcSet1RM, isRepsOnlyExercise } from "@/lib/legacy/standards";
 import { state } from "./state";
+import { firstToLatestTrainingDelta } from "@/lib/deload-progress";
 import {
   renderMeasurementSparkline,
   renderPairedMeasurementSparkline,
@@ -83,8 +84,10 @@ function renderMeasurementsCard() {
       if ((w <= 0 && !repsOnly) || r <= 0) return;
       const orm = calcSet1RM(st.exercise, w, r, st.bands_json, st.grip);
       if (!exerciseDates[st.exercise]) exerciseDates[st.exercise] = {};
-      if (exerciseDates[st.exercise][sess.date] === undefined || orm > exerciseDates[st.exercise][sess.date]) {
-        exerciseDates[st.exercise][sess.date] = orm;
+      const current = exerciseDates[st.exercise][sess.date];
+      const isDeload = !!sess.is_deload;
+      if (!current || (!isDeload && current.isDeload) || (isDeload === current.isDeload && orm > current.value)) {
+        exerciseDates[st.exercise][sess.date] = { value: orm, isDeload };
       }
     });
   });
@@ -93,13 +96,15 @@ function renderMeasurementsCard() {
     const pts = Object.keys(datesObj).sort().map(date => ({
       date,
       ms: Date.parse(date + 'T00:00:00'),
-      value: datesObj[date],
+      value: datesObj[date].value,
+      isDeload: datesObj[date].isDeload,
     }));
     const latest = pts[pts.length - 1];
     return {
       name: exName,
       latestOrm: latest.value,
-      diffLb: pts.length > 1 ? Math.round(latest.value - pts[0].value) : null,
+      latestIsDeload: !!latest.isDeload,
+      diffLb: (() => { const delta = firstToLatestTrainingDelta(pts); return delta == null ? null : Math.round(delta); })(),
       pts,
       latestMs: latest.ms,
     };
@@ -285,7 +290,7 @@ function renderMeasurementsCard() {
               <span style="color:#111827;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ex.name}</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-              <span style="font-size:10px;color:#6b7280">${Math.round(ex.latestOrm)} ${unit}${isRepsOnly ? '' : ' est 1RM'}</span>
+              <span style="font-size:10px;color:${ex.latestIsDeload ? '#b45309' : '#6b7280'}">${Math.round(ex.latestOrm)} ${unit}${isRepsOnly ? '' : ' est 1RM'}${ex.latestIsDeload ? ' · DELOAD' : ''}</span>
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { T, localDate } from "@/lib/legacy/shared";
 import { EXERCISE_MUSCLES, getMuscleImpact, calcSet1RM, decodeStageScore, isAssistExercise } from "@/lib/legacy/standards";
 import { Sparkline } from "./Sparkline";
+import { trainingPoints } from "@/lib/deload-progress";
 
 // ─── file: workout-session-stats-pane.js ───
 
@@ -136,15 +137,25 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
         sv += w * r;
       }
     });
-    histByDate[sess.date] = { date: sess.date, orm: mo === -Infinity ? 0 : mo, vol: sv, wt: mw === -Infinity ? 0 : mw, reps: mr };
+    histByDate[sess.date] = {
+      date: sess.date,
+      orm: mo === -Infinity ? 0 : mo,
+      vol: sv,
+      wt: mw === -Infinity ? 0 : mw,
+      reps: mr,
+      isDeload: !!sess.is_deload,
+    };
   });
 
   const mergeMetric = (statArr, key) => {
     const byDate = {};
-    (statArr || []).forEach(d => { byDate[d.date] = +d[key] || 0; });
-    Object.values(histByDate).forEach(h => { byDate[h.date] = h[key]; });
-    return Object.entries(byDate)
-      .map(([date, v]) => ({ date, [key]: v }))
+    (statArr || []).forEach(d => {
+      byDate[d.date] = { date: d.date, [key]: +d[key] || 0, isDeload: !!d.is_deload };
+    });
+    Object.values(histByDate).forEach(h => {
+      byDate[h.date] = { date: h.date, [key]: h[key], isDeload: h.isDeload };
+    });
+    return Object.values(byDate)
       .sort((a, b) => a.date.localeCompare(b.date));
   };
   const ormHistRaw = mergeMetric((stat.orm || {})[exercise.name], "orm");
@@ -184,15 +195,19 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
   const chartTodayDateStr = new Date(todayMs).toISOString().slice(0, 10);
 
   const ormHist = (todayOrm !== -Infinity)
-    ? [...ormHistRaw.filter(d => d.date !== chartTodayDateStr), { date: chartTodayDateStr, orm: todayOrm }]
+    ? [...ormHistRaw.filter(d => d.date !== chartTodayDateStr), { date: chartTodayDateStr, orm: todayOrm, isDeload: !!window.SESSION_DELOAD }]
     : ormHistRaw;
   const volHist = (todayVol > 0)
-    ? [...volHistRaw.filter(d => d.date !== chartTodayDateStr), { date: chartTodayDateStr, vol: todayVol }]
+    ? [...volHistRaw.filter(d => d.date !== chartTodayDateStr), { date: chartTodayDateStr, vol: todayVol, isDeload: !!window.SESSION_DELOAD }]
     : volHistRaw;
-  const bestOrm = ormHist.length ? Math.max(...ormHist.map(d => d.orm !== undefined ? +d.orm : -Infinity)) : (exercise.assist ? -Infinity : 0);
-  const bestWt = wtHist.length ? Math.max(...wtHist.map(d => d.wt !== undefined ? +d.wt : -Infinity)) : (exercise.assist ? -Infinity : 0);
-  const bestReps = repsHist.length ? Math.max(...repsHist.map(d => +d.reps || 0)) : 0;
-  const bestVol = volHist.length ? Math.max(...volHist.map(d => +d.vol || 0)) : 0;
+  const ormTraining = trainingPoints(ormHist);
+  const wtTraining = trainingPoints(wtHist);
+  const repsTraining = trainingPoints(repsHist);
+  const volTraining = trainingPoints(volHist);
+  const bestOrm = ormTraining.length ? Math.max(...ormTraining.map(d => d.orm !== undefined ? +d.orm : -Infinity)) : (exercise.assist ? -Infinity : 0);
+  const bestWt = wtTraining.length ? Math.max(...wtTraining.map(d => d.wt !== undefined ? +d.wt : -Infinity)) : (exercise.assist ? -Infinity : 0);
+  const bestReps = repsTraining.length ? Math.max(...repsTraining.map(d => +d.reps || 0)) : 0;
+  const bestVol = volTraining.length ? Math.max(...volTraining.map(d => +d.vol || 0)) : 0;
 
   const hasPRs = exercise.assist
     ? (bestOrm !== -Infinity || bestWt !== -Infinity || bestVol > 0)

@@ -1,6 +1,7 @@
 "use client";
 import { T, localDate } from "@/lib/legacy/shared";
 import { isAssistExercise } from "@/lib/legacy/standards";
+import { trainingPoints } from "@/lib/deload-progress";
 
 // ─── file: workout-session-sparkline.js ───
 
@@ -24,14 +25,19 @@ function Sparkline({ exerciseName, data, valueKey, color, label, fmt, showTip, h
   }
   (data || []).forEach(d => {
     const day = days.find(x => x.date === d.date);
-    if (day) day.value = +d[valueKey] || 0;
+    if (day) {
+      day.value = +d[valueKey] || 0;
+      day.isDeload = !!d.isDeload;
+    }
   });
 
   const isAssist = isAssistExercise(exerciseName);
   const isValidVal = (v) => v != null && (isAssist ? v > -1000 : v > 0);
 
-  const historicalVals = days.filter(d => isValidVal(d.value)).map(d => d.value);
-  if (historicalVals.length === 0) {
+  const presentDays = days.filter(d => isValidVal(d.value));
+  const comparisonDays = trainingPoints(presentDays);
+  const comparisonVals = comparisonDays.map(d => d.value);
+  if (presentDays.length === 0) {
     return (
       <div style={{ marginBottom: 14 }}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
@@ -47,9 +53,9 @@ function Sparkline({ exerciseName, data, valueKey, color, label, fmt, showTip, h
     );
   }
 
-  const first = historicalVals[0], last = historicalVals[historicalVals.length - 1];
-  const lastDay = [...days].reverse().find(d => isValidVal(d.value));
-  const lastDate = lastDay ? lastDay.date : null;
+  const first = comparisonVals[0];
+  const last = comparisonVals[comparisonVals.length - 1];
+  const displayDay = presentDays[presentDays.length - 1];
 
   const presentVals = days.filter(d => isValidVal(d.value)).map(d => d.value);
   let min = Math.min(...presentVals);
@@ -68,20 +74,21 @@ function Sparkline({ exerciseName, data, valueKey, color, label, fmt, showTip, h
   const yFor = (v) => h - padY - ((v - min) / range) * (h - 2 * padY);
 
   const pts = days.map((d, i) => isValidVal(d.value) ? {
-    x: dayX(i), y: yFor(d.value), value: d.value, isToday: d.isToday, isFuture: d.isFuture, date: d.date,
+    x: dayX(i), y: yFor(d.value), value: d.value, isToday: d.isToday, isFuture: d.isFuture, date: d.date, isDeload: d.isDeload,
   } : null);
   const presentPts = pts.filter(Boolean);
+  const comparisonPts = trainingPoints(presentPts);
 
-  const linePath = presentPts.length > 1
-    ? presentPts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ")
+  const linePath = comparisonPts.length > 1
+    ? comparisonPts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ")
     : "";
-  const areaPath = presentPts.length > 1
-    ? `${linePath} L ${presentPts[presentPts.length-1].x.toFixed(1)} ${h} L ${presentPts[0].x.toFixed(1)} ${h} Z`
+  const areaPath = comparisonPts.length > 1
+    ? `${linePath} L ${comparisonPts[comparisonPts.length-1].x.toFixed(1)} ${h} L ${comparisonPts[0].x.toFixed(1)} ${h} Z`
     : "";
 
   // Divide by |first| — assist-exercise 1RM series are negative, and a signed
   // denominator would flip the trend direction.
-  const delta = first ? Math.round(((last - first) / Math.abs(first)) * 100) : 0;
+  const delta = comparisonVals.length > 1 && first ? Math.round(((last - first) / Math.abs(first)) * 100) : 0;
   const deltaColor = delta > 0 ? T.green : delta < 0 ? T.red : T.faint;
   const gradId = `spark-${label.replace(/[^a-z0-9]/gi, "")}-${color.replace(/[^a-z0-9]/gi, "")}`;
 
@@ -90,8 +97,9 @@ function Sparkline({ exerciseName, data, valueKey, color, label, fmt, showTip, h
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 5 }}>
         <span style={{ color: T.muted, fontFamily: T.mono, fontSize: 10, fontWeight: 700, letterSpacing: 0.3 }}>{label}</span>
         <span style={{ fontFamily: T.mono, fontSize: 11, fontWeight: 800, color: T.strong }}>
-          {fmt(last)}
-          {historicalVals.length > 1 && (
+          {fmt(displayDay.value)}
+          {displayDay.isDeload && <span style={{ color: T.amber, marginLeft: 6, fontSize: 9 }}>DELOAD</span>}
+          {comparisonVals.length > 1 && !displayDay.isDeload && (
             <span style={{ color: deltaColor, fontWeight: 700, marginLeft: 6, fontSize: 10 }}>
               {delta > 0 ? "↑" : delta < 0 ? "↓" : "→"} {Math.abs(delta)}%
             </span>
@@ -129,11 +137,14 @@ function Sparkline({ exerciseName, data, valueKey, color, label, fmt, showTip, h
         {presentPts.map((p, i) => {
           return (
             <g key={`p${i}`}>
-              <circle cx={p.x} cy={p.y} r={p.isToday ? 3.2 : 2.4} fill={color}
-                stroke={p.isToday ? "rgba(11,15,20,0.9)" : "none"} strokeWidth={p.isToday ? 1 : 0} />
+              <circle cx={p.x} cy={p.y} r={p.isToday ? 3.2 : 2.4}
+                fill={p.isDeload ? "rgba(11,15,20,0.9)" : color}
+                stroke={p.isDeload ? T.amber : p.isToday ? "rgba(11,15,20,0.9)" : "none"}
+                strokeWidth={p.isDeload || p.isToday ? 1.2 : 0}
+                opacity={p.isDeload ? 0.75 : 1} />
               <circle cx={p.x} cy={p.y} r="8" fill="transparent"
                 style={{ cursor: "default" }}
-                onMouseEnter={(e) => showTip(e, `${p.date} · ${fmt(p.value)}${p.isToday ? " (today)" : ""}`)}
+                onMouseEnter={(e) => showTip(e, `${p.date} · ${fmt(p.value)}${p.isDeload ? " · DELOAD" : p.isToday ? " (today)" : ""}`)}
                 onMouseLeave={hideTip} />
             </g>
           );

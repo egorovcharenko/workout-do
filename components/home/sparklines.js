@@ -108,18 +108,26 @@ function renderMeasurementSparkline(pts, color, startMs, endMs, unit, goal) {
   if (pts.length === 1) {
     const x = getX(pts[0].ms);
     const y = getY(pts[0].value);
-    const tip = `${mmdd(pts[0].date)} · ${pts[0].value.toFixed(1)} ${unit}`.replace(/'/g, "\\'");
-    dotsHTML = `<circle cx="${x}" cy="${y}" r="2.5" fill="${color}" />`
-      + `<circle cx="${x}" cy="${y}" r="7" fill="transparent" style="cursor:pointer"
+    const tip = `${mmdd(pts[0].date)} · ${pts[0].value.toFixed(1)} ${unit}${pts[0].isDeload ? ' · DELOAD' : ''}`.replace(/'/g, "\\'");
+    dotsHTML = pts[0].isDeload
+      ? `<circle cx="${x}" cy="${y}" r="2.5" fill="white" stroke="#d97706" stroke-width="1.2" opacity="0.8" />`
+      : `<circle cx="${x}" cy="${y}" r="2.5" fill="${color}" />`;
+    dotsHTML += `<circle cx="${x}" cy="${y}" r="7" fill="transparent" style="cursor:pointer"
        onmouseenter="sparkTip(event,'${tip}')" onmouseleave="sparkTip()" onclick="sparkTip(event,'${tip}',true)"></circle>`;
   } else {
-    const pathD = pts.map(p => `L ${getX(p.ms)} ${getY(p.value)}`).join(' ').replace(/^L/, 'M');
-    pathHTML = `<path d="${pathD}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" />`;
+    const trainingPts = pts.filter(p => !p.isDeload);
+    if (trainingPts.length > 1) {
+      const pathD = trainingPts.map(p => `L ${getX(p.ms)} ${getY(p.value)}`).join(' ').replace(/^L/, 'M');
+      pathHTML = `<path d="${pathD}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" />`;
+    }
     dotsHTML = pts.map(p => {
       const x = getX(p.ms);
       const y = getY(p.value);
-      const tip = `${mmdd(p.date)} · ${p.value.toFixed(1)} ${unit}`.replace(/'/g, "\\'");
-      return `<circle cx="${x}" cy="${y}" r="2" fill="${color}" />`
+      const tip = `${mmdd(p.date)} · ${p.value.toFixed(1)} ${unit}${p.isDeload ? ' · DELOAD' : ''}`.replace(/'/g, "\\'");
+      const dot = p.isDeload
+        ? `<circle cx="${x}" cy="${y}" r="2.4" fill="white" stroke="#d97706" stroke-width="1.2" opacity="0.8" />`
+        : `<circle cx="${x}" cy="${y}" r="2" fill="${color}" />`;
+      return dot
         + `<circle cx="${x}" cy="${y}" r="7" fill="transparent" style="cursor:pointer"
          onmouseenter="sparkTip(event,'${tip}')" onmouseleave="sparkTip()" onclick="sparkTip(event,'${tip}',true)"></circle>`;
     }).join('');

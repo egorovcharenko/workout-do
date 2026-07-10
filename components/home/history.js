@@ -56,7 +56,7 @@ function renderSessionList() {
       if (st.set_type === 'working' && !repsOnlyExerciseNames.has(st.exercise)) vol += (st.weight_lb || 0) * (parseInt(st.reps) || 0);
     });
     if (!workoutVolTrend[s.workout_name]) workoutVolTrend[s.workout_name] = [];
-    workoutVolTrend[s.workout_name].push(vol);
+    workoutVolTrend[s.workout_name].push({ value: vol, isDeload: !!s.is_deload });
   });
 
   function historySparkline(workoutName, currentIdx) {
@@ -64,17 +64,23 @@ function renderSessionList() {
     if (!trend || trend.length < 2) return '';
     const vals = trend.slice(0, currentIdx + 1);
     if (vals.length < 2) return '';
-    const max = Math.max(...vals), min = Math.min(...vals), range = max - min || 1;
+    const max = Math.max(...vals.map(p => p.value)), min = Math.min(...vals.map(p => p.value)), range = max - min || 1;
     const w = 50, h = 18, pad = 2;
-    const points = vals.map((v, i) =>
-      `${pad + (i / (vals.length - 1)) * (w - pad * 2)},${pad + (1 - (v - min) / range) * (h - pad * 2)}`
-    ).join(' ');
+    const coords = vals.map((p, i) => ({
+      x: pad + (i / (vals.length - 1)) * (w - pad * 2),
+      y: pad + (1 - (p.value - min) / range) * (h - pad * 2),
+      isDeload: p.isDeload,
+    }));
+    const points = coords.filter(p => !p.isDeload).map(p => `${p.x},${p.y}`).join(' ');
     const latest = vals[vals.length - 1];
-    const prev = vals[vals.length - 2];
-    const trend2 = latest >= prev ? '#16a34a' : '#ef4444';
+    const normalVals = vals.filter(p => !p.isDeload);
+    const priorNormal = normalVals.length > 1 ? normalVals[normalVals.length - 2] : null;
+    const trend2 = latest.isDeload ? '#d97706' : !priorNormal ? '#6b7280' : latest.value >= priorNormal.value ? '#16a34a' : '#ef4444';
     return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="display:block">
-    <polyline points="${points}" fill="none" stroke="${trend2}" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
-    <circle cx="${pad + ((vals.length - 1) / (vals.length - 1)) * (w - pad * 2)}" cy="${pad + (1 - (latest - min) / range) * (h - pad * 2)}" r="2" fill="${trend2}"/>
+    ${coords.filter(p => !p.isDeload).length > 1 ? `<polyline points="${points}" fill="none" stroke="${trend2}" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>` : ''}
+    ${coords.map((p, i) => p.isDeload
+      ? `<circle cx="${p.x}" cy="${p.y}" r="2" fill="white" stroke="#d97706" stroke-width="1" opacity="0.8"/>`
+      : i === coords.length - 1 ? `<circle cx="${p.x}" cy="${p.y}" r="2" fill="${trend2}"/>` : '').join('')}
   </svg>`;
   }
 
