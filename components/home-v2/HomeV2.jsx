@@ -281,7 +281,7 @@ function HomeV2() {
                   <h2>{view.featured.name.replace(/^(Main|Micro):\s*/, "")}</h2>
                   {view.plan[0]?.note && <p className={styles.featureNote}>{view.plan[0].note}</p>}
                 </div>
-                <Link href={`/session?w=${view.featured.id}`} className={styles.startButton}>
+                <Link href={`/v2/session?w=${view.featured.id}`} className={styles.startButton}>
                   <span>{view.resumable ? "Resume" : "Start workout"}</span>
                   <span aria-hidden>↗</span>
                 </Link>
@@ -309,7 +309,7 @@ function HomeV2() {
                   const isFeatured = workout.id === view.featured.id;
                   return (
                     <Link
-                      href={`/session?w=${workout.id}`}
+                      href={`/v2/session?w=${workout.id}`}
                       key={workout.id}
                       className={`${styles.programCard} ${isFeatured ? styles.programCardActive : ""}`}
                     >
@@ -400,7 +400,7 @@ function HomeV2() {
 
         <footer className={styles.footer}>
           <span>Workout Do · Home v2 preview</span>
-          <div>{PROGRAM.map((workout) => <Link key={workout.id} href={`/session?w=${workout.id}&test=1`}>{workout.name.replace(/^(Main|Micro):\s*/, "")}</Link>)}</div>
+          <div>{PROGRAM.map((workout) => <Link key={workout.id} href={`/v2/session?w=${workout.id}&test=1`}>{workout.name.replace(/^(Main|Micro):\s*/, "")}</Link>)}</div>
         </footer>
       </div>
     </main>

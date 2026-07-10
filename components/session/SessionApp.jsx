@@ -18,11 +18,12 @@ import { Header } from "./Header";
 import { ExerciseNav } from "./ExerciseNav";
 import { WorkoutCompleteScreen } from "./WorkoutCompleteScreen";
 import { ExerciseCard } from "./ExerciseCard";
+import { ExerciseCardV2 } from "./ExerciseCardV2";
 import { StatsPane } from "./StatsPane";
 
 // ─── file: workout-session-app.js ───
 
-function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUrl = new URLSearchParams(window.location.search).get("w");
+function App({ cardVariant = "v1", homeHref = "/" }) { const [workoutId, setWorkoutId] = useState(() => { const fromUrl = new URLSearchParams(window.location.search).get("w");
     return (fromUrl && WORKOUTS.some(w => w.id === fromUrl)) ? fromUrl : (WORKOUTS.find(w => w.main) || WORKOUTS[0]).id; });
   const workout = useMemo(() => WORKOUTS.find(w => w.id === workoutId) || WORKOUTS[0], [workoutId]);
   const onPickWorkout = (id) => { if (id === workoutId) return;
@@ -248,7 +249,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
     actions.onPickWeight(exIdx, setIdx, selectedSet.weight || selectedSet.lastWeight || 0, next); };
   if (!loaded) { return ( <div style={{ height: "100%", overflowY: "auto" }}>
         <div style={{ maxWidth: 448, margin: "0 auto", minHeight: "100%", background: T.page }}>
-          <Header workout={workout} workouts={WORKOUTS} onPickWorkout={onPickWorkout} done={0} total={0} elapsedSec={0} deload={!!window.SESSION_DELOAD} />
+          <Header workout={workout} workouts={WORKOUTS} onPickWorkout={onPickWorkout} done={0} total={0} elapsedSec={0} deload={!!window.SESSION_DELOAD} homeHref={homeHref} />
           <div style={{ margin: "40px 16px", padding: "20px", textAlign: "center", color: T.muted, fontFamily: T.mono, fontSize: 13, border: `1px dashed ${T.cardBorder}`, borderRadius: 12 }}>
             loading workout…
           </div>
@@ -257,6 +258,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
   const shownIdx = (focusIdx != null && exercises[focusIdx]) ? focusIdx : (isFinished ? null : currentIdx);
   const shownExercise = shownIdx !== null ? exercises[shownIdx] : null;
   const sessionTimes = computeSessionTimes(exercises, startedAt);
+  const ExerciseCardComponent = cardVariant === "v2" ? ExerciseCardV2 : ExerciseCard;
   const nav = (variant) => ( <ExerciseNav
       exercises={exercises}
       sessionTimes={sessionTimes}
@@ -285,7 +287,8 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
             done={doneSets}
             total={totalSets}
             elapsedSec={elapsed}
-            deload={!!window.SESSION_DELOAD} />
+            deload={!!window.SESSION_DELOAD}
+            homeHref={homeHref} />
           <div className="exercise-nav-strip">
             {nav("strip")}
           </div>
@@ -306,7 +309,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
             const combined = group.length > 1;
             const posInGroup = combined ? group.findIndex(g => g.idx === i) + 1 : null;
             const supersetTag = ex.superset ? `${ex.superset}${ex.supersetPos || posInGroup || ''}` : null;
-            const card = ( <ExerciseCard exercise={ex}
+            const card = ( <ExerciseCardComponent exercise={ex}
                 sessionTimes={sessionTimes}
                 supersetTag={supersetTag}
                 embedded={combined}

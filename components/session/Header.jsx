@@ -5,7 +5,7 @@ import { T, estimateTemplateWorkoutDuration } from "@/lib/legacy/shared";
 
 // ─── file: workout-session-header.js ───
 
-function Header({ workout, workouts, onPickWorkout, done, total, elapsedSec, deload }) {
+function Header({ workout, workouts, onPickWorkout, done, total, elapsedSec, deload, homeHref = "/" }) {
   const pct = total ? (done / total) * 100 : 0;
   const m = Math.floor(elapsedSec / 60);
   const s = String(elapsedSec % 60).padStart(2, "0");
@@ -25,7 +25,7 @@ function Header({ workout, workouts, onPickWorkout, done, total, elapsedSec, del
     <div style={{ background: T.page, padding: "14px 18px 14px", position: "sticky", top: 0, zIndex: 5 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, gap: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
-          <Link href="/" style={{ color: T.accent, fontSize: 16, fontWeight: 600, textDecoration: "none", flexShrink: 0 }} title="Home">← Back</Link>
+          <Link href={homeHref} style={{ color: T.accent, fontSize: 16, fontWeight: 600, textDecoration: "none", flexShrink: 0 }} title="Home">← Back</Link>
           <div data-workout-menu style={{ position: "relative", minWidth: 0 }}>
             <button onClick={hasMultiple ? () => setOpen(o => !o) : undefined} style={{
               background: "transparent", border: 0, color: T.strong,
