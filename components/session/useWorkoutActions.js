@@ -109,9 +109,13 @@ function useWorkoutActions({
         }
       }
 
-      const restKind = (nextSet && nextSet.kind === "warmup") ? "warmup" : "work";
-      const total = restKind === "warmup" ? 30 : (ex.rest || 90);
-      setRest({ total, left: total, endAt: Date.now() + total * 1000, eIdx, sIdx, kind: restKind, paused: false });
+      if (nextSet) {
+        const restKind = nextSet.kind === "warmup" ? "warmup" : "work";
+        const total = restKind === "warmup" ? 30 : (ex.rest || 90);
+        setRest({ total, left: total, endAt: Date.now() + total * 1000, eIdx, sIdx, kind: restKind, paused: false });
+      } else {
+        setRest(null);
+      }
     } else {
       setRest(null);
     }

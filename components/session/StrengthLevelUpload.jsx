@@ -248,8 +248,8 @@ function StrengthLevelUpload({ exercises, workoutName, sessionDate }) {
                 <div style={{ marginTop: 16, background: "rgba(255,255,255,0.03)", border: `1px solid ${T.cardBorder}`, borderRadius: 10, padding: "12px 14px" }}>
                   <div style={{ color: T.faint, fontFamily: T.mono, fontSize: 10, fontWeight: 700, letterSpacing: 0.5, marginBottom: 8 }}>HOW TO RUN {copied ? "· COPIED ✓" : ""}</div>
                   <ol style={{ margin: 0, paddingLeft: 18, color: T.muted, fontSize: 12.5, lineHeight: 1.6 }}>
-                    <li>Open <b style={{ color: T.text }}>my.strengthlevel.com</b> in a tab and make sure you're logged in.</li>
-                    <li>Open that tab's DevTools <b style={{ color: T.text }}>Console</b> (⌥⌘J), paste the copied snippet, press Enter. (First time, Chrome may ask you to type <i>allow pasting</i>.)</li>
+                    <li>Open <b style={{ color: T.text }}>my.strengthlevel.com</b> in a tab and make sure you&apos;re logged in.</li>
+                    <li>Open that tab&apos;s DevTools <b style={{ color: T.text }}>Console</b> (⌥⌘J), paste the copied snippet, press Enter. (First time, Chrome may ask you to type <i>allow pasting</i>.)</li>
                     <li>A confirmation alert appears; refresh your workouts page.</li>
                   </ol>
                 </div>
@@ -265,7 +265,7 @@ function StrengthLevelUpload({ exercises, workoutName, sessionDate }) {
                   style={{ width: "100%", marginTop: 10, height: 70, background: "rgba(0,0,0,0.25)", border: `1px solid ${T.cardBorder}`, borderRadius: 8, color: T.faint, fontFamily: T.mono, fontSize: 10, padding: 8, resize: "vertical" }}
                 />
                 <p style={{ color: T.faint, fontSize: 10.5, lineHeight: 1.5, margin: "10px 0 0" }}>
-                  Note: this uses Strength Level's unofficial API and is against their Terms of Service. It uploads only your own data.
+                  Note: this uses Strength Level&apos;s unofficial API and is against their Terms of Service. It uploads only your own data.
                 </p>
               </React.Fragment>
             )}

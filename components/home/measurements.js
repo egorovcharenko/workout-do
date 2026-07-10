@@ -2,6 +2,7 @@
 // UI rendering logic for the Measurements tab of Workout Tracker
 
 import { api } from "@/lib/db/api";
+import { localDate } from "@/lib/legacy/shared";
 import { state } from "./state";
 import { renderMeasurementsCard } from "./measurementsCard";
 import { render } from "./shell";
@@ -123,7 +124,7 @@ function _renderMeasurementForm() {
     <span style="font-size:10px;color:#6b7280;font-weight:600">${m.label} (${m.unit || 'cm'})</span>
     <input type="number" step="0.1" id="meas-${m.id}" placeholder="—" style="font-size:13px;padding:6px 8px;border:1px solid #e5e7eb;border-radius:6px;font-family:monospace;width:100%">
   </label>`).join('');
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDate();
   return `
   <div class="card" style="padding:14px 16px">
     <h3 style="font-size:13px;font-weight:600;color:#111827;margin:0 0 8px">Add measurement</h3>
@@ -149,7 +150,7 @@ async function reloadMeasurements() {
 
 async function submitMeasurement() {
   const dateEl = document.getElementById('meas-date');
-  const date = dateEl?.value || new Date().toISOString().slice(0, 10);
+  const date = dateEl?.value || localDate();
   // Anchor the entry to the chosen date at the current local time-of-day,
   // then convert to real UTC (the old code stamped local time with a "Z").
   const localDT = new Date(`${date}T${new Date().toTimeString().slice(0, 8)}`);

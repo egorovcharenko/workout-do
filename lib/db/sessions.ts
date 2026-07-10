@@ -12,6 +12,7 @@ import {
 import { db } from "@/lib/firebase/client";
 import { isAssistExercise, isRepsOnlyExercise } from "@/lib/legacy/standards";
 import { log } from "@/lib/log";
+import { sessionUpdateConflict } from "@/lib/session-save-scope";
 import type {
   HintMap,
   SessionDoc,
@@ -354,12 +355,16 @@ export async function saveSession(
     // Cross-day stale-tab guard (same as the old server): a tab from a
     // previous day must not overwrite that older session with today's
     // partial state. Date mismatch → treat as a fresh session.
-    const existingDate = snap.exists() ? (snap.data() as SessionDoc).date : null;
+    const existing = snap.exists() ? (snap.data() as SessionDoc) : null;
+    const conflict = sessionUpdateConflict(existing, data);
     if (!snap.exists()) {
       log("db", `save: session ${sessionId} not found, creating new`);
       sessionId = null;
-    } else if (existingDate && data.date && existingDate !== data.date) {
-      log("db", `save: REJECTED stale-tab update (session dated ${existingDate}, payload ${data.date})`);
+    } else if (conflict === "date") {
+      log("db", `save: REJECTED stale-tab update (session dated ${existing?.date}, payload ${data.date})`);
+      sessionId = null;
+    } else if (conflict === "workout") {
+      log("db", `save: REJECTED cross-workout update (session ${existing?.workout_name}, payload ${data.workout})`);
       sessionId = null;
     } else {
       await updateDoc(ref, {

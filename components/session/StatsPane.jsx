@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { T, localDate } from "@/lib/legacy/shared";
 import { EXERCISE_MUSCLES, getMuscleImpact, calcSet1RM, decodeStageScore, isAssistExercise } from "@/lib/legacy/standards";
 import { Sparkline } from "./Sparkline";
@@ -23,21 +23,19 @@ const KV = ({ k, v }) => (
 );
 
 function StatsPane({ exercise, history, statHistory, exercises }) {
+  const [tipState, setTip] = useState(null);
+  const tip = tipState?.exerciseName === exercise?.name ? tipState : null;
+
   if (!exercise) return null;
   const today = localDate();
   const todayMs = Date.parse(today + 'T00:00:00Z');
   const windowStartMs = todayMs - 14 * 86400000;
   
-  const [tip, setTip] = useState(null);
   const showTip = (e, content) => {
     const r = e.currentTarget.getBoundingClientRect();
-    setTip({ content, x: r.left + r.width / 2, y: r.top - 4 });
+    setTip({ exerciseName: exercise.name, content, x: r.left + r.width / 2, y: r.top - 4 });
   };
   const hideTip = () => setTip(null);
-
-  useEffect(() => {
-    setTip(null);
-  }, [exercise]);
 
   const muscleInfo = EXERCISE_MUSCLES[exercise.name] || { primary: [], secondary: [] };
 

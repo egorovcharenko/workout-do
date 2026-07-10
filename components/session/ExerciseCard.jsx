@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { T, SWAP_GROUPS, getSwapGroup, getSwapGroupName, estimateExerciseDuration } from "@/lib/legacy/shared";
 import { SetCard } from "./SetCard";
 import { RestTimer } from "./RestTimer";
@@ -7,15 +7,10 @@ import { ActiveSetBlock } from "./ActiveSetBlock";
 
 // ─── file: workout-session-exercise-card.js ───
 
-function ExerciseCard({ exercise, sessionTimes, supersetTag, embedded, rest, onRestAdd, onRestSkip, onRestToggle, onPickWeight, onPickBodyweight, onPickGrip, onToggleBand, onClearBands, onLogReps, onSkipWarmup, onSkipExercise, onDeferExercise, onSwapExercise, onReopenSet, onAddSet, onRemoveSet, onRemoveWarmup }) {
+function ExerciseCardContent({ exercise, sessionTimes, supersetTag, embedded, rest, onRestAdd, onRestSkip, onRestToggle, onPickWeight, onPickBodyweight, onPickGrip, onToggleBand, onClearBands, onLogReps, onSkipWarmup, onSkipExercise, onDeferExercise, onSwapExercise, onReopenSet, onAddSet, onRemoveSet, onRemoveWarmup }) {
   const [showAllFamilies, setShowAllFamilies] = useState(false);
   const [showVariants, setShowVariants] = useState(false);
   const currentFamilyName = getSwapGroupName(exercise.name) || "Other";
-
-  useEffect(() => {
-    setShowAllFamilies(false);
-    setShowVariants(false);
-  }, [exercise.name]);
 
   const swapGroup = getSwapGroup(exercise.name);
   const hasVariants = swapGroup && swapGroup.length > 1;
@@ -283,6 +278,10 @@ function ExerciseCard({ exercise, sessionTimes, supersetTag, embedded, rest, onR
       </div>
     </div>
   );
+}
+
+function ExerciseCard(props) {
+  return <ExerciseCardContent key={props.exercise.name} {...props} />;
 }
 
 export { ExerciseCard };

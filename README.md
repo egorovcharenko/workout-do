@@ -6,7 +6,7 @@ Port of the old flat-file app in the `egorovcharenko/workout-tracker` GitHub rep
 
 ## Dev cycle
 
-1. **Edit + typecheck**: `npx tsc --noEmit` and `npm run build` must pass. Read
+1. **Edit + verify**: `npm test`, `npm run lint`, `npx tsc --noEmit`, and `npm run build` must pass. Read
    `node_modules/next/dist/docs/` before writing Next.js-specific code (see AGENTS.md — this Next
    version has breaking changes).
 2. **Commit**: directly on `main`. There is **no git remote** — the repo is local-only; git history

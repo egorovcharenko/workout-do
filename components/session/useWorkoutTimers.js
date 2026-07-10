@@ -1,41 +1,35 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { LS_PREFIX } from "@/lib/legacy/shared";
 
 // ─── file: workout-session-hooks.js ───
 
+function restoreRestTimer(id) {
+  if (!id || typeof localStorage === "undefined") return null;
+  const savedRestRaw = localStorage.getItem(`${LS_PREFIX}v2-rest-timer:${id}`);
+  if (savedRestRaw) {
+    try {
+      const savedRest = JSON.parse(savedRestRaw);
+      if (savedRest && (savedRest.paused || savedRest.endAt > Date.now())) {
+        const left = savedRest.paused ? savedRest.left : Math.max(0, Math.ceil((savedRest.endAt - Date.now()) / 1000));
+        if (left > 0) return { ...savedRest, left };
+      } else {
+        localStorage.removeItem(`${LS_PREFIX}v2-rest-timer:${id}`);
+      }
+    } catch (_) {}
+  }
+  return null;
+}
+
 function useWorkoutTimers(workoutId, exercises) {
   const [elapsed, setElapsed] = useState(0);
-  const [running, setRunning] = useState(false);
   const [startedAt, setStartedAt] = useState(null);
-  const [rest, setRest] = useState(null);  // { total, left, eIdx, sIdx, kind, paused }
+  const [rest, setRest] = useState(() => restoreRestTimer(workoutId));  // { total, left, eIdx, sIdx, kind, paused }
 
-  const lastInteractionRef = useRef(Date.now());
-  const IDLE_THRESHOLD_MS = 5 * 60 * 1000;
-
-  // Reset/restore timer states when workoutId changes
-  useEffect(() => {
+  const resetTimers = (nextWorkoutId) => {
     setElapsed(0);
-    setRunning(false);
     setStartedAt(null);
-    setRest(null);
-
-    if (!workoutId) return;
-
-    const savedRestRaw = localStorage.getItem(`${LS_PREFIX}v2-rest-timer:${workoutId}`);
-    if (savedRestRaw) {
-      try {
-        const savedRest = JSON.parse(savedRestRaw);
-        if (savedRest && (savedRest.paused || savedRest.endAt > Date.now())) {
-          const left = savedRest.paused ? savedRest.left : Math.max(0, Math.ceil((savedRest.endAt - Date.now()) / 1000));
-          if (left > 0) {
-            setRest({ ...savedRest, left });
-          }
-        } else {
-          localStorage.removeItem(`${LS_PREFIX}v2-rest-timer:${workoutId}`);
-        }
-      } catch (_) {}
-    }
-  }, [workoutId]);
+    setRest(restoreRestTimer(nextWorkoutId));
+  };
 
   // Persist rest timer state to localStorage whenever it changes
   useEffect(() => {
@@ -94,18 +88,14 @@ function useWorkoutTimers(workoutId, exercises) {
     };
   }, []);
 
-  // Migrate the rest timer to wherever the active set currently lives.
-  useEffect(() => {
-    if (!rest) return;
-    const activeExIdx = exercises.findIndex(e => e.sets.some(s => s.active));
-    if (activeExIdx === -1) return;
-    if (activeExIdx === rest.eIdx) return;
-    setRest(r => r ? { ...r, eIdx: activeExIdx } : r);
-  }, [exercises, rest && rest.eIdx]);
+  // Display the rest timer beside the active exercise without mutating the
+  // persisted timer merely because navigation moved the active set.
+  const activeExIdx = exercises.findIndex(e => e.sets.some(s => s.active));
+  const visibleRest = rest && activeExIdx !== -1 && activeExIdx !== rest.eIdx
+    ? { ...rest, eIdx: activeExIdx }
+    : rest;
 
   const startTimer = () => {
-    lastInteractionRef.current = Date.now();
-    if (!running) setRunning(true);
     if (!startedAt) {
       setStartedAt(Date.now() - (elapsed || 0) * 1000);
     }
@@ -130,17 +120,16 @@ function useWorkoutTimers(workoutId, exercises) {
 
   return {
     elapsed,
-    running: startedAt !== null,
     startedAt,
-    rest,
+    rest: visibleRest,
     setElapsed,
-    setRunning: () => {},
     setStartedAt,
     setRest,
     startTimer,
     restAdd,
     restSkip,
-    restToggle
+    restToggle,
+    resetTimers,
   };
 }
 

@@ -23,9 +23,14 @@ function ExerciseNav({ exercises, sessionTimes, shownIdx, currentIdx, onSelect, 
   const [searchFocused, setSearchFocused] = useState(false);
   const searchInputRef = useRef(null);
 
-  useEffect(() => {
+  const updateSwapOpenIdx = (value) => {
     setShowAllFamilies(false);
-  }, [swapOpenIdx]);
+    setSwapOpenIdx(value);
+  };
+  const closeLibrary = () => {
+    setSearchQuery("");
+    setShowAddLibrary(false);
+  };
 
   useEffect(() => {
     if (showAddLibrary) {
@@ -35,8 +40,6 @@ function ExerciseNav({ exercises, sessionTimes, shownIdx, currentIdx, onSelect, 
         }
       }, 50);
       return () => clearTimeout(timer);
-    } else {
-      setSearchQuery("");
     }
   }, [showAddLibrary]);
 
@@ -72,7 +75,7 @@ function ExerciseNav({ exercises, sessionTimes, shownIdx, currentIdx, onSelect, 
         background: "rgba(0,0,0,0.85)", backdropFilter: "blur(4px)", zIndex: 10000,
         display: "flex", alignItems: "center", justifyContent: "center",
         padding: 16
-      }} onClick={() => setShowAddLibrary(false)}>
+      }} onClick={closeLibrary}>
         <div style={{
           background: T.cardBg, border: `1px solid ${T.cardBorder}`,
           borderRadius: 16, width: "100%", maxWidth: 360,
@@ -81,7 +84,7 @@ function ExerciseNav({ exercises, sessionTimes, shownIdx, currentIdx, onSelect, 
         }} onClick={(e) => e.stopPropagation()}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
             <span style={{ fontSize: 11, color: T.faint, fontWeight: 800, fontFamily: T.mono, letterSpacing: 0.5 }}>ADD EXERCISE FROM LIBRARY</span>
-            <button onClick={() => setShowAddLibrary(false)} style={{
+            <button onClick={closeLibrary} style={{
               background: "transparent", border: "none", color: T.accentLight, fontSize: 13, fontWeight: 600, cursor: "pointer", padding: 4
             }}>✕</button>
           </div>
@@ -128,7 +131,7 @@ function ExerciseNav({ exercises, sessionTimes, shownIdx, currentIdx, onSelect, 
                     {grp.exercises.map(opt => (
                       <button
                         key={opt.name}
-                        onClick={() => { onAddExercise(opt.name); setShowAddLibrary(false); }}
+                        onClick={() => { onAddExercise(opt.name); closeLibrary(); }}
                         style={{
                           padding: "6px 10px", borderRadius: 8,
                           fontFamily: "inherit", fontSize: 11.5, fontWeight: 600,
@@ -261,7 +264,7 @@ function ExerciseNav({ exercises, sessionTimes, shownIdx, currentIdx, onSelect, 
                   onSelectSet={onSelectSet}
                   onSwapExercise={onSwapExercise}
                   swapOpenIdx={swapOpenIdx}
-                  setSwapOpenIdx={setSwapOpenIdx}
+                  setSwapOpenIdx={updateSwapOpenIdx}
                   showAllFamilies={showAllFamilies}
                   setShowAllFamilies={setShowAllFamilies}
                 />
@@ -316,7 +319,7 @@ function ExerciseNav({ exercises, sessionTimes, shownIdx, currentIdx, onSelect, 
                             onSelectSet={onSelectSet}
                             onSwapExercise={onSwapExercise}
                             swapOpenIdx={swapOpenIdx}
-                            setSwapOpenIdx={setSwapOpenIdx}
+                            setSwapOpenIdx={updateSwapOpenIdx}
                             showAllFamilies={showAllFamilies}
                             setShowAllFamilies={setShowAllFamilies}
                           />

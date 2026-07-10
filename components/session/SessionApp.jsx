@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { api } from "@/lib/db/api";
+import { canApplyResolvedSessionId, selectScopedSaveTiming } from "@/lib/session-save-scope";
 import {
   TEST_MODE, T, GRIP_LABELS, WORKOUTS, localDate, SWAP_GROUPS, isDeloadActive, planEntryForWorkout,
 } from "@/lib/legacy/shared";
@@ -26,20 +27,21 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
   const workout = useMemo(() => WORKOUTS.find(w => w.id === workoutId) || WORKOUTS[0], [workoutId]);
   const onPickWorkout = (id) => { if (id === workoutId) return;
     const url = new URL(window.location.href); url.searchParams.set("w", id);
-    window.history.replaceState({}, "", url); setWorkoutId(id); };
+    window.history.replaceState({}, "", url);
+    setLoaded(false); setExercises([]); setSessionId(null); setHistory([]); setStatHistory([]); setSwaps({});
+    setSessionDate(localDate()); setFocused(null); resetTimers(id);
+    setWorkoutId(id); };
   const [exercises, setExercises] = useState([]);
   const [sessionDate, setSessionDate] = useState(() => localDate());
   const [loaded, setLoaded] = useState(false);
   const [sessionId, setSessionId] = useState(null);
-  const [focusIdx, setFocusIdx] = useState(null);
-  const { elapsed, running, startedAt, rest, setElapsed, setRunning, setStartedAt, setRest, startTimer, restAdd, restSkip, restToggle } = useWorkoutTimers(workoutId, exercises);
-  const [motivations, setMotivations] = useState({});
+  const [focused, setFocused] = useState(null);
+  const { elapsed, startedAt, rest, setElapsed, setStartedAt, setRest, startTimer, restAdd, restSkip, restToggle, resetTimers } = useWorkoutTimers(workoutId, exercises);
   const [history, setHistory] = useState([]);
   const [statHistory, setStatHistory] = useState({});
   const [swaps, setSwaps] = useState({});
   const dataRef = useRef({ last: {}, hints: {} });
   useEffect(() => { let cancelled = false;
-    setLoaded(false); setExercises([]); setSessionId(null); setMotivations({}); setHistory([]); setStatHistory([]); setSwaps({});
     // settings goes first: it's the cheapest query but gates deload/bodyweight,
     // and a single-threaded dev server processes requests in arrival order —
     // listed last it queues behind the heavy queries and can hit fetchT's timeout.
@@ -195,19 +197,32 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
         setExercises(exs); setLoaded(true);
       } catch (e) { console.error("[V2] mount failed:", e);
         setLoaded(true); } })(); return () => { cancelled = true; };
-  }, [workout]);
+  }, [workout, setElapsed, setStartedAt]);
   const startedAtRef = useRef(startedAt);
-  startedAtRef.current = startedAt;
   const elapsedRef = useRef(elapsed);
-  elapsedRef.current = elapsed;
+  const saveScopeRef = useRef(`${workout.name}:${sessionDate}`);
+  useEffect(() => {
+    startedAtRef.current = startedAt;
+    elapsedRef.current = elapsed;
+    saveScopeRef.current = `${workout.name}:${sessionDate}`;
+  }, [startedAt, elapsed, workout.name, sessionDate]);
   const saveDebounceRef = useRef(null);
   const queueSave = (currentExercises, currentSessionId, currentStartedAt, currentElapsed) => { clearTimeout(saveDebounceRef.current);
+    const saveScope = `${workout.name}:${sessionDate}`;
     saveDebounceRef.current = setTimeout(() => {
-      const latestStartedAt = startedAtRef.current;
-      const latestElapsed = elapsedRef.current;
+      const timing = selectScopedSaveTiming(
+        saveScope,
+        saveScopeRef.current,
+        { startedAt: currentStartedAt, elapsed: currentElapsed },
+        { startedAt: startedAtRef.current, elapsed: elapsedRef.current },
+      );
+      const latestStartedAt = timing.startedAt;
+      const latestElapsed = timing.elapsed;
       const payload = serializeForSave(currentExercises, workout.name, currentSessionId, latestStartedAt, latestElapsed, sessionDate);
       if (payload.sets.length === 0 && !latestStartedAt && !currentSessionId) return;
-      autoSavePayload(payload, (newId) => { if (!currentSessionId && newId) setSessionId(newId); });
+      autoSavePayload(payload, (newId) => {
+        if (canApplyResolvedSessionId(saveScope, saveScopeRef.current, currentSessionId, newId)) setSessionId(newId);
+      });
     }, 400); };
   const actions = useWorkoutActions({ workout, exercises, setExercises, sessionDate, sessionId, setSessionId, startedAt, elapsed, swaps, setSwaps, dataRef, startTimer, setRest, queueSave });
   const currentIdx = (() => { let i = exercises.findIndex(e => !e.skipped && e.sets.some(s => s.active));
@@ -215,27 +230,25 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
     i = exercises.findIndex(e => !e.skipped && e.sets.some(s => !s.completed));
     if (i !== -1) return i;
     return exercises.length - 1; })();
-  useEffect(() => { setFocusIdx(null); }, [currentIdx]);
+  const focusIdx = focused?.currentIdx === currentIdx ? focused.idx : null;
   const totalSets = exercises.reduce((n, e) => n + e.sets.length, 0);
   const doneSets = exercises.reduce((n, e) => e.skipped ? n + e.sets.length : n + e.sets.filter(s => s.completed).length, 0);
   const isFinished = totalSets > 0 && doneSets === totalSets;
-  useEffect(() => { if (isFinished) { setRunning(false);
-      setRest(null); } }, [isFinished]);
-  const onSelectExercise = (idx) => { setFocusIdx(idx);
+  const onSelectExercise = (idx) => { setFocused(idx == null ? null : { idx, currentIdx });
     const ex = exercises[idx]; if (!ex || ex.skipped) return;
     const hasActiveHere = ex.sets.some(s => s.active);
     const firstIncomplete = ex.sets.findIndex(s => !s.completed);
     if (!hasActiveHere && firstIncomplete !== -1) { const next = exercises.map((e) => ({ ...e, sets: e.sets.map(s => s.active ? { ...s, active: false } : s), }));
       next[idx] = { ...next[idx], sets: next[idx].sets.map((s, j) => j === firstIncomplete ? { ...s, active: true } : s), };
       actions.onPickWeight(idx, firstIncomplete, next[idx].sets[firstIncomplete].weight, next); } };
-  const onSelectSet = (exIdx, setIdx) => { setFocusIdx(exIdx);
+  const onSelectSet = (exIdx, setIdx) => { setFocused({ idx: exIdx, currentIdx });
     const ex = exercises[exIdx]; if (!ex || ex.skipped) return;
     const next = exercises.map((e, idx) => idx !== exIdx ? { ...e, sets: e.sets.map(s => s.active ? { ...s, active: false } : s) } : { ...e, sets: e.sets.map((s, j) => ({ ...s, active: j === setIdx })), });
     const selectedSet = next[exIdx].sets[setIdx];
     actions.onPickWeight(exIdx, setIdx, selectedSet.weight || selectedSet.lastWeight || 0, next); };
   if (!loaded) { return ( <div style={{ height: "100%", overflowY: "auto" }}>
         <div style={{ maxWidth: 448, margin: "0 auto", minHeight: "100%", background: T.page }}>
-          <Header workout={workout} workouts={WORKOUTS} onPickWorkout={onPickWorkout} done={0} total={0} elapsedSec={0} running={false} onToggleTimer={() => {}} deload={!!window.SESSION_DELOAD} />
+          <Header workout={workout} workouts={WORKOUTS} onPickWorkout={onPickWorkout} done={0} total={0} elapsedSec={0} deload={!!window.SESSION_DELOAD} />
           <div style={{ margin: "40px 16px", padding: "20px", textAlign: "center", color: T.muted, fontFamily: T.mono, fontSize: 13, border: `1px dashed ${T.cardBorder}`, borderRadius: 12 }}>
             loading workout…
           </div>
@@ -272,8 +285,6 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
             done={doneSets}
             total={totalSets}
             elapsedSec={elapsed}
-            running={running}
-            onToggleTimer={() => setRunning(r => !r)}
             deload={!!window.SESSION_DELOAD} />
           <div className="exercise-nav-strip">
             {nav("strip")}
