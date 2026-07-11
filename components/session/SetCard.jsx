@@ -2,6 +2,7 @@
 import React from "react";
 import { T, stageRank } from "@/lib/legacy/shared";
 import { fmtSetDuration } from "@/lib/legacy/session-utils";
+import { cableStackMultiplier } from "@/lib/legacy/cable-stack";
 
 // ─── file: workout-session-set-card.js ───
 
@@ -26,6 +27,7 @@ function SetCard({ s, idx, exercise, onReopenSet, dur }) {
   const bandSum = (s.bands || []).reduce((a, b) => a + b, 0);
   const lastBandSum = (s.lastBands || []).reduce((a, b) => a + b, 0);
   const totalLb = isAssist ? Math.max(0, baseW - bandSum) : (isBandsOnly ? bandSum : baseW + bandSum);
+  const weightDisplay = cableStackMultiplier(exercise.name) === 2 ? `${totalLb}×2` : totalLb;
   const prev = isAssist ? Math.max(0, lastBaseW - lastBandSum) : (isBandsOnly ? lastBandSum : lastBaseW + lastBandSum);
   const stages = exercise.stages || null;
   // Staged exercise: the "weight" slot shows the stage (S1..Sn); deltas compare
@@ -84,7 +86,7 @@ function SetCard({ s, idx, exercise, onReopenSet, dur }) {
         }
         return (
           <div style={{ display: "flex", alignItems: "baseline", gap: 2, fontFamily: T.mono }}>
-            <span style={{ color: (s.completed || isCurrent) ? T.strong : T.faint, fontSize: 16, fontWeight: 700, letterSpacing: -0.3 }}>{stages ? (curRank > 0 ? `S${curRank}` : "—") : totalLb}</span>
+            <span style={{ color: (s.completed || isCurrent) ? T.strong : T.faint, fontSize: 16, fontWeight: 700, letterSpacing: -0.3 }}>{stages ? (curRank > 0 ? `S${curRank}` : "—") : weightDisplay}</span>
             <span style={{ color: T.disabled, fontSize: 11 }}>×</span>
             <span style={{ color: repColor, fontSize: 16, fontWeight: 700, letterSpacing: -0.3, fontStyle: isPreview ? "italic" : "normal" }}>{repText}</span>
           </div>
@@ -93,7 +95,7 @@ function SetCard({ s, idx, exercise, onReopenSet, dur }) {
       {s.completed ? (
         <span style={{ color: deltaColor, fontFamily: T.mono, fontSize: 10, fontWeight: 700 }}>
           {deltaText}
-          {dur != null && <span style={{ color: T.disabled, fontWeight: 500, fontSize: 9 }}> · {fmtSetDuration(dur)}</span>}
+          {dur != null && <span style={{ color: T.disabled, fontWeight: 500, fontSize: 9 }}> · actual {fmtSetDuration(dur)}</span>}
         </span>
       ) : isCurrent ? (
         <span style={{ color: isWarm ? T.amber : T.accentLight, fontFamily: T.mono, fontSize: 10, fontWeight: 700 }}>● now</span>

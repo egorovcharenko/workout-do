@@ -1,0 +1,269 @@
+.selector {
+  margin-top: 12px;
+  color: #e5e7eb;
+}
+
+.selector button {
+  font-family: inherit;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 7px;
+}
+
+.header > span,
+.pinLabel {
+  color: #9ca3af;
+  font: 800 9px ui-monospace, Menlo, monospace;
+  letter-spacing: .7px;
+  text-transform: uppercase;
+}
+
+.lastButton {
+  padding: 3px 7px;
+  border: 1px dashed rgba(255,255,255,.1);
+  border-radius: 5px;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  font: 700 9px ui-monospace, Menlo, monospace;
+  letter-spacing: .4px;
+}
+
+.lastButtonMatched {
+  border-style: solid;
+  border-color: rgba(96,165,250,.35);
+  background: rgba(96,165,250,.1);
+  color: #60a5fa;
+  cursor: default;
+}
+
+.machine {
+  display: grid;
+  grid-template-columns: 126px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  min-height: 112px;
+  padding: 11px 12px;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 12px;
+  background: rgba(255,255,255,.015);
+}
+
+.towers {
+  height: 88px;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 9px;
+}
+
+.tower {
+  position: relative;
+  width: 42px;
+  padding: 6px 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: 1px solid rgba(148,163,184,.22);
+  border-radius: 7px 7px 4px 4px;
+  background: linear-gradient(180deg, rgba(51,65,85,.34), rgba(15,23,42,.5));
+  box-shadow: inset 0 0 0 2px rgba(0,0,0,.12);
+}
+
+.tower::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 8px;
+  right: 8px;
+  height: 5px;
+  border: 1px solid rgba(148,163,184,.22);
+  border-bottom: 0;
+  border-radius: 4px 4px 0 0;
+}
+
+.plate {
+  position: relative;
+  flex: 1;
+  min-height: 4px;
+  border: 1px solid rgba(148,163,184,.12);
+  border-radius: 2px;
+  background: rgba(71,85,105,.24);
+}
+
+.plateLoaded {
+  border-color: rgba(96,165,250,.24);
+  background: linear-gradient(180deg, rgba(96,165,250,.32), rgba(59,130,246,.18));
+}
+
+.pin {
+  position: absolute;
+  left: -5px;
+  top: 50%;
+  width: 8px;
+  height: 5px;
+  transform: translateY(-50%);
+  border-radius: 3px;
+  background: #60a5fa;
+  box-shadow: 0 0 7px rgba(96,165,250,.7);
+}
+
+.controls {
+  min-width: 0;
+}
+
+.valueRow {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 42px;
+  gap: 8px;
+  align-items: center;
+}
+
+.adjustButton {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 10px;
+  background: rgba(255,255,255,.04);
+  color: #d1d5db;
+  cursor: pointer;
+  font: 600 19px ui-monospace, Menlo, monospace;
+}
+
+.adjustButton:disabled {
+  opacity: .35;
+  cursor: default;
+}
+
+.readout {
+  min-width: 0;
+  text-align: center;
+}
+
+.number {
+  color: #f3f4f6;
+  font: 800 30px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: -1px;
+}
+
+.unit {
+  margin-left: 4px;
+  color: #6b7280;
+  font: 600 12px ui-monospace, Menlo, monospace;
+}
+
+.stackCaption {
+  display: block;
+  margin-top: 3px;
+  color: #6b7280;
+  font: 700 8px ui-monospace, Menlo, monospace;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+
+.formula {
+  margin-top: 7px;
+  color: #9ca3af;
+  text-align: center;
+  font: 600 10px ui-monospace, Menlo, monospace;
+}
+
+.formula strong {
+  color: #60a5fa;
+  font-weight: 800;
+}
+
+.pinPicker {
+  margin-top: 9px;
+}
+
+.pinRow {
+  display: flex;
+  gap: 5px;
+  margin-top: 5px;
+  padding: 2px 1px 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.pinRow::-webkit-scrollbar {
+  display: none;
+}
+
+.pinChoice {
+  flex: 0 0 auto;
+  min-width: 38px;
+  height: 34px;
+  padding: 0 7px;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 8px;
+  background: rgba(255,255,255,.02);
+  color: #9ca3af;
+  cursor: pointer;
+  font: 700 11px ui-monospace, Menlo, monospace;
+}
+
+.pinChoiceActive {
+  border-color: rgba(96,165,250,.8);
+  background: rgba(59,130,246,.85);
+  color: #fff;
+}
+
+.compact {
+  margin-top: 9px;
+}
+
+.compact .machine {
+  grid-template-columns: 108px minmax(0, 1fr);
+  min-height: 96px;
+  padding: 9px 10px;
+}
+
+.compact .towers {
+  height: 72px;
+  gap: 7px;
+}
+
+.compact .tower {
+  width: 36px;
+  padding: 5px 4px;
+}
+
+.compact .pinChoice {
+  height: 31px;
+}
+
+@media (max-width: 390px) {
+  .machine,
+  .compact .machine {
+    grid-template-columns: 92px minmax(0, 1fr);
+    gap: 9px;
+    padding-inline: 8px;
+  }
+
+  .valueRow {
+    grid-template-columns: 38px minmax(0, 1fr) 38px;
+    gap: 5px;
+  }
+
+  .adjustButton {
+    width: 38px;
+    height: 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .adjustButton,
+  .pinChoice {
+    transition: none;
+  }
+}

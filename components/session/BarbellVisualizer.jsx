@@ -3,7 +3,7 @@ import { T } from "@/lib/legacy/shared";
 
 // ─── file: workout-session-barbell-visualizer.js ───
 
-function BarbellVisualizer({ weight, onWeightChange }) {
+function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
   const PLATE_COLORS = {
     45: { bg: "#3B82F6", text: "#FFFFFF" }, // blue
     35: { bg: "#EAB308", text: "#1E293B" }, // yellow
@@ -19,6 +19,8 @@ function BarbellVisualizer({ weight, onWeightChange }) {
   const PLATE_SIZES = [45, 35, 25, 15, 10, 5, 2.5, 1, 0.5];
   const B_WIDTHS = { 45: 28, 35: 24, 25: 20, 15: 16, 10: 14, 5: 14, 2.5: 13, 1: 12, 0.5: 11 };
   const B_HEIGHTS = { 45: 66, 35: 66, 25: 66, 15: 66, 10: 66, 5: 36, 2.5: 33, 1: 30, 0.5: 27 };
+  const compactScale = compact ? 0.68 : 1;
+  const scaled = (value) => Math.round(value * compactScale);
 
   // Decompose weight into plates on one side
   const loadedPlates = [];
@@ -63,10 +65,10 @@ function BarbellVisualizer({ weight, onWeightChange }) {
               title="Click to remove plate"
               style={{
                 width: getPlateWidth(p),
-                height: getPlateHeight(p),
+                height: scaled(getPlateHeight(p)),
                 background: PLATE_COLORS[p].bg,
                 color: PLATE_COLORS[p].text,
-                fontSize: p >= 25 ? 12.5 : p >= 10 ? 11 : 9.5,
+                fontSize: compact ? (p >= 25 ? 10.5 : p >= 10 ? 9.5 : 8) : (p >= 25 ? 12.5 : p >= 10 ? 11 : 9.5),
                 fontWeight: 900,
                 fontFamily: T.mono,
                 display: "flex",
@@ -94,13 +96,13 @@ function BarbellVisualizer({ weight, onWeightChange }) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 12 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: compact ? 8 : 12, marginTop: compact ? 9 : 12 }}>
       {/* Barbell load graphic */}
       <div style={{
         position: "relative",
-        height: 88,
+        height: compact ? 62 : 88,
         background: "rgba(255,255,255,0.015)",
-        borderRadius: 12,
+        borderRadius: compact ? 10 : 12,
         border: "1px solid rgba(255,255,255,0.06)",
         display: "flex",
         alignItems: "center",
@@ -206,7 +208,7 @@ function BarbellVisualizer({ weight, onWeightChange }) {
             </button>
           )}
         </div>
-        <div style={{ display: "flex", gap: 4, justifyContent: "space-between" }}>
+        <div style={{ display: "flex", gap: compact ? 3 : 4, justifyContent: "space-between" }}>
           {PLATE_SIZES.map(p => {
             const label = p === 0.5 ? '.5' : p;
             return (
@@ -216,10 +218,10 @@ function BarbellVisualizer({ weight, onWeightChange }) {
                 style={{
                   flex: 1,
                   minWidth: 0,
-                  height: 72,
+                  height: compact ? 46 : 72,
                   background: "rgba(255,255,255,0.02)",
                   border: "1px solid rgba(255,255,255,0.04)",
-                  borderRadius: 8,
+                  borderRadius: compact ? 7 : 8,
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
@@ -244,10 +246,10 @@ function BarbellVisualizer({ weight, onWeightChange }) {
                   className="inner-plate"
                   style={{
                     width: B_WIDTHS[p],
-                    height: B_HEIGHTS[p],
+                    height: scaled(B_HEIGHTS[p]),
                     background: PLATE_COLORS[p].bg,
                     color: PLATE_COLORS[p].text,
-                    fontSize: p >= 25 ? 14 : p >= 10 ? 12.5 : 11,
+                    fontSize: compact ? (p >= 25 ? 11 : p >= 10 ? 10 : 9) : (p >= 25 ? 14 : p >= 10 ? 12.5 : 11),
                     fontWeight: 900,
                     fontFamily: T.mono,
                     display: "flex",

@@ -4,16 +4,18 @@ import { useEffect, useRef, useState } from "react";
 import {
   GRIP_LABELS,
   SWAP_GROUPS,
-  estimateExerciseDuration,
   getSwapGroup,
   getSwapGroupName,
   stageLabel,
 } from "@/lib/legacy/shared";
 import { fmtSetDuration } from "@/lib/legacy/session-utils";
 import { BarbellVisualizer } from "./BarbellVisualizer";
+import { CableStackVisualizer } from "./CableStackVisualizer";
+import { cableStackMultiplier, isCableStackExercise } from "@/lib/legacy/cable-stack";
 import { RepStrip } from "./RepStrip";
 import { RestTimer } from "./RestTimer";
 import { BandsGrid, GripSelector, StageSelector, WeightStepper } from "./Stepper";
+import { DurationReadout } from "./DurationReadout";
 import styles from "./ExerciseCardV2.module.css";
 
 function setLabel(set, allSets) {
@@ -29,7 +31,8 @@ function setValue(set, exercise) {
   const bands = (set.bands || []).reduce((sum, band) => sum + band, 0);
   if (exercise.isBandsOnly) return `${bands || "—"} × ${reps}`;
   if (exercise.assist) return `BW${bands ? ` − ${bands}` : ""} × ${reps}`;
-  return `${set.weight || set.lastWeight || "—"} × ${reps}`;
+  const weight = set.weight || set.lastWeight || "—";
+  return `${weight}${cableStackMultiplier(exercise.name) === 2 ? "×2" : ""} × ${reps}`;
 }
 
 function SetTile({ set, index, exercise, duration, onReopenSet }) {
@@ -49,13 +52,15 @@ function SetTile({ set, index, exercise, duration, onReopenSet }) {
     >
       <span className={styles.setNumber}>{setLabel(set, exercise.sets)}</span>
       <strong>{setValue(set, exercise)}</strong>
-      <small>{set.active ? "Now" : set.completed ? duration != null ? fmtSetDuration(duration) : "Done" : "Next"}</small>
+      <small>{set.active ? "Now" : set.completed ? duration != null ? `Actual ${fmtSetDuration(duration)}` : "Done" : "Next"}</small>
     </button>
   );
 }
 
 function ActivePanelV2({ exercise, set, totalWork, totalWarmup, warmupPos, onPickWeight, onPickBodyweight, onPickGrip, onToggleBand, onClearBands, onLogReps, onSkipWarmup, onApplyLast }) {
   const isBodyweight = exercise.mode === "bodyweight";
+  const isCable = isCableStackExercise(exercise.name, exercise.equipment);
+  const cableMultiplier = cableStackMultiplier(exercise.name);
   const stages = exercise.stages || null;
   const bands = set.bands || [];
   const lastBands = set.lastBands || [];
@@ -77,7 +82,7 @@ function ActivePanelV2({ exercise, set, totalWork, totalWarmup, warmupPos, onPic
 
   const previousText = exercise.repsOnly
     ? `${set.lastReps || "—"} reps${exercise.grips && set.lastGrip ? ` · ${GRIP_LABELS[set.lastGrip]?.label || set.lastGrip}` : ""}`
-    : `${stages ? stageLabel(stages, set.lastGrip) || "—" : lastBaseWeight || "—"}${!stages && lastBands.length ? ` ${isBodyweight ? "−" : "+"} ${lastBands.join("+")}` : ""} × ${set.lastReps || "—"}`;
+    : `${stages ? stageLabel(stages, set.lastGrip) || "—" : `${lastBaseWeight || "—"}${cableMultiplier === 2 ? "×2" : ""}`}${!stages && lastBands.length ? ` ${isBodyweight ? "−" : "+"} ${lastBands.join("+")}` : ""} × ${set.lastReps || "—"}`;
 
   return (
     <section className={`${styles.activePanel} ${set.kind === "warmup" ? styles.activeWarmup : ""}`}>
@@ -100,23 +105,32 @@ function ActivePanelV2({ exercise, set, totalWork, totalWarmup, warmupPos, onPic
 
       {exercise.grips && <GripSelector grips={exercise.grips} selected={set.grip} last={set.lastGrip} onPick={onPickGrip} />}
       {stages && <StageSelector stages={stages} selected={set.grip} last={set.lastGrip} onPick={onPickGrip} />}
-      {!exercise.isBandsOnly && !stages && !exercise.repsOnly && (
+      {!exercise.isBandsOnly && !stages && !exercise.repsOnly && !isCable && (
         <WeightStepper
           value={baseWeight}
           last={lastBaseWeight || null}
           onPick={isBodyweight ? onPickBodyweight : onPickWeight}
           label={isBodyweight ? "BODYWEIGHT" : null}
-          isCable={exercise.equipment === "cable" || exercise.name.toLowerCase().includes("cable")}
+          compact
         />
       )}
-      {!isBodyweight && exercise.isBarbell && <BarbellVisualizer weight={baseWeight || 45} onWeightChange={onPickWeight} />}
+      {!exercise.isBandsOnly && !stages && !exercise.repsOnly && isCable && (
+        <CableStackVisualizer
+          exerciseName={exercise.name}
+          value={baseWeight || 0}
+          last={lastBaseWeight || null}
+          onPick={onPickWeight}
+          compact
+        />
+      )}
+      {!isBodyweight && exercise.isBarbell && <BarbellVisualizer weight={baseWeight || 45} onWeightChange={onPickWeight} compact />}
       {(exercise.isBandsOnly || exercise.bandAddon || (exercise.assist && exercise.equipment === "band")) && (
         <BandsGrid bands={bands} lastBands={lastBands} onToggle={onToggleBand} onClear={onClearBands} isAssist={exercise.assist} />
       )}
 
       <div className={styles.repSection}>
         <span>Reps</span>
-        <RepStrip min={1} max={20} range={range} last={set.lastReps} logged={set.reps} onLog={onLogReps} />
+        <RepStrip min={1} max={20} range={range} last={set.lastReps} logged={set.reps} onLog={onLogReps} compact />
       </div>
       {set.kind === "warmup" && <button type="button" className={styles.skipWarmup} onClick={onSkipWarmup}>Skip remaining warm-ups</button>}
     </section>
@@ -146,7 +160,7 @@ function VariantPanel({ exercise, swapGroup, currentFamily, anyLogged, showAllFa
   );
 }
 
-function ExerciseCardV2Content({ exercise, sessionTimes, supersetTag, embedded, rest, onRestAdd, onRestSkip, onRestToggle, onPickWeight, onPickBodyweight, onPickGrip, onToggleBand, onClearBands, onLogReps, onSkipWarmup, onSkipExercise, onDeferExercise, onSwapExercise, onReopenSet, onAddSet, onRemoveSet, onRemoveWarmup }) {
+function ExerciseCardV2Content({ exercise, sessionTimes, durationMeta, supersetTag, embedded, rest, onRestAdd, onRestSkip, onRestToggle, onPickWeight, onPickBodyweight, onPickGrip, onToggleBand, onClearBands, onLogReps, onSkipWarmup, onSkipExercise, onDeferExercise, onSwapExercise, onReopenSet, onAddSet, onRemoveSet, onRemoveWarmup }) {
   const [showVariants, setShowVariants] = useState(false);
   const [showAllFamilies, setShowAllFamilies] = useState(false);
   const activeIndex = exercise.sets.findIndex((set) => set.active);
@@ -183,7 +197,10 @@ function ExerciseCardV2Content({ exercise, sessionTimes, supersetTag, embedded, 
       {!embedded && (
         <header className={styles.cardHeader}>
           <div className={styles.headerCopy}>
-            <div className={styles.kicker}>{supersetTag ? <span>{supersetTag}</span> : <span>Exercise</span>}<b>≈ {Math.round(estimateExerciseDuration(exercise) / 60)} min</b></div>
+            <div className={styles.kicker}>
+              {supersetTag ? <span>{supersetTag}</span> : <span>Exercise</span>}
+              <DurationReadout meta={durationMeta} />
+            </div>
             <h2>{exercise.name}</h2>
           </div>
           <div className={styles.headerTools}>

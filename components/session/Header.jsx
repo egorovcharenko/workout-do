@@ -2,10 +2,11 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { T, estimateTemplateWorkoutDuration } from "@/lib/legacy/shared";
+import { DurationReadout } from "./DurationReadout";
 
 // ─── file: workout-session-header.js ───
 
-function Header({ workout, workouts, onPickWorkout, done, total, elapsedSec, deload, homeHref = "/" }) {
+function Header({ workout, workouts, onPickWorkout, done, total, elapsedSec, durationMeta, deload, homeHref = "/" }) {
   const pct = total ? (done / total) * 100 : 0;
   const m = Math.floor(elapsedSec / 60);
   const s = String(elapsedSec % 60).padStart(2, "0");
@@ -23,7 +24,7 @@ function Header({ workout, workouts, onPickWorkout, done, total, elapsedSec, del
 
   return (
     <div style={{ background: T.page, padding: "14px 18px 14px", position: "sticky", top: 0, zIndex: 5 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, gap: 10 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
           <Link href={homeHref} style={{ color: T.accent, fontSize: 16, fontWeight: 600, textDecoration: "none", flexShrink: 0 }} title="Home">← Back</Link>
           <div data-workout-menu style={{ position: "relative", minWidth: 0 }}>
@@ -55,7 +56,7 @@ function Header({ workout, workouts, onPickWorkout, done, total, elapsedSec, del
                       padding: "9px 12px", borderRadius: 7, cursor: "pointer",
                     }}>
                       {w.name}
-                      <span style={{ marginLeft: 8, color: T.faint, fontSize: 11, fontWeight: 500 }}>~{Math.round(estimateTemplateWorkoutDuration(w) / 60)} min</span>
+                      <span style={{ marginLeft: 8, color: T.faint, fontSize: 11, fontWeight: 500 }}>plan {Math.round(estimateTemplateWorkoutDuration(w) / 60)}m</span>
                     </button>
                   );
                 })}
@@ -85,7 +86,7 @@ function Header({ workout, workouts, onPickWorkout, done, total, elapsedSec, del
               }}
             >
               <span style={{ fontSize: 11 }}>⏱</span>
-              <span>Active</span>
+              <span>Actual</span>
               <span style={{ opacity: 0.45 }}>·</span>
               <span style={{ letterSpacing: -0.3 }}>{m}:{s}</span>
             </div>
@@ -101,13 +102,18 @@ function Header({ workout, workouts, onPickWorkout, done, total, elapsedSec, del
               }}
             >
               <span style={{ fontSize: 11 }}>▶</span>
-              <span>Not Started</span>
+              <span>Actual</span>
               <span style={{ opacity: 0.45 }}>·</span>
               <span style={{ letterSpacing: -0.3 }}>0:00</span>
             </div>
           )}
         </div>
       </div>
+      {durationMeta && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", marginBottom: 8 }}>
+          <DurationReadout meta={durationMeta} variant="header" showActual={false} />
+        </div>
+      )}
       <div style={{ height: 3, background: "rgba(255,255,255,0.05)", borderRadius: 99, overflow: "hidden" }}>
         <div style={{ height: "100%", width: `${pct}%`, background: T.accent, borderRadius: 99, transition: "width 240ms ease" }} />
       </div>

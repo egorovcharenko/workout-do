@@ -15,6 +15,7 @@ import {
   parseWorkoutPlan,
 } from "@/lib/legacy/shared";
 import { isRepsOnlyExercise } from "@/lib/legacy/standards";
+import { effectiveExerciseWeight } from "@/lib/legacy/cable-stack";
 import styles from "./HomeV2.module.css";
 
 const PROGRAM_ORDER = ["Main: Squat", "Micro: Arms", "Main: Deadlift", "Micro: Delts & Traps"];
@@ -54,7 +55,7 @@ function formatDate(date, options = {}) {
 function sessionVolume(session) {
   return (session.sets || []).reduce((total, set) => {
     if (set.set_type !== "working" || isRepsOnlyExercise(set.exercise)) return total;
-    return total + (Number(set.weight_lb) || 0) * (parseInt(set.reps, 10) || 0);
+    return total + effectiveExerciseWeight(set.exercise, Number(set.weight_lb) || 0) * (parseInt(set.reps, 10) || 0);
   }, 0);
 }
 

@@ -3,8 +3,9 @@ import { T } from "@/lib/legacy/shared";
 
 // ─── file: workout-session-stepper.js ───
 
-function StepperBtn({ children, onClick, big, dim }) {
+function StepperBtn({ children, onClick, big, dim, compact = false }) {
   const press = (e, val) => { e.currentTarget.style.transform = val; };
+  const size = big ? (compact ? 44 : 52) : (compact ? 34 : 40);
   return (
     <button
       onClick={onClick}
@@ -14,11 +15,11 @@ function StepperBtn({ children, onClick, big, dim }) {
       onTouchStart={e => press(e, "scale(0.92)")}
       onTouchEnd={e => press(e, "scale(1)")}
       style={{
-        width: big ? 52 : 40, height: big ? 52 : 40, borderRadius: 12,
+        width: size, height: size, borderRadius: compact ? 10 : 12,
         background: "rgba(255,255,255,0.04)",
         border: "1px solid rgba(255,255,255,0.08)",
         color: dim ? T.faint : "#D1D5DB",
-        fontFamily: T.mono, fontWeight: 600, fontSize: big ? 22 : 14,
+        fontFamily: T.mono, fontWeight: 600, fontSize: big ? (compact ? 19 : 22) : (compact ? 12 : 14),
         cursor: "pointer",
         display: "flex", alignItems: "center", justifyContent: "center",
         flexShrink: 0, lineHeight: 1,
@@ -28,24 +29,24 @@ function StepperBtn({ children, onClick, big, dim }) {
   );
 }
 
-function WeightStepper({ value, last, pr, onPick, label, isCable }) {
+function WeightStepper({ value, last, pr, onPick, label, compact = false }) {
   const v = parseFloat(value ?? last ?? 0);
   const step = (delta) => onPick(Math.max(0, Math.round((v + delta) * 100) / 100));
   const atLast = last != null && parseFloat(v) === parseFloat(last);
   const diff = last != null ? v - last : 0;
   return (
-    <div style={{ marginTop: 14 }}>
+    <div style={{ marginTop: compact ? 9 : 14 }}>
       {label && (
         <div style={{ marginBottom: 6, color: T.muted, fontFamily: T.mono, fontSize: 10, fontWeight: 700, letterSpacing: 0.6 }}>
           {label}
         </div>
       )}
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <StepperBtn onClick={() => step(-5)} big>−</StepperBtn>
+      <div style={{ display: "flex", alignItems: "center", gap: compact ? 8 : 10 }}>
+        <StepperBtn onClick={() => step(-5)} big compact={compact}>−</StepperBtn>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-            <span style={{ color: T.strong, fontFamily: T.mono, fontSize: 36, fontWeight: 800, letterSpacing: -1, lineHeight: 1 }}>{v}</span>
-            <span style={{ color: T.faint, fontFamily: T.mono, fontSize: 14, fontWeight: 600 }}>lb</span>
+            <span style={{ color: T.strong, fontFamily: T.mono, fontSize: compact ? 30 : 36, fontWeight: 800, letterSpacing: -1, lineHeight: 1 }}>{v}</span>
+            <span style={{ color: T.faint, fontFamily: T.mono, fontSize: compact ? 12 : 14, fontWeight: 600 }}>lb</span>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", fontFamily: T.mono, fontSize: 11, color: T.faint }}>
             {last != null && (
@@ -65,13 +66,11 @@ function WeightStepper({ value, last, pr, onPick, label, isCable }) {
             {pr != null && <span>· PR {pr}</span>}
           </div>
         </div>
-        <StepperBtn onClick={() => step(5)} big>+</StepperBtn>
+        <StepperBtn onClick={() => step(5)} big compact={compact}>+</StepperBtn>
       </div>
-      <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 8 }}>
-        <StepperBtn onClick={() => step(-2.5)} dim>−2.5</StepperBtn>
-        {isCable && <StepperBtn onClick={() => step(-1.25)} dim>−1.25</StepperBtn>}
-        {isCable && <StepperBtn onClick={() => step(1.25)} dim>+1.25</StepperBtn>}
-        <StepperBtn onClick={() => step(2.5)} dim>+2.5</StepperBtn>
+      <div style={{ display: "flex", justifyContent: "center", gap: compact ? 5 : 6, marginTop: compact ? 6 : 8 }}>
+        <StepperBtn onClick={() => step(-2.5)} dim compact={compact}>−2.5</StepperBtn>
+        <StepperBtn onClick={() => step(2.5)} dim compact={compact}>+2.5</StepperBtn>
       </div>
     </div>
   );

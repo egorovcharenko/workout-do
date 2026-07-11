@@ -1,5 +1,6 @@
 import { api } from "@/lib/db/api";
 import { EXERCISE_MUSCLES, calcSet1RM } from "@/lib/legacy/standards";
+import { effectiveExerciseWeight } from "@/lib/legacy/cable-stack";
 
 // ─── file: workout-session-motivation-payload.js ───
 
@@ -64,11 +65,12 @@ function buildMotivatePayload(exercise, sid, sessionDate, history, statHistory) 
       let mw = 0, mr = 0, mo = 0, sv = 0;
       sess.sets.forEach(st => {
         if (st.exercise !== subName || st.set_type !== 'working') return;
-        const w = +st.weight_lb || 0;
+        const recordedWeight = +st.weight_lb || 0;
+        const w = effectiveExerciseWeight(subName, recordedWeight);
         const r = parseInt(st.reps) || 0;
         if (!repsOnly) { if (w > mw) mw = w; if (mw > histMaxWt) histMaxWt = mw; }
         if (r > mr) mr = r; if (mr > histMaxReps) histMaxReps = mr;
-          const o = calcSet1RM(subName, w, r, st.bands_json, st.grip);
+          const o = calcSet1RM(subName, recordedWeight, r, st.bands_json, st.grip);
           if (o > mo) mo = o;
           if (mo > histMaxOrm) histMaxOrm = mo;
           if (!repsOnly) sv += w * r;

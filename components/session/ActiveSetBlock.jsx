@@ -3,6 +3,8 @@ import { T, GRIP_LABELS, stageLabel } from "@/lib/legacy/shared";
 import { WeightStepper, GripSelector, StageSelector, BandsGrid } from "./Stepper";
 import { RepStrip } from "./RepStrip";
 import { BarbellVisualizer } from "./BarbellVisualizer";
+import { CableStackVisualizer } from "./CableStackVisualizer";
+import { cableStackMultiplier, isCableStackExercise } from "@/lib/legacy/cable-stack";
 
 // ─── file: workout-session-activeset.js ───
 
@@ -10,6 +12,8 @@ import { BarbellVisualizer } from "./BarbellVisualizer";
 
 function ActiveSetBlock({ exercise, set, totalWork, totalWarmup, warmupPos, onPickWeight, onPickBodyweight, onPickGrip, onToggleBand, onClearBands, onLogReps, onSkipWarmup, onApplyLast }) {
   const isBW = exercise.mode === "bodyweight";
+  const isCable = isCableStackExercise(exercise.name, exercise.equipment);
+  const cableMultiplier = cableStackMultiplier(exercise.name);
   const bands = set.bands || [];
   const lastBands = set.lastBands || [];
   const baseW = isBW ? (set.bodyweight || 0) : set.weight;
@@ -86,7 +90,7 @@ function ActiveSetBlock({ exercise, set, totalWork, totalWarmup, warmupPos, onPi
                 </>
               ) : (
                 <>
-                  {stages ? (stageLabel(stages, set.lastGrip) || "—") : (lastBaseW || "—")}
+                  {stages ? (stageLabel(stages, set.lastGrip) || "—") : `${lastBaseW || "—"}${cableMultiplier === 2 ? "×2" : ""}`}
                   {!stages && lastBands.length > 0 && (
                     <span style={{ color: T.bands }}> {isBW ? "−" : "+"} {lastBands.join("+")}</span>
                   )}
@@ -124,13 +128,21 @@ function ActiveSetBlock({ exercise, set, totalWork, totalWarmup, warmupPos, onPi
         />
       )}
 
-      {!exercise.isBandsOnly && !stages && !exercise.repsOnly && (
+      {!exercise.isBandsOnly && !stages && !exercise.repsOnly && !isCable && (
         <WeightStepper
           value={baseW}
           last={lastBaseW || null}
           onPick={isBW ? onPickBodyweight : onPickWeight}
           label={isBW ? "BODYWEIGHT" : null}
-          isCable={exercise.equipment === "cable" || exercise.name.toLowerCase().includes("cable")}
+        />
+      )}
+
+      {!exercise.isBandsOnly && !stages && !exercise.repsOnly && isCable && (
+        <CableStackVisualizer
+          exerciseName={exercise.name}
+          value={baseW || 0}
+          last={lastBaseW || null}
+          onPick={onPickWeight}
         />
       )}
 

@@ -1,8 +1,9 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { T, SWAP_GROUPS, estimateExerciseDuration } from "@/lib/legacy/shared";
+import { T, SWAP_GROUPS } from "@/lib/legacy/shared";
 import { ExerciseNavRow } from "./ExerciseNavRow";
+import { DurationReadout } from "./DurationReadout";
 
 // ─── file: workout-session-exercise-nav.js ───
 
@@ -11,11 +12,7 @@ import { ExerciseNavRow } from "./ExerciseNavRow";
 // Tapping a row focuses that exercise in the center column; the App's onSelect
 // also activates the exercise's next set so you can log it.
 
-function ExerciseNav({ exercises, sessionTimes, shownIdx, currentIdx, onSelect, onSelectSet, onSwapExercise, onAddExercise, variant, isFinished }) {
-  const spentMin = (i) => {
-    const sec = sessionTimes && sessionTimes.byExercise ? sessionTimes.byExercise[i] : null;
-    return sec >= 60 ? Math.round(sec / 60) : null;
-  };
+function ExerciseNav({ exercises, durationMeta, shownIdx, currentIdx, onSelect, onSelectSet, onSwapExercise, onAddExercise, variant, isFinished }) {
   const [swapOpenIdx, setSwapOpenIdx] = useState(null);
   const [showAllFamilies, setShowAllFamilies] = useState(false);
   const [showAddLibrary, setShowAddLibrary] = useState(false);
@@ -173,9 +170,7 @@ function ExerciseNav({ exercises, sessionTimes, shownIdx, currentIdx, onSelect, 
                 <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 4 }}>
                   <span style={{ color: STATUS_COLOR[m.status], fontSize: 10, flexShrink: 0 }}>{STATUS_GLYPH[m.status]}</span>
                   {m.tag && <span style={{ color: T.bands, fontFamily: T.mono, fontSize: 9, fontWeight: 800 }}>{m.tag}</span>}
-                  <span style={{ marginLeft: "auto", fontFamily: T.mono, fontSize: 9, color: m.status === "done" ? T.green : T.faint }}>
-                    (~{Math.round(estimateExerciseDuration(e) / 60)}m{spentMin(i) ? ` · ${spentMin(i)}m` : ""}) {m.doneWork}/{m.totalWork}
-                  </span>
+                  <span style={{ marginLeft: "auto", fontFamily: T.mono, fontSize: 9, color: m.status === "done" ? T.green : T.faint }}>{m.doneWork}/{m.totalWork}</span>
                 </div>
                 <div style={{
                   color: m.status === "skipped" ? T.muted : T.strong,
@@ -184,6 +179,7 @@ function ExerciseNav({ exercises, sessionTimes, shownIdx, currentIdx, onSelect, 
                   textDecoration: m.status === "skipped" ? "line-through" : "none",
                   minHeight: 30,
                 }}>{e.name}</div>
+                <DurationReadout meta={durationMeta?.[i]} variant="nav" />
               </button>
             );
           })}
@@ -257,7 +253,7 @@ function ExerciseNav({ exercises, sessionTimes, shownIdx, currentIdx, onSelect, 
                 <ExerciseNavRow
                   i={i}
                   exercises={exercises}
-                  sessionTimes={sessionTimes}
+                  durationMeta={durationMeta?.[i]}
                   shownIdx={shownIdx}
                   currentIdx={currentIdx}
                   onSelect={onSelect}
@@ -312,7 +308,7 @@ function ExerciseNav({ exercises, sessionTimes, shownIdx, currentIdx, onSelect, 
                           <ExerciseNavRow
                             i={i}
                             exercises={exercises}
-                            sessionTimes={sessionTimes}
+                            durationMeta={durationMeta?.[i]}
                             shownIdx={shownIdx}
                             currentIdx={currentIdx}
                             onSelect={onSelect}

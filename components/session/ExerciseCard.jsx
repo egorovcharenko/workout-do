@@ -1,13 +1,14 @@
 "use client";
 import { useState } from "react";
-import { T, SWAP_GROUPS, getSwapGroup, getSwapGroupName, estimateExerciseDuration } from "@/lib/legacy/shared";
+import { T, SWAP_GROUPS, getSwapGroup, getSwapGroupName } from "@/lib/legacy/shared";
 import { SetCard } from "./SetCard";
 import { RestTimer } from "./RestTimer";
 import { ActiveSetBlock } from "./ActiveSetBlock";
+import { DurationReadout } from "./DurationReadout";
 
 // ─── file: workout-session-exercise-card.js ───
 
-function ExerciseCardContent({ exercise, sessionTimes, supersetTag, embedded, rest, onRestAdd, onRestSkip, onRestToggle, onPickWeight, onPickBodyweight, onPickGrip, onToggleBand, onClearBands, onLogReps, onSkipWarmup, onSkipExercise, onDeferExercise, onSwapExercise, onReopenSet, onAddSet, onRemoveSet, onRemoveWarmup }) {
+function ExerciseCardContent({ exercise, sessionTimes, durationMeta, supersetTag, embedded, rest, onRestAdd, onRestSkip, onRestToggle, onPickWeight, onPickBodyweight, onPickGrip, onToggleBand, onClearBands, onLogReps, onSkipWarmup, onSkipExercise, onDeferExercise, onSwapExercise, onReopenSet, onAddSet, onRemoveSet, onRemoveWarmup }) {
   const [showAllFamilies, setShowAllFamilies] = useState(false);
   const [showVariants, setShowVariants] = useState(false);
   const currentFamilyName = getSwapGroupName(exercise.name) || "Other";
@@ -55,19 +56,19 @@ function ExerciseCardContent({ exercise, sessionTimes, supersetTag, embedded, re
     }}>
       {!embedded && (
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
-          <h2 style={{ margin: 0, color: T.strong, fontSize: 20, fontWeight: 800, lineHeight: 1.15, letterSpacing: -0.4 }}>
-            {supersetTag && (
-              <span style={{
-                color: T.bands, fontFamily: T.mono, fontSize: 11, fontWeight: 800, letterSpacing: 1,
-                marginRight: 8, padding: "2px 6px", borderRadius: 5,
-                background: "rgba(192,132,252,0.12)", verticalAlign: "middle",
-              }}>{supersetTag}</span>
-            )}
-            {exercise.name}
-            <span style={{ fontSize: 11, color: T.faint, fontWeight: 500, marginLeft: 8, fontFamily: T.mono, verticalAlign: "middle" }}>
-              (~{Math.round(estimateExerciseDuration(exercise) / 60)} min)
-            </span>
-          </h2>
+          <div style={{ minWidth: 0 }}>
+            <h2 style={{ margin: 0, color: T.strong, fontSize: 20, fontWeight: 800, lineHeight: 1.15, letterSpacing: -0.4 }}>
+              {supersetTag && (
+                <span style={{
+                  color: T.bands, fontFamily: T.mono, fontSize: 11, fontWeight: 800, letterSpacing: 1,
+                  marginRight: 8, padding: "2px 6px", borderRadius: 5,
+                  background: "rgba(192,132,252,0.12)", verticalAlign: "middle",
+                }}>{supersetTag}</span>
+              )}
+              {exercise.name}
+            </h2>
+            <DurationReadout meta={durationMeta} variant="card" />
+          </div>
           {hasVariants && (
             <button
               onClick={() => setShowVariants(v => !v)}

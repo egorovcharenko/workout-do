@@ -4,6 +4,7 @@ import { api } from "@/lib/db/api";
 import { canApplyResolvedSessionId, selectScopedSaveTiming } from "@/lib/session-save-scope";
 import {
   TEST_MODE, T, GRIP_LABELS, WORKOUTS, localDate, SWAP_GROUPS, isDeloadActive, planEntryForWorkout,
+  estimateActiveWorkoutDuration,
 } from "@/lib/legacy/shared";
 import { applySwaps } from "@/lib/legacy/standards";
 import {
@@ -20,6 +21,8 @@ import { WorkoutCompleteScreen } from "./WorkoutCompleteScreen";
 import { ExerciseCard } from "./ExerciseCard";
 import { ExerciseCardV2 } from "./ExerciseCardV2";
 import { StatsPane } from "./StatsPane";
+import { DurationReadout } from "./DurationReadout";
+import { buildExerciseDurationHistory, estimateExerciseDurationMeta } from "@/lib/legacy/duration-estimates";
 
 // ─── file: workout-session-app.js ───
 
@@ -235,6 +238,10 @@ function App({ cardVariant = "v1", homeHref = "/" }) { const [workoutId, setWork
   const totalSets = exercises.reduce((n, e) => n + e.sets.length, 0);
   const doneSets = exercises.reduce((n, e) => e.skipped ? n + e.sets.length : n + e.sets.filter(s => s.completed).length, 0);
   const isFinished = totalSets > 0 && doneSets === totalSets;
+  const durationHistory = useMemo(
+    () => buildExerciseDurationHistory(history, { excludeSessionId: sessionId }),
+    [history, sessionId],
+  );
   const onSelectExercise = (idx) => { setFocused(idx == null ? null : { idx, currentIdx });
     const ex = exercises[idx]; if (!ex || ex.skipped) return;
     const hasActiveHere = ex.sets.some(s => s.active);
@@ -257,11 +264,36 @@ function App({ cardVariant = "v1", homeHref = "/" }) { const [workoutId, setWork
       </div> ); }
   const shownIdx = (focusIdx != null && exercises[focusIdx]) ? focusIdx : (isFinished ? null : currentIdx);
   const shownExercise = shownIdx !== null ? exercises[shownIdx] : null;
-  const sessionTimes = computeSessionTimes(exercises, startedAt);
+  const currentTimeMs = startedAt ? startedAt + elapsed * 1000 : null;
+  const sessionTimes = computeSessionTimes(exercises, startedAt, isFinished ? null : currentIdx, currentTimeMs);
+  const exerciseDurationMeta = exercises.map((exercise, index) => estimateExerciseDurationMeta(
+    exercise,
+    durationHistory[exercise.name] || [],
+    sessionTimes.byExercise[index] || 0,
+  ));
+  const plannedWorkoutSec = estimateActiveWorkoutDuration(exercises);
+  const plannedExerciseSec = exerciseDurationMeta.reduce((sum, meta) => sum + meta.plannedSec, 0);
+  const expectedExerciseSec = exerciseDurationMeta.reduce((sum, meta) => sum + meta.estimatedSec, 0);
+  const historyExerciseCount = exerciseDurationMeta.filter((meta) => meta.sampleCount > 0).length;
+  const expectedWorkoutBase = plannedExerciseSec > 0
+    ? plannedWorkoutSec * (expectedExerciseSec / plannedExerciseSec)
+    : plannedWorkoutSec;
+  const expectedWorkoutSec = isFinished && elapsed > 0
+    ? elapsed
+    : Math.max(elapsed, Math.round(expectedWorkoutBase / 15) * 15);
+  const workoutDurationMeta = {
+    plannedSec: plannedWorkoutSec,
+    estimatedSec: expectedWorkoutSec,
+    actualSec: elapsed,
+    sampleCount: 0,
+    historyExerciseCount,
+    source: isFinished && elapsed > 0 ? "actual" : elapsed > 0 ? "live" : historyExerciseCount ? "history" : "plan",
+    complete: isFinished,
+  };
   const ExerciseCardComponent = cardVariant === "v2" ? ExerciseCardV2 : ExerciseCard;
   const nav = (variant) => ( <ExerciseNav
       exercises={exercises}
-      sessionTimes={sessionTimes}
+      durationMeta={exerciseDurationMeta}
       shownIdx={shownIdx}
       currentIdx={currentIdx}
       onSelect={onSelectExercise}
@@ -275,7 +307,7 @@ function App({ cardVariant = "v1", homeHref = "/" }) { const [workoutId, setWork
           ⚠ TEST MODE — nothing is being saved
         </div>
       )}
-      <div className="session-shell">
+      <div className={`session-shell${cardVariant === "v2" ? " session-shell-v2" : ""}`}>
         <aside className="exercise-nav-pane">
           {nav("list")}
         </aside>
@@ -287,6 +319,7 @@ function App({ cardVariant = "v1", homeHref = "/" }) { const [workoutId, setWork
             done={doneSets}
             total={totalSets}
             elapsedSec={elapsed}
+            durationMeta={workoutDurationMeta}
             deload={!!window.SESSION_DELOAD}
             homeHref={homeHref} />
           <div className="exercise-nav-strip">
@@ -311,6 +344,7 @@ function App({ cardVariant = "v1", homeHref = "/" }) { const [workoutId, setWork
             const supersetTag = ex.superset ? `${ex.superset}${ex.supersetPos || posInGroup || ''}` : null;
             const card = ( <ExerciseCardComponent exercise={ex}
                 sessionTimes={sessionTimes}
+                durationMeta={exerciseDurationMeta[i]}
                 supersetTag={supersetTag}
                 embedded={combined}
                 rest={rest}
@@ -386,7 +420,10 @@ function App({ cardVariant = "v1", homeHref = "/" }) { const [workoutId, setWork
                     if (m.idx === i) { return ( <div key={m.idx} style={{ padding: "12px 14px 14px", borderTop: k > 0 ? divider : "none" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                             <span style={{ color: T.bands, fontFamily: T.mono, fontSize: 11, fontWeight: 800, letterSpacing: 1, padding: "2px 6px", borderRadius: 5, background: "rgba(192,132,252,0.12)", flexShrink: 0, }}>{tag}</span>
-                            <h2 style={{ margin: 0, color: T.strong, fontSize: 18, fontWeight: 800, lineHeight: 1.15, letterSpacing: -0.3 }}>{m.e.name}</h2>
+                            <div style={{ minWidth: 0 }}>
+                              <h2 style={{ margin: 0, color: T.strong, fontSize: 18, fontWeight: 800, lineHeight: 1.15, letterSpacing: -0.3 }}>{m.e.name}</h2>
+                              <DurationReadout meta={exerciseDurationMeta[m.idx]} variant="nav" />
+                            </div>
                           </div>
                           {m.e.note && ( <p style={{ margin: "5px 0 0", color: T.muted, fontSize: 12, lineHeight: 1.4 }}>{m.e.note}</p>
                           )}
@@ -402,6 +439,7 @@ function App({ cardVariant = "v1", homeHref = "/" }) { const [workoutId, setWork
                           <div style={{ color: T.faint, fontFamily: T.mono, fontSize: 11 }}>
                             {done}/{total} sets{last ? ` · last ${last}` : ""}
                           </div>
+                          <DurationReadout meta={exerciseDurationMeta[m.idx]} variant="nav" />
                         </div>
                         <span style={{ color: T.faint, fontFamily: T.mono, fontSize: 10, flexShrink: 0 }}>{allDone ? "edit" : "open →"}</span>
                       </div> );

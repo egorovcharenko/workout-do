@@ -4,7 +4,7 @@ import { T } from "@/lib/legacy/shared";
 
 // ─── file: workout-session-repstrip.js ───
 
-function RepCell({ n, inRange, isLast, isLogged, onClick }) {
+function RepCell({ n, inRange, isLast, isLogged, onClick, compact = false }) {
   let bg = "transparent";
   let color = inRange ? "#D1D5DB" : T.faint;
   let border = "1px solid transparent";
@@ -25,9 +25,9 @@ function RepCell({ n, inRange, isLast, isLogged, onClick }) {
     <button
       onClick={onClick}
       style={{
-        position: "relative", width: 38, height: 44, borderRadius: 9,
+        position: "relative", width: compact ? 34 : 38, height: compact ? 38 : 44, borderRadius: compact ? 8 : 9,
         background: bg, border, color,
-        fontFamily: T.mono, fontWeight: isLogged || isLast ? 800 : 600, fontSize: 14,
+        fontFamily: T.mono, fontWeight: isLogged || isLast ? 800 : 600, fontSize: compact ? 13 : 14,
         cursor: "pointer", flexShrink: 0,
         transition: "transform 80ms ease, background 120ms ease",
         animation: isLogged ? "set-pulse 320ms ease-out" : "none",
@@ -44,7 +44,7 @@ function RepCell({ n, inRange, isLast, isLogged, onClick }) {
   );
 }
 
-function RepStrip({ min = 1, max = 20, range, last, logged, onLog }) {
+function RepStrip({ min = 1, max = 20, range, last, logged, onLog, compact = false }) {
   const [lo, hi] = range || [];
   const ref = useRef(null);
   const [edges, setEdges] = useState({ left: false, right: true });
@@ -70,14 +70,14 @@ function RepStrip({ min = 1, max = 20, range, last, logged, onLog }) {
   ];
   const maskImage = `linear-gradient(to right, ${maskParts.join(", ")})`;
   return (
-    <div style={{ position: "relative", marginTop: 6 }}>
+    <div style={{ position: "relative", marginTop: compact ? 3 : 6 }}>
       <div
         ref={ref}
         onScroll={updateEdges}
         className="scroll-row"
         style={{
           display: "flex", gap: 5, overflowX: "auto",
-          padding: "8px 4px 6px",
+          padding: compact ? "5px 4px 3px" : "8px 4px 6px",
           WebkitOverflowScrolling: "touch",
           WebkitMaskImage: maskImage, maskImage,
         }}
@@ -86,7 +86,7 @@ function RepStrip({ min = 1, max = 20, range, last, logged, onLog }) {
           const inRange = lo != null && n >= lo && n <= hi;
           return (
             <div key={n} data-n={n}>
-              <RepCell n={n} inRange={inRange} isLast={last === n && logged !== n} isLogged={logged === n} onClick={() => onLog(n)} />
+              <RepCell n={n} inRange={inRange} isLast={last === n && logged !== n} isLogged={logged === n} onClick={() => onLog(n)} compact={compact} />
             </div>
           );
         })}

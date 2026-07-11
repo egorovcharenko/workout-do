@@ -14,6 +14,7 @@ import {
 } from "@/lib/legacy/shared";
 import { EXERCISE_MUSCLES } from "@/lib/legacy/standards";
 import { loadSkippedExercises } from "@/lib/legacy/session-persistence";
+import { cableStackMultiplier } from "@/lib/legacy/cable-stack";
 import { state } from "./state";
 import { renderCalendar } from "./calendar";
 import { renderWorkoutSummaryCard } from "./summary";
@@ -72,7 +73,8 @@ function renderWorkoutCard(w, isSuggested, isOngoing, logged, expected, pct) {
   const rowHTML = ex => {
     const s = state.lastSession[`${ex.name}|working|1`] || state.lastSession[`${ex.name}|working|2`] || state.lastSession[`${ex.name}|working|3`];
     const weightVal = s ? (s.weight_lb || '—') : '—', repsVal = s ? (s.reps || '—') : '—';
-    const valLabel = !s ? '—' : ex.repsOnly ? `${repsVal} reps` : `${weightVal}lb × ${repsVal}`;
+    const stackLabel = cableStackMultiplier(ex.name) === 2 ? `${weightVal}×2lb` : `${weightVal}lb`;
+    const valLabel = !s ? '—' : ex.repsOnly ? `${repsVal} reps` : `${stackLabel} × ${repsVal}`;
     return `
     <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;gap:6px">
       <span style="color:${isSuggested ? '#4b5563' : '#374151'};font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ex.name}</span>

@@ -37,7 +37,9 @@ Port of the old flat-file app in the `egorovcharenko/workout-tracker` GitHub rep
 - `weight_lb` on a saved set depends on the exercise type: plain → weight; `assist` (Pull-Ups,
   Dips, Dead Hang) → bodyweight minus band assistance; `isBandsOnly` → band total; `bandAddon` →
   weight + bands; `repsOnly` (Hanging Knee Raise) → always 0. Older Hanging Knee Raise rows saved
-  bodyweight in `weight_lb` — never use weight/volume from reps-only rows.
+  bodyweight in `weight_lb` — never use weight/volume from reps-only rows. Cable rows store the
+  machine's per-stack pin value; `Lat Pulldown` and low-row variants use two linked stacks, so
+  analytics must pass their recorded weight through `effectiveExerciseWeight`.
 - 1RM scoring: `calcSet1RM` in `lib/legacy/standards.js` and `get1RMHistory` in `lib/db/sessions.ts`
   must stay in sync (reps-only → raw reps; Dragon Fly → stage score; assist → formula minus bands).
 - Session saves: a save with `session_id: null` **creates a new doc**. All saves must go through

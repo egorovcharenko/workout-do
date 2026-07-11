@@ -79,6 +79,13 @@ button { font-family: inherit; }
     max-height: calc(100vh - 32px);
     overflow-y: auto;
   }
+  /* V2 gives the live controls more room and keeps the exercise rail from
+     overpowering the task the user is currently performing. */
+  .session-shell-v2 .session-main { max-width: 520px; }
+  .session-shell-v2 .exercise-nav-pane {
+    flex: 0 1 420px;
+    max-width: 420px;
+  }
 }
 /* Stats column joins as the third pane when there's room. */
 @media (min-width: 1240px) {

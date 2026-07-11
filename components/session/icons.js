@@ -41,6 +41,7 @@
     "Incline DB Curls": "biceps/dumbbell-incline-biceps-curl.gif",
     "Incline Dumbbell Press": "pectorals/dumbbell-incline-bench-press.gif",
     "Lat Pulldown": "lats/cable-bar-lateral-pulldown.gif",
+    "Low Row": "upper-back/cable-low-seated-row.gif",
     "Lunges": "glutes/dumbbell-lunge.gif",
     "Overhead Dumbbell Press": "delts/dumbbell-standing-overhead-press.gif",
     "Overhead Tricep Extension": "triceps/dumbbell-standing-triceps-extension.gif",

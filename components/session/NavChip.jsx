@@ -1,9 +1,11 @@
 "use client";
 import { T, stageRank } from "@/lib/legacy/shared";
+import { cableStackMultiplier } from "@/lib/legacy/cable-stack";
 
 // ─── file: workout-session-nav-chip.js ───
 
 function navSetDisplay(s, exercise) {
+  const weightMultiplier = cableStackMultiplier(exercise.name);
   if (exercise.repsOnly) {
     if (s.completed) return { repsOnly: true, reps: s.reps, state: "done", kind: s.kind };
     if (s.active) return { repsOnly: true, reps: s.reps != null ? s.reps : s.lastReps, state: "current", kind: s.kind };
@@ -29,12 +31,12 @@ function navSetDisplay(s, exercise) {
   const lastBandSum = (s.lastBands || []).reduce((a, b) => a + b, 0);
   const cur = isAssist ? Math.max(0, baseW - bandSum) : (isBandsOnly ? bandSum : baseW + bandSum);
   const prevW = isAssist ? Math.max(0, lastBaseW - lastBandSum) : (isBandsOnly ? lastBandSum : lastBaseW + lastBandSum);
-  if (s.completed) return { lb: cur, reps: s.reps, state: "done", kind: s.kind };
+  if (s.completed) return { lb: cur, reps: s.reps, state: "done", kind: s.kind, weightMultiplier };
   if (s.active) {
     const reps = s.reps != null ? s.reps : (s.lastReps != null ? s.lastReps : null);
-    return { lb: cur || prevW, reps, state: "current", kind: s.kind };
+    return { lb: cur || prevW, reps, state: "current", kind: s.kind, weightMultiplier };
   }
-  return { lb: prevW || cur, reps: s.lastReps != null ? s.lastReps : null, state: "upcoming", preview: true, kind: s.kind };
+  return { lb: prevW || cur, reps: s.lastReps != null ? s.lastReps : null, state: "upcoming", preview: true, kind: s.kind, weightMultiplier };
 }
 
 function SetChip({ d, k, onClick }) {
@@ -69,7 +71,7 @@ function SetChip({ d, k, onClick }) {
     }}>
       {d.repsOnly
         ? (d.reps != null ? d.reps : "—")
-        : <>{d.lb || "—"}<span style={{ color: box.xColor, fontWeight: 400, fontSize: 11 }}>×</span>{d.reps != null ? d.reps : "—"}</>}
+        : <>{d.lb || "—"}{d.weightMultiplier === 2 && <span style={{ color: box.xColor, fontWeight: 600, fontSize: 10 }}>×2</span>}<span style={{ color: box.xColor, fontWeight: 400, fontSize: 11 }}>×</span>{d.reps != null ? d.reps : "—"}</>}
     </span>
   );
 }

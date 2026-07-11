@@ -4,6 +4,7 @@ import { T, localDate } from "@/lib/legacy/shared";
 import { EXERCISE_MUSCLES, getMuscleImpact, calcSet1RM, decodeStageScore, isAssistExercise } from "@/lib/legacy/standards";
 import { Sparkline } from "./Sparkline";
 import { trainingPoints } from "@/lib/deload-progress";
+import { effectiveExerciseWeight } from "@/lib/legacy/cable-stack";
 
 // ─── file: workout-session-stats-pane.js ───
 
@@ -55,7 +56,7 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
         if (muscle in muscleSets14d) muscleSets14d[muscle].push({
           date: sess.date, isToday: false,
           exercise: st.exercise,
-          weight: +st.weight_lb || 0,
+          weight: effectiveExerciseWeight(st.exercise, +st.weight_lb || 0),
           reps: parseInt(st.reps) || 0,
           weightage: getMuscleImpact(st.exercise, muscle, true),
         });
@@ -64,7 +65,7 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
         if (muscle in muscleSets14d) muscleSets14d[muscle].push({
           date: sess.date, isToday: false,
           exercise: st.exercise,
-          weight: +st.weight_lb || 0,
+          weight: effectiveExerciseWeight(st.exercise, +st.weight_lb || 0),
           reps: parseInt(st.reps) || 0,
           weightage: getMuscleImpact(st.exercise, muscle, false),
         });
@@ -79,10 +80,11 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
     for (const s of e.sets) {
       if (!s.completed || s.kind !== 'work') continue;
       const bs = (s.bands || []).reduce((a, b) => a + b, 0);
-      const weight = e.assist ? Math.max(0, (s.bodyweight || 0) - bs)
+      const recordedWeight = e.assist ? Math.max(0, (s.bodyweight || 0) - bs)
                     : e.isBandsOnly ? bs
                     : e.bandAddon ? (s.weight || 0) + bs
                     : (s.weight || 0);
+      const weight = effectiveExerciseWeight(e.name, recordedWeight);
       for (const muscle of (em.primary || [])) {
         if (muscle in muscleSets14d) muscleSets14d[muscle].push({
           date: chartTodayDate, isToday: true,
@@ -116,8 +118,9 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
     if (!sets.length) return;
     let mo = lookupIsAssist ? -Infinity : 0, sv = 0, mw = lookupIsAssist ? -Infinity : 0, mr = 0;
     sets.forEach(st => {
-      const w = +st.weight_lb || 0, r = parseInt(st.reps) || 0;
-      const orm = calcSet1RM(st.exercise || exercise.name, w, r, st.bands_json, st.grip);
+      const recordedWeight = +st.weight_lb || 0, r = parseInt(st.reps) || 0;
+      const w = effectiveExerciseWeight(st.exercise || exercise.name, recordedWeight);
+      const orm = calcSet1RM(st.exercise || exercise.name, recordedWeight, r, st.bands_json, st.grip);
       let bandSum = 0;
       if (lookupIsAssist && st.bands_json) {
         try {
@@ -167,10 +170,11 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
   (exercise.sets || []).forEach(s => {
     if (!s.completed || s.kind !== 'work') return;
     const bs = (s.bands || []).reduce((a, b) => a + b, 0);
-    const w = exercise.assist ? Math.max(0, (s.bodyweight || 0) - bs)
+    const recordedWeight = exercise.assist ? Math.max(0, (s.bodyweight || 0) - bs)
             : exercise.isBandsOnly ? bs
             : exercise.bandAddon ? (s.weight || 0) + bs
             : (s.weight || 0);
+    const w = effectiveExerciseWeight(exercise.name, recordedWeight);
     const r = parseInt(s.reps) || 0;
     if (isRepsOnly) {
       if (r > 0 && r > todayOrm) todayOrm = r;

@@ -11,6 +11,7 @@ import {
 } from "@/lib/legacy/standards";
 import { state } from "./state";
 import { formatTime, MUSCLE_GROUPS } from "./shell";
+import { effectiveExerciseWeight } from "@/lib/legacy/cable-stack";
 
 function getExDurs(s) {
   const sorted = (s.sets || []).filter(st => st.logged_at).sort((a, b) => a.logged_at.localeCompare(b.logged_at));
@@ -53,7 +54,7 @@ function renderSessionList() {
     s.sets.forEach(st => {
       // Reps-only rows carry no tonnage; older ones saved bodyweight in
       // weight_lb, which would inflate the trend against new zero-weight rows.
-      if (st.set_type === 'working' && !repsOnlyExerciseNames.has(st.exercise)) vol += (st.weight_lb || 0) * (parseInt(st.reps) || 0);
+      if (st.set_type === 'working' && !repsOnlyExerciseNames.has(st.exercise)) vol += effectiveExerciseWeight(st.exercise, st.weight_lb || 0) * (parseInt(st.reps) || 0);
     });
     if (!workoutVolTrend[s.workout_name]) workoutVolTrend[s.workout_name] = [];
     workoutVolTrend[s.workout_name].push({ value: vol, isDeload: !!s.is_deload });
@@ -107,7 +108,7 @@ function renderSessionList() {
         byEx[st.exercise].push(st);
         if (st.set_type === "working") {
           const r = parseInt(st.reps) || 0;
-          const w = repsOnlyExerciseNames.has(st.exercise) ? 0 : (st.weight_lb || 0);
+          const w = repsOnlyExerciseNames.has(st.exercise) ? 0 : effectiveExerciseWeight(st.exercise, st.weight_lb || 0);
           totalReps += r;
           totalVol += w * r;
         }
@@ -145,12 +146,12 @@ function renderSessionList() {
           const allSets = subNames.flatMap(n => (byEx[n] || []).filter(st => st.set_type === "working"));
           if (allSets.length > 0) {
             const totalSupersetDur = subNames.reduce((acc, n) => acc + (durs[n] || 0), 0);
-            const supersetDurTag = totalSupersetDur > 0 ? `<span style="font-size:9px;background:#f3e8ff;color:#7c3aed;padding:1px 5px;border-radius:9999px;font-weight:500;margin-left:auto">${Math.round(totalSupersetDur/60)} min</span>` : '';
+            const supersetDurTag = totalSupersetDur > 0 ? `<span style="font-size:9px;background:#f3e8ff;color:#7c3aed;padding:1px 5px;border-radius:9999px;font-weight:500;margin-left:auto">actual ${Math.round(totalSupersetDur/60)}m</span>` : '';
             const subSummaries = subNames.map(n => {
               const ws = (byEx[n] || []).filter(st => st.set_type === "working");
               const reps = ws.map(st => parseInt(st.reps) || 0).filter(r => r > 0).join('·');
-              const maxW = repsOnlyExerciseNames.has(n) ? 0 : Math.max(0, ...ws.map(st => st.weight_lb || 0));
-              const subDur = durs[n] ? ` (${Math.round(durs[n]/60)}m)` : '';
+              const maxW = repsOnlyExerciseNames.has(n) ? 0 : Math.max(0, ...ws.map(st => effectiveExerciseWeight(st.exercise, st.weight_lb || 0)));
+              const subDur = durs[n] ? ` (actual ${Math.round(durs[n]/60)}m)` : '';
               return `<span style="font-size:10px;color:#6b7280;font-family:monospace">${n.split(' ').pop()}${subDur}: ${reps}${maxW > 0 ? ` @ ${maxW}lb` : ''}</span>`;
             }).join('<br>');
             exEntries.push(`<div style="padding:3px 0">
@@ -166,7 +167,7 @@ function renderSessionList() {
           seen.add(ex);
           const workingSets = sets.filter(st => st.set_type === "working");
           if (workingSets.length === 0) return;
-          const maxWeight = repsOnlyExerciseNames.has(ex) ? 0 : Math.max(...workingSets.map(st => st.weight_lb || 0));
+          const maxWeight = repsOnlyExerciseNames.has(ex) ? 0 : Math.max(...workingSets.map(st => effectiveExerciseWeight(st.exercise, st.weight_lb || 0)));
           const repsList = workingSets.map(st => parseInt(st.reps) || 0).filter(r => r > 0);
           const weightStr = maxWeight > 0 ? `@ ${maxWeight}lb` : "";
           const repsDisplay = repsList.join('·');
@@ -185,7 +186,7 @@ function renderSessionList() {
               assistTag = ` <span style="color:#0891b2">· ${range}lb assist</span>`;
             }
           }
-          const durTag = durs[ex] ? ` <span style="color:#9ca3af;font-size:10px;font-family:monospace">(${Math.round(durs[ex]/60)}m)</span>` : '';
+          const durTag = durs[ex] ? ` <span style="color:#9ca3af;font-size:10px;font-family:monospace">(actual ${Math.round(durs[ex]/60)}m)</span>` : '';
           exEntries.push(`<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0">
           <span style="font-size:12px;color:#374151">${ex}${durTag}</span>
           <span style="font-size:11px;color:#6b7280;font-family:monospace">${repsDisplay} ${weightStr}${assistTag}</span>
@@ -198,7 +199,7 @@ function renderSessionList() {
       s.sets.forEach(st => {
         if (st.set_type !== 'working') return;
         const r = parseInt(st.reps) || 0;
-        const wt = repsOnlyExerciseNames.has(st.exercise) ? 0 : (st.weight_lb || 0);
+        const wt = repsOnlyExerciseNames.has(st.exercise) ? 0 : effectiveExerciseWeight(st.exercise, st.weight_lb || 0);
         if (r <= 0 || wt <= 0) return;
         const m = EXERCISE_MUSCLES[st.exercise];
         if (!m) return;
@@ -236,7 +237,8 @@ function renderSessionList() {
             const isRepsOnly = isRepsOnlyExercise(st.exercise);
             if (!m[st.exercise]) m[st.exercise] = { vol: 0, reps: 0, maxW: isAssist ? -Infinity : 0, best1RM: -Infinity };
             const r = parseInt(st.reps) || 0;
-            const w = st.weight_lb || 0;
+            const recordedWeight = st.weight_lb || 0;
+            const w = effectiveExerciseWeight(st.exercise, recordedWeight);
             let bandSum = 0;
             if (isAssist && st.bands_json) {
               try {
@@ -248,7 +250,7 @@ function renderSessionList() {
             m[st.exercise].reps += r;
             const displayW = isRepsOnly ? 0 : isAssist ? -bandSum : w;
             m[st.exercise].maxW = Math.max(m[st.exercise].maxW, displayW);
-            if ((isRepsOnly || w > 0) && r > 0) m[st.exercise].best1RM = Math.max(m[st.exercise].best1RM, calcSet1RM(st.exercise, w, r, st.bands_json, st.grip));
+            if ((isRepsOnly || w > 0) && r > 0) m[st.exercise].best1RM = Math.max(m[st.exercise].best1RM, calcSet1RM(st.exercise, recordedWeight, r, st.bands_json, st.grip));
           });
           return m;
         }

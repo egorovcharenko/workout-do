@@ -13,6 +13,7 @@ import { db } from "@/lib/firebase/client";
 import { isAssistExercise, isRepsOnlyExercise } from "@/lib/legacy/standards";
 import { log } from "@/lib/log";
 import { sessionUpdateConflict } from "@/lib/session-save-scope";
+import { effectiveExerciseWeight } from "@/lib/legacy/cable-stack";
 import type {
   HintMap,
   SessionDoc,
@@ -260,7 +261,7 @@ export async function get1RMHistory(uid: string): Promise<{
         push(ormRaw, key, Math.round((rank + Math.min(reps, 19) / 20) * 1000) / 1000);
         continue;
       }
-      const w = set.weight_lb ? Number(set.weight_lb) : 0;
+      const w = effectiveExerciseWeight(set.exercise, set.weight_lb ? Number(set.weight_lb) : 0);
       if (w > 0) {
         const isAssist = isAssistExercise(set.exercise);
         let bandSum = 0;
