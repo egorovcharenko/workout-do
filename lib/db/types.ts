@@ -22,6 +22,7 @@ export type SessionDoc = {
   duration_sec: number;
   notes: string;
   started_at: string | null; // ISO-8601 with Z
+  finished_at?: string | null; // ISO-8601 with Z; absent on legacy sessions
   created_at: string; // ISO-8601 with Z
   state_json: string | null;
   is_deload: number; // 0 | 1

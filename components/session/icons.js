@@ -22,8 +22,7 @@
     "Bent-Over Barbell Rows": "upper-back/barbell-bent-over-row.gif",
     "Bulgarian Split Squat": "quads/dumbbell-single-leg-split-squat.gif",
     "Cable Torso Rotation": "abs/cable-twist.gif",
-    // No dragon flag in the gif DB — bench lying leg raise is the closest.
-    "Dragon Fly Progression": "abs/lying-leg-raise-flat-bench.gif",
+    "Dragon Fly Progression": "https://i0.wp.com/bodyweighttrainingarena.com/wp-content/uploads/2015/12/Dragon-Flag-Tuck-to-Extend-Straddle-low-Front-Lever_Gif_Low_360x240_739-KB.gif?resize=240%2C160&quality=40&ssl=1",
     "Calf Raises": "calves/dumbbell-standing-calf-raise.gif",
     "Dips": "triceps/triceps-dip.gif",
     "Dumbbell Bent-Over Rows": "upper-back/dumbbell-bent-over-row.gif",
@@ -68,12 +67,13 @@
   window.getExerciseIcon = function(name) {
     const file = gifMap[name];
     if (!file) return fallback;
+    const src = file.startsWith("https://") ? file : `${base}${file}`;
     
     // The DB gifs are square with a white background; the media box isn't
     // square, so contain letterboxes them — the bars must be white to blend.
     return `
       <div style="display:flex;width:100%;height:100%;background:#fff;align-items:center;justify-content:center;overflow:hidden">
-        <img src="${base}${file}" style="width:100%;height:100%;object-fit:contain;display:block;background:#fff" />
+        <img src="${src}" style="width:100%;height:100%;object-fit:contain;display:block;background:#fff" />
       </div>
     `;
   };

@@ -1,6 +1,7 @@
 "use client";
 import { T, GRIP_LABELS, stageLabel } from "@/lib/legacy/shared";
-import { WeightStepper, GripSelector, StageSelector, BandsGrid } from "./Stepper";
+import { WeightStepper, GripSelector, BandsGrid } from "./Stepper";
+import { StageSelector } from "./StageSelector";
 import { RepStrip } from "./RepStrip";
 import { BarbellVisualizer } from "./BarbellVisualizer";
 import { CableStackVisualizer } from "./CableStackVisualizer";
@@ -115,6 +116,8 @@ function ActiveSetBlock({ exercise, set, totalWork, totalWarmup, warmupPos, onPi
           grips={exercise.grips}
           selected={set.grip}
           last={set.lastGrip}
+          attempts={exercise.stageAttempts || exercise.sets.filter((candidate) => candidate.kind === "work").map((candidate) => ({ stageId: candidate.lastGrip, reps: candidate.lastReps }))}
+          requiredSets={totalWork}
           onPick={onPickGrip}
         />
       )}

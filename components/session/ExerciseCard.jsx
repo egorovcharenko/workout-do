@@ -256,7 +256,7 @@ function ExerciseCardContent({ exercise, sessionTimes, durationMeta, supersetTag
             } else if (!exercise.isBandsOnly && !exercise.repsOnly) {
               onPickWeight(activeIdx, activeSet.lastWeight || 0);
             }
-            if (exercise.grips && activeSet.lastGrip) onPickGrip(activeIdx, activeSet.lastGrip);
+            if ((exercise.grips || exercise.stages) && activeSet.lastGrip) onPickGrip(activeIdx, activeSet.lastGrip);
             onClearBands(activeIdx);
             (activeSet.lastBands || []).forEach(b => onToggleBand(activeIdx, b));
           }}

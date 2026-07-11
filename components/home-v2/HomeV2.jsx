@@ -16,6 +16,8 @@ import {
 } from "@/lib/legacy/shared";
 import { isRepsOnlyExercise } from "@/lib/legacy/standards";
 import { effectiveExerciseWeight } from "@/lib/legacy/cable-stack";
+import { storedSessionProgress } from "@/lib/legacy/session-status";
+import { consumeSatisfiedPlanEntries } from "@/lib/legacy/workout-plan";
 import styles from "./HomeV2.module.css";
 
 const PROGRAM_ORDER = ["Main: Squat", "Micro: Arms", "Main: Deadlift", "Micro: Delts & Traps"];
@@ -127,7 +129,12 @@ function HomeV2() {
     if (!dashboard) return null;
     const { history, activeSessions, measurements, settings, strength } = dashboard;
     const deload = isDeloadActive(settings);
-    const plan = parseWorkoutPlan(settings);
+    const plan = consumeSatisfiedPlanEntries(
+      parseWorkoutPlan(settings),
+      history,
+      activeSessions,
+      LEGACY_WORKOUT_NAMES,
+    );
 
     const latestProgramSession = history.find((session) =>
       PROGRAM_ORDER.includes(normalizeWorkoutName(session.workout_name)),
@@ -139,10 +146,9 @@ function HomeV2() {
     const suggestedName = plannedName && PROGRAM_ORDER.includes(plannedName) ? plannedName : rotationName;
     let featured = PROGRAM.find((workout) => workout.name === suggestedName) || PROGRAM[0];
 
-    const resumable = activeSessions.find((active) => {
-      const workout = PROGRAM.find((candidate) => candidate.name === normalizeWorkoutName(active.workout_name));
-      return workout && active.sets_done < expectedSetCount(workout, deload);
-    });
+    const resumable = activeSessions.find((active) =>
+      PROGRAM.some((candidate) => candidate.name === normalizeWorkoutName(active.workout_name)),
+    );
     if (resumable) {
       featured = PROGRAM.find((workout) => workout.name === normalizeWorkoutName(resumable.workout_name)) || featured;
     }
@@ -178,6 +184,7 @@ function HomeV2() {
       plan,
       featured,
       resumable,
+      resumableProgress: resumable ? storedSessionProgress(resumable) : null,
       recent,
       weekSessions,
       weekSets,
@@ -223,9 +230,10 @@ function HomeV2() {
 
   const firstName = user?.displayName?.split(" ")[0] || "Egor";
   const featuredNames = workoutExerciseNames(view.featured);
-  const featuredExpected = expectedSetCount(view.featured, view.deload);
+  const featuredExpected = view.resumableProgress?.total || expectedSetCount(view.featured, view.deload);
+  const featuredDone = view.resumableProgress?.completed ?? view.resumable?.sets_done ?? 0;
   const progress = view.resumable
-    ? Math.min(100, Math.round((view.resumable.sets_done / featuredExpected) * 100))
+    ? Math.min(100, Math.round((featuredDone / featuredExpected) * 100))
     : 0;
 
   return (
@@ -294,7 +302,7 @@ function HomeV2() {
               </div>
               {view.resumable && (
                 <div className={styles.progressWrap}>
-                  <div><span>{view.resumable.sets_done} of {featuredExpected} sets</span><b>{progress}%</b></div>
+                  <div><span>{featuredDone} of {featuredExpected} sets</span><b>{progress}%</b></div>
                   <div className={styles.progressTrack}><span style={{ width: `${progress}%` }} /></div>
                 </div>
               )}

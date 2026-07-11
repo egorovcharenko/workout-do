@@ -236,7 +236,7 @@ function App({ cardVariant = "v1", homeHref = "/" }) { const [workoutId, setWork
     return exercises.length - 1; })();
   const focusIdx = focused?.currentIdx === currentIdx ? focused.idx : null;
   const totalSets = exercises.reduce((n, e) => n + e.sets.length, 0);
-  const doneSets = exercises.reduce((n, e) => e.skipped ? n + e.sets.length : n + e.sets.filter(s => s.completed).length, 0);
+  const doneSets = exercises.reduce((n, e) => e.skipped ? n + e.sets.length : n + e.sets.filter(s => s.completed || s.userSkipped).length, 0);
   const isFinished = totalSets > 0 && doneSets === totalSets;
   const durationHistory = useMemo(
     () => buildExerciseDurationHistory(history, { excludeSessionId: sessionId }),

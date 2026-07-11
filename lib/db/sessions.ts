@@ -14,6 +14,7 @@ import { isAssistExercise, isRepsOnlyExercise } from "@/lib/legacy/standards";
 import { log } from "@/lib/log";
 import { sessionUpdateConflict } from "@/lib/session-save-scope";
 import { effectiveExerciseWeight } from "@/lib/legacy/cable-stack";
+import { isStoredSessionFinished } from "@/lib/legacy/session-status";
 import type {
   HintMap,
   SessionDoc,
@@ -56,11 +57,12 @@ function yesterdayStr(): string {
 
 /**
  * Whether a session should be treated as the in-progress one (resumable,
- * and excluded from last-session/hint lookups). Dated today: active.
- * Dated yesterday: only if it started within the last 12h (the
- * midnight-crossing case). Mirrors _is_active_session in the old server.
+ * and excluded from last-session/hint lookups). Completion state wins over
+ * the calendar date; otherwise today is active, and yesterday is active only
+ * within the 12h midnight-crossing window.
  */
 function isActiveSession(s: SessionWithId): boolean {
+  if (isStoredSessionFinished(s)) return false;
   if (s.date && s.date >= localToday()) return true;
   const ts = s.started_at ?? s.created_at;
   if (!ts) return false;
@@ -320,6 +322,7 @@ export type SavePayload = {
   duration_sec?: number;
   notes?: string;
   started_at?: string;
+  finished_at?: string | null;
   state_json?: string | null;
   is_deload?: boolean | number;
   sets?: {
@@ -377,6 +380,9 @@ export async function saveSession(
         ...(data.state_json !== undefined && data.state_json !== null
           ? { state_json: data.state_json }
           : {}),
+        ...(data.finished_at !== undefined
+          ? { finished_at: data.finished_at }
+          : {}),
         sets,
       });
       invalidateSessionCache();
@@ -392,6 +398,7 @@ export async function saveSession(
     duration_sec: data.duration_sec ?? 0,
     notes: data.notes ?? "",
     started_at: data.started_at ?? nowIso,
+    finished_at: data.finished_at ?? null,
     created_at: nowIso,
     state_json: data.state_json ?? null,
     is_deload: data.is_deload ? 1 : 0,

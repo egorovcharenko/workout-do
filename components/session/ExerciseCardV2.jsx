@@ -14,7 +14,8 @@ import { CableStackVisualizer } from "./CableStackVisualizer";
 import { cableStackMultiplier, isCableStackExercise } from "@/lib/legacy/cable-stack";
 import { RepStrip } from "./RepStrip";
 import { RestTimer } from "./RestTimer";
-import { BandsGrid, GripSelector, StageSelector, WeightStepper } from "./Stepper";
+import { BandsGrid, GripSelector, WeightStepper } from "./Stepper";
+import { StageSelector } from "./StageSelector";
 import { DurationReadout } from "./DurationReadout";
 import styles from "./ExerciseCardV2.module.css";
 
@@ -104,7 +105,17 @@ function ActivePanelV2({ exercise, set, totalWork, totalWarmup, warmupPos, onPic
       )}
 
       {exercise.grips && <GripSelector grips={exercise.grips} selected={set.grip} last={set.lastGrip} onPick={onPickGrip} />}
-      {stages && <StageSelector stages={stages} selected={set.grip} last={set.lastGrip} onPick={onPickGrip} />}
+      {stages && (
+        <StageSelector
+          stages={stages}
+          selected={set.grip}
+          last={set.lastGrip}
+          attempts={exercise.stageAttempts || exercise.sets.filter((candidate) => candidate.kind === "work").map((candidate) => ({ stageId: candidate.lastGrip, reps: candidate.lastReps }))}
+          requiredSets={totalWork}
+          onPick={onPickGrip}
+          compact
+        />
+      )}
       {!exercise.isBandsOnly && !stages && !exercise.repsOnly && !isCable && (
         <WeightStepper
           value={baseWeight}
@@ -187,7 +198,7 @@ function ExerciseCardV2Content({ exercise, sessionTimes, durationMeta, supersetT
     if (!activeSet) return;
     if (exercise.mode === "bodyweight") onPickBodyweight(activeIndex, activeSet.lastBodyweight || 175);
     else if (!exercise.isBandsOnly && !exercise.repsOnly) onPickWeight(activeIndex, activeSet.lastWeight || 0);
-    if (exercise.grips && activeSet.lastGrip) onPickGrip(activeIndex, activeSet.lastGrip);
+    if ((exercise.grips || exercise.stages) && activeSet.lastGrip) onPickGrip(activeIndex, activeSet.lastGrip);
     onClearBands(activeIndex);
     (activeSet.lastBands || []).forEach((band) => onToggleBand(activeIndex, band));
   };

@@ -51,7 +51,19 @@ function useWorkoutActions({
 
   const onPickGrip = (eIdx, sIdx, g) => {
     startTimer();
-    updateAndSave(patchSet(eIdx, sIdx, { grip: g }));
+    const exercise = exercises[eIdx];
+    if (!exercise?.stages) {
+      updateAndSave(patchSet(eIdx, sIdx, { grip: g }));
+      return;
+    }
+    const next = exercises.map((candidate, index) => index !== eIdx ? candidate : ({
+      ...candidate,
+      sets: candidate.sets.map((set, setIndex) => {
+        const isRemainingWorkingSet = set.kind === "work" && !set.completed;
+        return isRemainingWorkingSet || setIndex === sIdx ? { ...set, grip: g } : set;
+      }),
+    }));
+    updateAndSave(next);
   };
 
   const onToggleBand = (eIdx, sIdx, b) => {
@@ -287,7 +299,10 @@ function useWorkoutActions({
 
   const onFinishWorkout = (elapsedSec) => {
     if (TEST_MODE) { window.location.href = "/"; return; }
-    const payload = serializeForSave(exercises, workout.name, sessionId, startedAt, elapsedSec, sessionDate);
+    const payload = {
+      ...serializeForSave(exercises, workout.name, sessionId, startedAt, elapsedSec, sessionDate),
+      finished_at: new Date().toISOString(),
+    };
     finishSavePayload(payload).catch(e => console.error("[V2-SAVE] finish error:", e)).finally(() => {
       window.location.href = "/";
     });

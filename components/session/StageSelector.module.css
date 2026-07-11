@@ -1,0 +1,468 @@
+.selector {
+  margin-top: 14px;
+  color: #e5e7eb;
+}
+
+.selector button,
+.selector a {
+  font-family: inherit;
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.header > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.header span,
+.repRule span,
+.applyNote {
+  color: #6b7280;
+  font: 800 9px ui-monospace, Menlo, monospace;
+  letter-spacing: .7px;
+  text-transform: uppercase;
+}
+
+.header strong {
+  color: #dbeafe;
+  font: 750 13px/1.2 ui-monospace, Menlo, monospace;
+}
+
+.useLast {
+  padding: 5px 8px;
+  border: 1px dashed rgba(96,165,250,.38);
+  border-radius: 7px;
+  background: rgba(59,130,246,.07);
+  color: #93c5fd;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.guide {
+  display: grid;
+  grid-template-columns: minmax(150px, .85fr) minmax(0, 1.15fr);
+  overflow: hidden;
+  border: 1px solid rgba(96,165,250,.22);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(30,64,175,.12), rgba(15,23,42,.38));
+}
+
+.demo {
+  position: relative;
+  min-height: 170px;
+  margin: 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+.demo img {
+  width: 100%;
+  height: 100%;
+  min-height: 170px;
+  display: block;
+  object-fit: contain;
+}
+
+.demo figcaption {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  left: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 5px 7px;
+  border-radius: 7px;
+  background: rgba(11,15,20,.86);
+  color: #d1d5db;
+  font-size: 8px;
+  line-height: 1.25;
+  backdrop-filter: blur(5px);
+}
+
+.demo figcaption span {
+  min-width: 0;
+}
+
+.demo a {
+  flex: 0 0 auto;
+  color: #93c5fd;
+  font-size: 8px;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.stageCopy {
+  min-width: 0;
+  padding: 13px 14px;
+}
+
+.stageTitle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.stageTitle > span {
+  width: 29px;
+  height: 29px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 1px solid rgba(96,165,250,.42);
+  border-radius: 8px;
+  background: rgba(59,130,246,.14);
+  color: #93c5fd;
+  font: 800 11px ui-monospace, Menlo, monospace;
+}
+
+.stageTitle > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.stageTitle strong {
+  color: #f3f4f6;
+  font-size: 15px;
+  line-height: 1.15;
+}
+
+.stageTitle small {
+  margin-top: 2px;
+  color: #6b7280;
+  font: 700 9px ui-monospace, Menlo, monospace;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+}
+
+.stageCopy p {
+  margin: 10px 0 7px;
+  color: #cbd5e1;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.stageCopy ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stageCopy li {
+  position: relative;
+  padding-left: 11px;
+  color: #9ca3af;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.stageCopy li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: #60a5fa;
+}
+
+.repRule {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 9px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,.06);
+}
+
+.repRule strong {
+  color: #dbeafe;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.rules {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.rules > div {
+  min-width: 0;
+  display: flex;
+  gap: 7px;
+  padding: 8px;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 9px;
+  background: rgba(255,255,255,.02);
+}
+
+.rules b {
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 6px;
+  background: rgba(96,165,250,.12);
+  color: #60a5fa;
+  font: 800 9px ui-monospace, Menlo, monospace;
+}
+
+.rules span {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rules strong {
+  color: #d1d5db;
+  font-size: 10px;
+}
+
+.rules small {
+  color: #6b7280;
+  font-size: 8px;
+  line-height: 1.3;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 9px;
+  background: rgba(255,255,255,.02);
+}
+
+.status > span {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.status small {
+  color: #9ca3af;
+  font: 800 8px ui-monospace, Menlo, monospace;
+  letter-spacing: .45px;
+  text-transform: uppercase;
+}
+
+.status strong {
+  color: #9ca3af;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.status button {
+  flex: 0 0 auto;
+  padding: 6px 8px;
+  border: 1px solid rgba(52,211,153,.45);
+  border-radius: 7px;
+  background: rgba(16,185,129,.12);
+  color: #6ee7b7;
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.statusReady {
+  border-color: rgba(52,211,153,.3);
+  background: rgba(16,185,129,.07);
+}
+
+.statusReady small,
+.statusReady strong {
+  color: #6ee7b7;
+}
+
+.statusCaution {
+  border-color: rgba(251,191,36,.25);
+  background: rgba(251,191,36,.05);
+}
+
+.statusCaution small,
+.statusCaution strong {
+  color: #d6b68a;
+}
+
+.ladder {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.stageButton {
+  min-width: 0;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 9px;
+  background: rgba(255,255,255,.02);
+  color: #9ca3af;
+  cursor: pointer;
+  text-align: left;
+}
+
+.stageButton:hover {
+  border-color: rgba(96,165,250,.28);
+  background: rgba(96,165,250,.05);
+}
+
+.stageNumber {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 7px;
+  background: rgba(255,255,255,.05);
+  color: #6b7280;
+  font: 800 9px ui-monospace, Menlo, monospace;
+}
+
+.stageButtonCopy {
+  min-width: 0;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stageButtonCopy strong {
+  overflow: hidden;
+  color: #d1d5db;
+  font-size: 10px;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stageButtonCopy small {
+  overflow: hidden;
+  color: #6b7280;
+  font: 700 8px ui-monospace, Menlo, monospace;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.stageMarkers {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.stageMarkers i {
+  color: #6b7280;
+  font: normal 800 7px ui-monospace, Menlo, monospace;
+  letter-spacing: .35px;
+  text-transform: uppercase;
+}
+
+.stageSelected {
+  border-color: rgba(96,165,250,.7);
+  background: rgba(59,130,246,.14);
+  box-shadow: inset 0 0 0 1px rgba(96,165,250,.12);
+}
+
+.stageSelected .stageNumber {
+  background: #3b82f6;
+  color: #fff;
+}
+
+.stageSelected .stageButtonCopy strong {
+  color: #dbeafe;
+}
+
+.stageReady:not(.stageSelected) {
+  border-color: rgba(52,211,153,.34);
+}
+
+.stageReady .stageMarkers i:last-child {
+  color: #6ee7b7;
+}
+
+.applyNote {
+  margin: 6px 1px 0;
+  font-size: 7px;
+  text-align: right;
+}
+
+.compact {
+  margin-top: 10px;
+}
+
+.compact .demo,
+.compact .demo img {
+  min-height: 148px;
+}
+
+.compact .stageCopy {
+  padding: 11px 12px;
+}
+
+.compact .stageButton {
+  min-height: 44px;
+}
+
+@media (max-width: 440px) {
+  .guide {
+    grid-template-columns: 1fr;
+  }
+
+  .demo,
+  .demo img,
+  .compact .demo,
+  .compact .demo img {
+    min-height: 150px;
+    max-height: 190px;
+  }
+
+  .rules {
+    grid-template-columns: 1fr;
+  }
+
+  .rules > div {
+    align-items: center;
+    padding: 6px 8px;
+  }
+
+  .status {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .status button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stageButton {
+    transition: none;
+  }
+}

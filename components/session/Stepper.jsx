@@ -115,60 +115,6 @@ function GripSelector({ grips, selected, last, onPick }) {
   );
 }
 
-// Ladder picker for staged (skill-progression) exercises. Ordered top = easiest.
-// The chosen stage id is stored on the set's `grip` field, so it persists and
-// prefills exactly like Pull-Up grips do.
-function StageSelector({ stages, selected, last, onPick }) {
-  if (!stages || stages.length === 0) return null;
-  const selIdx = stages.findIndex(s => s.id === selected);
-  const lastObj = stages.find(s => s.id === last);
-  return (
-    <div style={{ marginTop: 14 }}>
-      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 8 }}>
-        <span style={{ color: T.muted, fontFamily: T.mono, fontSize: 10, fontWeight: 700, letterSpacing: 0.6 }}>
-          STAGE <span style={{ color: T.faint, fontWeight: 500 }}>· easiest → hardest</span>
-        </span>
-        {lastObj && last !== selected && (
-          <button onClick={() => onPick(last)} style={{ background: "transparent", border: 0, color: T.accentLight, fontFamily: T.mono, fontSize: 11, fontWeight: 700, padding: 0, cursor: "pointer" }}>
-            use last: {lastObj.label}
-          </button>
-        )}
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-        {stages.map((st, i) => {
-          const sel = st.id === selected;
-          const wasLast = st.id === last;
-          const conquered = selIdx > -1 && i < selIdx;
-          return (
-            <button key={st.id} onClick={() => onPick(st.id)} style={{
-              position: "relative",
-              display: "flex", alignItems: "center", gap: 10,
-              background: sel ? "rgba(96,165,250,0.18)" : "rgba(255,255,255,0.03)",
-              border: sel ? `1px solid ${T.accentLight}` : "1px solid rgba(255,255,255,0.08)",
-              padding: "8px 10px", borderRadius: 8, cursor: "pointer",
-              opacity: sel ? 1 : conquered ? 0.55 : 0.9,
-              transition: "all 120ms ease", textAlign: "left",
-            }}>
-              <span style={{
-                width: 20, height: 20, borderRadius: 6, flexShrink: 0,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                background: sel ? T.accent : conquered ? "rgba(52,211,153,0.15)" : "rgba(255,255,255,0.06)",
-                color: sel ? "#FFFFFF" : conquered ? T.green : T.faint,
-                fontFamily: T.mono, fontSize: 11, fontWeight: 800,
-              }}>{conquered ? "✓" : i + 1}</span>
-              <span style={{ color: sel ? "#DBEAFE" : T.text, fontSize: 13.5, fontWeight: 700, flex: 1 }}>{st.label}</span>
-              <span style={{ color: sel ? T.muted : T.faint, fontFamily: T.mono, fontSize: 9.5, letterSpacing: 0.4, textTransform: "uppercase" }}>{st.hint}</span>
-              {wasLast && (
-                <span style={{ position: "absolute", top: 5, left: 5, width: 5, height: 5, borderRadius: "50%", background: T.accentLight }} />
-              )}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 function BandsGrid({ bands, lastBands, onToggle, onClear, isAssist }) {
   const total = bands.reduce((a, b) => a + b, 0);
   const showUseLast = lastBands.length > 0 && !(lastBands.length === bands.length && lastBands.every(b => bands.includes(b)));
@@ -223,4 +169,4 @@ function BandsGrid({ bands, lastBands, onToggle, onClear, isAssist }) {
   );
 }
 
-export { StepperBtn, WeightStepper, GripSelector, StageSelector, BandsGrid };
+export { StepperBtn, WeightStepper, GripSelector, BandsGrid };
