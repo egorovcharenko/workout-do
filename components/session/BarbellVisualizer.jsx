@@ -41,15 +41,14 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
   const getPlateWidth = (p) => ({ 45: 18, 35: 14, 25: 11, 15: 9, 10: 8, 5: 8, 2.5: 7, 1: 6, 0.5: 5 }[p] || 12);
   const getPlateHeight = (p) => ({ 45: 72, 35: 72, 25: 72, 15: 72, 10: 72, 5: 33, 2.5: 27, 1: 22, 0.5: 18 }[p] || 36);
 
-  const renderSleeve = (side) => {
-    const isLeft = side === "left";
+  const renderLoadedSleeve = () => {
     return (
       <div style={{
         position: "absolute",
-        [isLeft ? "right" : "left"]: "65%",
-        [isLeft ? "marginRight" : "marginLeft"]: 2,
+        left: "50%",
+        marginLeft: 3,
         display: "flex",
-        flexDirection: isLeft ? "row-reverse" : "row",
+        flexDirection: "row",
         alignItems: "center",
         gap: 2,
       }}>
@@ -60,7 +59,7 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
             : "0 0 2px #000, 0 0 2px #000, 0 0 2px #000";
           return (
             <div
-              key={`${side}-${idx}`}
+              key={`plate-${idx}`}
               onClick={() => handleRemovePlateAtIndex(idx)}
               title="Click to remove plate"
               style={{
@@ -109,65 +108,44 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
         justifyContent: "center",
         overflow: "hidden",
       }}>
-        {/* Central Shaft */}
+        {/* One half of the shaft, ending at the loaded sleeve. */}
         <div style={{
           position: "absolute",
-          left: "35%",
-          right: "35%",
+          left: "8%",
+          width: "42%",
           height: 4,
           background: "linear-gradient(180deg, #94A3B8, #475569)",
           borderRadius: 1,
         }} />
 
-        {/* Left Sleeve (where plates go) */}
+        {/* Single sleeve. */}
         <div style={{
           position: "absolute",
-          left: "8%",
-          width: "27%",
-          height: 8,
-          background: "linear-gradient(180deg, #CBD5E1, #94A3B8)",
-          borderRadius: "2px 0 0 2px",
-        }} />
-
-        {/* Right Sleeve (where plates go) */}
-        <div style={{
-          position: "absolute",
+          left: "50%",
           right: "8%",
-          width: "27%",
           height: 8,
           background: "linear-gradient(180deg, #CBD5E1, #94A3B8)",
           borderRadius: "0 2px 2px 0",
         }} />
 
-        {/* Left Collar Sleeve Stop */}
+        {/* Collar / sleeve stop. */}
         <div style={{
           position: "absolute",
-          left: "35%",
-          width: 3,
-          height: 16,
+          left: "50%",
+          width: 4,
+          height: 18,
           background: "#475569",
           borderRadius: 1,
         }} />
 
-        {/* Right Collar Sleeve Stop */}
+        {/* Loaded plates, inside out from the collar. */}
+        {renderLoadedSleeve()}
+
+        {/* Total load display on the shaft side. */}
         <div style={{
           position: "absolute",
-          right: "35%",
-          width: 3,
-          height: 16,
-          background: "#475569",
-          borderRadius: 1,
-        }} />
-
-        {/* Left sleeve loaded plates (inside out: right to left) */}
-        {renderSleeve("left")}
-
-        {/* Right sleeve loaded plates (inside out: left to right) */}
-        {renderSleeve("right")}
-
-        {/* Central Display Bubble */}
-        <div style={{
-          position: "absolute",
+          left: "28%",
+          transform: "translateX(-50%)",
           background: "rgba(11,15,20,0.9)",
           border: `1px solid rgba(255,255,255,0.08)`,
           borderRadius: 8,
