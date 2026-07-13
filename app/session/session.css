@@ -73,11 +73,12 @@ button { font-family: inherit; }
   .exercise-nav-strip { display: none; }
   .exercise-nav-pane {
     display: block;
-    /* Keep navigation useful without letting it take space from the active
-       exercise. The center column gets priority when the row has to shrink. */
-    flex: 0 1 320px;
-    min-width: 260px;
-    max-width: 420px;
+    /* Let the rail consume unused desktop width after the active exercise has
+       reached its cap. A fixed 320px basis made names and timing rows wrap on
+       the wide three-pane layout even though the viewport had room to spare. */
+    flex: 1 1 400px;
+    min-width: 320px;
+    max-width: 520px;
     position: sticky;
     top: 16px;
     margin-top: 64px; /* align with the first card, past the header row */
