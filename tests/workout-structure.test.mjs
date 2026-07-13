@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 
-import { WORKOUTS, parseRepTargetRange } from "../lib/legacy/shared.js";
+import { DRAGONFLY_STAGES, WORKOUTS, parseRepTargetRange } from "../lib/legacy/shared.js";
 import { isRepsOnlyExercise } from "../lib/legacy/standards.js";
 
 test("standing overhead press and lat pulldown are independent exercises", () => {
@@ -34,4 +35,14 @@ test("surf pop-up follows dragon fly in both micro workouts", () => {
   }
   assert.equal(isRepsOnlyExercise("Surf Pop-Up"), true);
   assert.deepEqual(parseRepTargetRange("5"), [5, 5]);
+});
+
+test("every dragon fly stage uses a bundled illustration", () => {
+  assert.equal(DRAGONFLY_STAGES.length, 6);
+
+  for (const stage of DRAGONFLY_STAGES) {
+    assert.match(stage.demoUrl, /^\/exercises\/dragon-fly\/.+\.png$/);
+    assert.equal(stage.demoSourceUrl, undefined);
+    assert.equal(existsSync(new URL(`../public${stage.demoUrl}`, import.meta.url)), true);
+  }
 });

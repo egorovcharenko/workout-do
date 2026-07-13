@@ -60,15 +60,14 @@ function StageSelector({ stages, selected, last, attempts = [], requiredSets = 2
       <div className={styles.guide}>
         <figure className={styles.demo}>
           {selectedStage.demoUrl && (
-            // The source animation is resized and compressed by WordPress's image CDN.
+            // The stage illustrations live in public/exercises/dragon-fly.
             // eslint-disable-next-line @next/next/no-img-element
             <img
               key={selectedStage.id}
               src={selectedStage.demoUrl}
-              alt={selectedStage.demoAlt || `${selectedStage.label} animated demonstration`}
+              alt={selectedStage.demoAlt || `${selectedStage.label} exercise demonstration`}
               loading="lazy"
               decoding="async"
-              referrerPolicy="no-referrer"
             />
           )}
           <figcaption>

@@ -22,7 +22,7 @@
     "Bent-Over Barbell Rows": "upper-back/barbell-bent-over-row.gif",
     "Bulgarian Split Squat": "quads/dumbbell-single-leg-split-squat.gif",
     "Cable Torso Rotation": "abs/cable-twist.gif",
-    "Dragon Fly Progression": "https://i0.wp.com/bodyweighttrainingarena.com/wp-content/uploads/2015/12/Dragon-Flag-Tuck-to-Extend-Straddle-low-Front-Lever_Gif_Low_360x240_739-KB.gif?resize=240%2C160&quality=40&ssl=1",
+    "Dragon Fly Progression": "/exercises/dragon-fly/strict-dragon-fly.png",
     "Surf Pop-Up": "/exercises/surf-pop-up-two-step.png",
     "Calf Raises": "calves/dumbbell-standing-calf-raise.gif",
     "Dips": "triceps/triceps-dip.gif",
