@@ -61,18 +61,23 @@ button { font-family: inherit; }
     flex-direction: row;
     align-items: flex-start;
     justify-content: center;
-    gap: 20px;
-    padding: 0 20px;
+    gap: 16px;
+    padding: 0 16px;
   }
-  .session-main { flex-shrink: 0; }
+  .session-main {
+    width: auto;
+    min-width: 0;
+    max-width: 680px;
+    flex: 1 1 680px;
+  }
   .exercise-nav-strip { display: none; }
   .exercise-nav-pane {
     display: block;
-    /* Grow to consume the free horizontal space instead of sitting cramped at
-       a fixed 268px — capped so the cards stay readable on ultrawide screens. */
-    flex: 1 1 320px;
-    min-width: 300px;
-    max-width: 520px;
+    /* Keep navigation useful without letting it take space from the active
+       exercise. The center column gets priority when the row has to shrink. */
+    flex: 0 1 320px;
+    min-width: 260px;
+    max-width: 420px;
     position: sticky;
     top: 16px;
     margin-top: 64px; /* align with the first card, past the header row */
@@ -80,11 +85,12 @@ button { font-family: inherit; }
     overflow-y: auto;
   }
 }
-/* Stats column joins as the third pane when there's room. */
-@media (min-width: 1240px) {
+/* Stats joins only when all three panes fit without squeezing the active
+   exercise back toward its old mobile-width presentation. */
+@media (min-width: 1320px) {
   .stats-pane-wrap {
     display: block;
-    width: 300px;
+    width: 280px;
     flex-shrink: 0;
     position: sticky;
     top: 16px;
