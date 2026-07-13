@@ -35,7 +35,7 @@ function ActiveSetBlock({ exercise, set, totalWork, totalWarmup, warmupPos, onPi
       bands.every(b => lastBands.includes(b));
 
   const hasLast = set.lastWeight != null || set.lastBodyweight != null || set.lastReps != null;
-  const range = (() => {
+  const range = set.targetRepRange || (() => {
     const m = String(exercise.repRange || "").match(/(\d+)\D+(\d+)/);
     return m ? [parseInt(m[1]), parseInt(m[2])] : null;
   })();

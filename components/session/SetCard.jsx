@@ -73,8 +73,12 @@ function SetCard({ s, idx, exercise, onReopenSet, dur }) {
         {setStripLabel(s, exercise.sets)}
       </span>
       {(() => {
-        const isPreview = s.reps == null && s.lastReps != null;
-        const repText = s.reps ?? s.lastReps ?? "—";
+        const targetRange = s.targetRepRange;
+        const targetReps = targetRange
+          ? (targetRange[0] === targetRange[1] ? String(targetRange[0]) : targetRange.join("–"))
+          : null;
+        const isPreview = s.reps == null && (targetReps != null || s.lastReps != null);
+        const repText = s.reps ?? targetReps ?? s.lastReps ?? "—";
         const repColor = isPreview ? T.muted : (s.completed || isCurrent) ? T.strong : T.faint;
         if (exercise.repsOnly) {
           return (

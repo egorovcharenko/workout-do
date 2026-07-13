@@ -17,6 +17,7 @@ import { RestTimer } from "./RestTimer";
 import { BandsGrid, GripSelector, WeightStepper } from "./Stepper";
 import { StageSelector } from "./StageSelector";
 import { DurationReadout } from "./DurationReadout";
+import { BenchProgressionBanner } from "./BenchProgressionBanner";
 import styles from "./ExerciseCardV2.module.css";
 
 function setLabel(set, allSets) {
@@ -26,7 +27,11 @@ function setLabel(set, allSets) {
 }
 
 function setValue(set, exercise) {
-  const reps = set.reps ?? set.lastReps ?? "—";
+  const targetRange = set.targetRepRange;
+  const targetReps = targetRange
+    ? (targetRange[0] === targetRange[1] ? String(targetRange[0]) : targetRange.join("–"))
+    : null;
+  const reps = set.reps ?? targetReps ?? set.lastReps ?? "—";
   if (exercise.repsOnly) return `${reps} reps`;
   if (exercise.stages) return `${stageLabel(exercise.stages, set.grip || set.lastGrip) || "Stage"} · ${reps}`;
   const bands = (set.bands || []).reduce((sum, band) => sum + band, 0);
@@ -78,7 +83,7 @@ function ActivePanelV2({ exercise, set, totalWork, totalWarmup, warmupPos, onPic
         bands.length === lastBands.length &&
         bands.every((band) => lastBands.includes(band));
   const rangeMatch = String(exercise.repRange || "").match(/(\d+)\D+(\d+)/);
-  const range = rangeMatch ? [parseInt(rangeMatch[1], 10), parseInt(rangeMatch[2], 10)] : null;
+  const range = set.targetRepRange || (rangeMatch ? [parseInt(rangeMatch[1], 10), parseInt(rangeMatch[2], 10)] : null);
   const lastBandTotal = lastBands.reduce((sum, band) => sum + band, 0);
 
   const previousText = exercise.repsOnly
@@ -222,6 +227,7 @@ function ExerciseCardV2Content({ exercise, sessionTimes, durationMeta, supersetT
       )}
 
       {!embedded && exercise.note && <details className={styles.details}><summary>Exercise notes</summary><p>{exercise.note}</p></details>}
+      {!embedded && <BenchProgressionBanner exercise={exercise} />}
       {deloadNormal && <div className={styles.deloadBar}><b>Deload −20%</b><span>Normal: {deloadNormal.weight != null ? `${deloadNormal.weight} lb · ` : ""}{deloadNormal.sets} sets</span></div>}
       {hasVariants && showVariants && <VariantPanel exercise={exercise} swapGroup={swapGroup} currentFamily={getSwapGroupName(exercise.name) || "Other"} anyLogged={anyLogged} showAllFamilies={showAllFamilies} setShowAllFamilies={setShowAllFamilies} onSwapExercise={onSwapExercise} />}
 
