@@ -23,6 +23,7 @@
     "Bulgarian Split Squat": "quads/dumbbell-single-leg-split-squat.gif",
     "Cable Torso Rotation": "abs/cable-twist.gif",
     "Dragon Fly Progression": "https://i0.wp.com/bodyweighttrainingarena.com/wp-content/uploads/2015/12/Dragon-Flag-Tuck-to-Extend-Straddle-low-Front-Lever_Gif_Low_360x240_739-KB.gif?resize=240%2C160&quality=40&ssl=1",
+    "Surf Pop-Up": "/exercises/surf-pop-up-two-step.png",
     "Calf Raises": "calves/dumbbell-standing-calf-raise.gif",
     "Dips": "triceps/triceps-dip.gif",
     "Dumbbell Bent-Over Rows": "upper-back/dumbbell-bent-over-row.gif",
@@ -67,7 +68,7 @@
   window.getExerciseIcon = function(name) {
     const file = gifMap[name];
     if (!file) return fallback;
-    const src = file.startsWith("https://") ? file : `${base}${file}`;
+    const src = file.startsWith("https://") || file.startsWith("/") ? file : `${base}${file}`;
     
     // The DB gifs are square with a white background; the media box isn't
     // square, so contain letterboxes them — the bars must be white to blend.
