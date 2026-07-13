@@ -2,12 +2,16 @@
 
 import { useEffect, useRef } from "react";
 import {
+  CABLE_STACK_ADD_ON_COUNT,
+  CABLE_STACK_ADD_ON_WEIGHT,
   CABLE_STACK_MAX,
   CABLE_STACK_MIN,
   CABLE_STACK_STEP,
   cableStackMultiplier,
+  cableStackSelection,
   cableTotalWeight,
   clampCableStackWeight,
+  cableStackWeightWithAddOns,
 } from "@/lib/legacy/cable-stack";
 import styles from "./CableStackVisualizer.module.css";
 
@@ -41,10 +45,11 @@ function CableStackVisualizer({ exerciseName, value, last, onPick, compact = fal
   const multiplier = cableStackMultiplier(exerciseName);
   const recordedStackWeight = cableTotalWeight(value, 1);
   const stackWeight = clampCableStackWeight(recordedStackWeight);
+  const { pinWeight, addOnCount } = cableStackSelection(stackWeight);
   const lastStackWeight = last != null ? clampCableStackWeight(cableTotalWeight(last, 1)) : null;
   const atLast = lastStackWeight != null && stackWeight === lastStackWeight;
   const activeRef = useRef(null);
-  const loadedCount = Math.max(1, Math.min(VISUAL_PLATES, Math.round((stackWeight / CABLE_STACK_MAX) * VISUAL_PLATES)));
+  const loadedCount = Math.max(1, Math.min(VISUAL_PLATES, Math.round((pinWeight / CABLE_STACK_MAX) * VISUAL_PLATES)));
 
   useEffect(() => {
     if (recordedStackWeight !== stackWeight) onPick(stackWeight);
@@ -58,21 +63,19 @@ function CableStackVisualizer({ exerciseName, value, last, onPick, compact = fal
       left: target.offsetLeft - row.clientWidth / 2 + target.clientWidth / 2,
       behavior: "smooth",
     });
-  }, [stackWeight]);
+  }, [pinWeight]);
 
   const pickStackWeight = (nextStackWeight) => {
     onPick(cableTotalWeight(clampCableStackWeight(nextStackWeight), 1));
   };
+  const pickPinWeight = (nextPinWeight) => {
+    onPick(cableStackWeightWithAddOns(nextPinWeight, addOnCount));
+  };
   const stepStack = (delta) => {
-    if (delta > 0 && stackWeight < CABLE_STACK_MIN) {
-      pickStackWeight(CABLE_STACK_MIN);
-      return;
-    }
-    if (delta < 0 && stackWeight > CABLE_STACK_MAX) {
-      pickStackWeight(CABLE_STACK_MAX);
-      return;
-    }
-    pickStackWeight(stackWeight + delta);
+    pickPinWeight(pinWeight + delta);
+  };
+  const selectAddOnCount = (nextCount) => {
+    onPick(cableStackWeightWithAddOns(pinWeight, nextCount));
   };
 
   return (
@@ -103,7 +106,7 @@ function CableStackVisualizer({ exerciseName, value, last, onPick, compact = fal
               className={styles.adjustButton}
               onClick={() => stepStack(-CABLE_STACK_STEP)}
               aria-label={`Decrease cable stack by ${CABLE_STACK_STEP} pounds`}
-              disabled={stackWeight <= CABLE_STACK_MIN}
+              disabled={pinWeight <= CABLE_STACK_MIN}
             >
               −
             </button>
@@ -116,7 +119,7 @@ function CableStackVisualizer({ exerciseName, value, last, onPick, compact = fal
               className={styles.adjustButton}
               onClick={() => stepStack(CABLE_STACK_STEP)}
               aria-label={`Increase cable stack by ${CABLE_STACK_STEP} pounds`}
-              disabled={stackWeight >= CABLE_STACK_MAX}
+              disabled={pinWeight >= CABLE_STACK_MAX}
             >
               +
             </button>
@@ -128,6 +131,31 @@ function CableStackVisualizer({ exerciseName, value, last, onPick, compact = fal
             </div>
           )}
 
+          <div className={styles.addOns}>
+            <span className={styles.addOnLabel}>Add-on weights · per stack</span>
+            <div className={styles.addOnRow}>
+              {Array.from({ length: CABLE_STACK_ADD_ON_COUNT + 1 }, (_, count) => {
+                const active = count === addOnCount;
+                return (
+                  <button
+                    key={count}
+                    type="button"
+                    className={`${styles.addOnButton}${active ? ` ${styles.addOnButtonActive}` : ""}`}
+                    onClick={() => selectAddOnCount(count)}
+                    aria-pressed={active}
+                    aria-label={count === 0
+                      ? "Turn off cable stack add-on weights"
+                      : `Use ${count} ${CABLE_STACK_ADD_ON_WEIGHT} pound add-on weight${count === 1 ? "" : "s"}${multiplier === 2 ? " per stack" : ""}`}
+                  >
+                    <span className={styles.addOnIcon} aria-hidden="true">
+                      {count === 0 ? "—" : Array.from({ length: count }, (_, index) => <i key={index} />)}
+                    </span>
+                    <span>{count === 0 ? "OFF" : `${count} × ${formatWeight(CABLE_STACK_ADD_ON_WEIGHT)}`}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -137,14 +165,14 @@ function CableStackVisualizer({ exerciseName, value, last, onPick, compact = fal
         </span>
         <div className={styles.pinRow}>
           {PIN_CHOICES.map((pin) => {
-            const selected = pin === stackWeight;
+            const selected = pin === pinWeight;
             return (
               <button
                 key={pin}
                 ref={selected ? activeRef : null}
                 type="button"
                 className={`${styles.pinChoice}${selected ? ` ${styles.pinChoiceActive}` : ""}`}
-                onClick={() => pickStackWeight(pin)}
+                onClick={() => pickPinWeight(pin)}
                 aria-pressed={selected}
                 aria-label={`Set cable stack to ${formatWeight(pin)} pounds${multiplier === 2 ? " per stack" : ""}`}
               >
