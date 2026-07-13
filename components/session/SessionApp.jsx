@@ -23,6 +23,7 @@ import { ExerciseCardV2 } from "./ExerciseCardV2";
 import { StatsPane } from "./StatsPane";
 import { DurationReadout } from "./DurationReadout";
 import { buildExerciseDurationHistory, estimateExerciseDurationMeta } from "@/lib/legacy/duration-estimates";
+import { mergeTemplateAndSavedSet } from "@/lib/legacy/exercise-history";
 
 // ─── file: workout-session-app.js ───
 
@@ -113,7 +114,7 @@ function App({ cardVariant = "v1", homeHref = "/" }) { const [workoutId, setWork
                 const ts = templateWarmups[i];
                 const ss = savedWarmups[i];
                 if (ts) {
-                  mergedWarmups.push(ss ? { ...ts, ...ss, kind: ts.kind, setNumber: ts.setNumber, idx: ts.idx } : ts);
+                  mergedWarmups.push(mergeTemplateAndSavedSet(ex.name, ts, ss));
                 } else {
                   mergedWarmups.push(ss);
                 }
@@ -133,7 +134,7 @@ function App({ cardVariant = "v1", homeHref = "/" }) { const [workoutId, setWork
                 const ts = templateWorking[i];
                 const ss = savedWorking[i];
                 if (ts) {
-                  mergedWorking.push(ss ? { ...ts, ...ss, kind: ts.kind, setNumber: ts.setNumber, idx: ts.idx } : ts);
+                  mergedWorking.push(mergeTemplateAndSavedSet(ex.name, ts, ss));
                 } else {
                   mergedWorking.push(ss);
                 }
