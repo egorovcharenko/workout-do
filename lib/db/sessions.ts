@@ -15,6 +15,7 @@ import { log } from "@/lib/log";
 import { sessionUpdateConflict } from "@/lib/session-save-scope";
 import { effectiveExerciseWeight } from "@/lib/legacy/cable-stack";
 import { isStoredSessionFinished } from "@/lib/legacy/session-status";
+import { exerciseHintsWithDeloadBootstrap, hintsFromSessions } from "@/lib/legacy/exercise-hints";
 import type {
   HintMap,
   SessionDoc,
@@ -127,25 +128,6 @@ export async function getTodaySession(
   return row;
 }
 
-function hintsFromSessions(sessions: SessionWithId[]): HintMap {
-  // Sessions arrive newest-first; first write per key wins = most recent.
-  const out: HintMap = {};
-  for (const s of sessions) {
-    for (const set of s.sets ?? []) {
-      const key = `${set.exercise}|${set.set_type}|${set.set_number}`;
-      if (!(key in out)) {
-        out[key] = {
-          weight_lb: set.weight_lb,
-          reps: set.reps,
-          bands_json: set.bands_json,
-          grip: set.grip,
-        };
-      }
-    }
-  }
-  return out;
-}
-
 /** /api/last-session equivalent: most recent non-deload, non-active session for a workout. */
 export async function getLastSession(
   uid: string,
@@ -160,15 +142,16 @@ export async function getLastSession(
       !isActiveSession(s),
   );
   const last = candidates[0];
-  return last ? hintsFromSessions([last]) : {};
+  return (last ? hintsFromSessions([last]) : {}) as HintMap;
 }
 
-/** /api/exercise-hints equivalent: latest values per exercise across ALL workouts. */
+/**
+ * /api/exercise-hints equivalent: normal history first. Exercises with no
+ * normal baseline may bootstrap once from their most recent deload session.
+ */
 export async function getExerciseHints(uid: string): Promise<HintMap> {
   const all = await fetchAllSessions(uid);
-  return hintsFromSessions(
-    all.filter((s) => !(s.is_deload ?? 0) && !isActiveSession(s)),
-  );
+  return exerciseHintsWithDeloadBootstrap(all.filter((s) => !isActiveSession(s))) as HintMap;
 }
 
 /** /api/history equivalent. */

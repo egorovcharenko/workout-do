@@ -65,3 +65,23 @@ test("completed pull-up results from today remain intact", () => {
   assert.equal(merged.reps, 2);
   assert.equal(merged.completed, true);
 });
+
+test("an untouched empty cable preview accepts a newly available bootstrap", () => {
+  const template = { kind: "work", idx: 1, setNumber: 1, weight: 70, lastWeight: 70, lastReps: 10, reps: null, completed: false };
+  const saved = { kind: "work", idx: 1, setNumber: 1, weight: 0, lastWeight: null, lastReps: null, reps: null, completed: false };
+
+  const merged = mergeTemplateAndSavedSet("Lat Pulldown", template, saved);
+
+  assert.equal(merged.weight, 70);
+  assert.equal(merged.lastWeight, 70);
+  assert.equal(merged.lastReps, 10);
+});
+
+test("a cable weight selected today is not overwritten by bootstrap history", () => {
+  const template = { kind: "work", idx: 1, setNumber: 1, weight: 70, lastWeight: 70, lastReps: 10, reps: null, completed: false };
+  const saved = { kind: "work", idx: 1, setNumber: 1, weight: 80, lastWeight: null, lastReps: null, reps: null, completed: false };
+
+  const merged = mergeTemplateAndSavedSet("Lat Pulldown", template, saved);
+
+  assert.equal(merged.weight, 80);
+});
