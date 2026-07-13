@@ -1,5 +1,5 @@
 "use client";
-import { T, stageRank } from "@/lib/legacy/shared";
+import { T, parseRepTargetRange, stageRank } from "@/lib/legacy/shared";
 import { cableStackMultiplier } from "@/lib/legacy/cable-stack";
 
 // ─── file: workout-session-nav-chip.js ───
@@ -7,9 +7,11 @@ import { cableStackMultiplier } from "@/lib/legacy/cable-stack";
 function navSetDisplay(s, exercise) {
   const weightMultiplier = cableStackMultiplier(exercise.name);
   if (exercise.repsOnly) {
+    const targetRange = parseRepTargetRange(exercise.repRange);
+    const targetReps = targetRange && targetRange[0] === targetRange[1] ? targetRange[0] : null;
     if (s.completed) return { repsOnly: true, reps: s.reps, state: "done", kind: s.kind };
-    if (s.active) return { repsOnly: true, reps: s.reps != null ? s.reps : s.lastReps, state: "current", kind: s.kind };
-    return { repsOnly: true, reps: s.lastReps != null ? s.lastReps : null, state: "upcoming", preview: true, kind: s.kind };
+    if (s.active) return { repsOnly: true, reps: s.reps != null ? s.reps : (s.lastReps != null ? s.lastReps : targetReps), state: "current", kind: s.kind };
+    return { repsOnly: true, reps: s.lastReps != null ? s.lastReps : targetReps, state: "upcoming", preview: true, kind: s.kind };
   }
   if (exercise.stages) {
     const rank = (id) => stageRank(exercise.stages, id);

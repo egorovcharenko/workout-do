@@ -1,5 +1,5 @@
 "use client";
-import { T, GRIP_LABELS, stageLabel } from "@/lib/legacy/shared";
+import { T, GRIP_LABELS, parseRepTargetRange, stageLabel } from "@/lib/legacy/shared";
 import { WeightStepper, GripSelector, BandsGrid } from "./Stepper";
 import { StageSelector } from "./StageSelector";
 import { RepStrip } from "./RepStrip";
@@ -35,10 +35,7 @@ function ActiveSetBlock({ exercise, set, totalWork, totalWarmup, warmupPos, onPi
       bands.every(b => lastBands.includes(b));
 
   const hasLast = set.lastWeight != null || set.lastBodyweight != null || set.lastReps != null;
-  const range = set.targetRepRange || (() => {
-    const m = String(exercise.repRange || "").match(/(\d+)\D+(\d+)/);
-    return m ? [parseInt(m[1]), parseInt(m[2])] : null;
-  })();
+  const range = set.targetRepRange || parseRepTargetRange(exercise.repRange);
 
   return (
     <div style={{
