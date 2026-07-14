@@ -43,6 +43,102 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
   const getPlateWidth = (p) => ({ 45: 18, 35: 14, 25: 11, 15: 9, 10: 8, 5: 8, 2.5: 7, 1: 6, 0.5: 5 }[p] || 12);
   const getPlateHeight = (p) => ({ 45: 72, 35: 72, 25: 72, 15: 72, 10: 72, 5: 33, 2.5: 27, 1: 22, 0.5: 18 }[p] || 36);
 
+  const plateLoader = (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
+        <span style={{ color: T.muted, fontFamily: T.mono, fontSize: 9, fontWeight: 700, letterSpacing: 0.6 }}>
+          ADD PLATES (PER SIDE)
+        </span>
+        {loadedPlates.length > 0 && (
+          <button
+            onClick={handleClear}
+            title="Reset to bar (45lb)"
+            style={{
+              background: "transparent",
+              border: 0,
+              color: T.red,
+              fontFamily: T.mono,
+              fontSize: 9,
+              fontWeight: 700,
+              letterSpacing: 0.4,
+              cursor: "pointer",
+              padding: "2px 0",
+            }}
+          >
+            {compact ? "RESET 45LB" : "RESET TO BAR (45LB)"}
+          </button>
+        )}
+      </div>
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(28px, 1fr))",
+        gap: compact ? 3 : 4,
+      }}>
+        {PLATE_SIZES.map(p => {
+          const label = p === 0.5 ? '.5' : p;
+          return (
+            <button
+              key={p}
+              onClick={() => handleAddPlate(p)}
+              aria-label={`Add ${p} pound plate per side`}
+              style={{
+                minWidth: 0,
+                height: compact ? 42 : 72,
+                background: "rgba(255,255,255,0.02)",
+                border: "1px solid rgba(255,255,255,0.04)",
+                borderRadius: compact ? 7 : 8,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                transition: "all 120ms ease",
+                padding: 0,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+                const inner = e.currentTarget.querySelector('.inner-plate');
+                if (inner) inner.style.transform = "scale(1.08)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "rgba(255,255,255,0.02)";
+                e.currentTarget.style.borderColor = "rgba(255,255,255,0.04)";
+                const inner = e.currentTarget.querySelector('.inner-plate');
+                if (inner) inner.style.transform = "scale(1)";
+              }}
+            >
+              <div
+                className="inner-plate"
+                style={{
+                  width: B_WIDTHS[p],
+                  height: scaled(B_HEIGHTS[p]),
+                  background: PLATE_COLORS[p].bg,
+                  color: PLATE_COLORS[p].text,
+                  fontSize: compact ? (p >= 25 ? 11 : p >= 10 ? 10 : 9) : (p >= 25 ? 14 : p >= 10 ? 12.5 : 11),
+                  fontWeight: 900,
+                  fontFamily: T.mono,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 2,
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
+                  transition: "transform 100ms",
+                  whiteSpace: "nowrap",
+                  overflow: "visible",
+                  textShadow: PLATE_COLORS[p].text === "#1E293B"
+                    ? "0 0 2px #fff, 0 0 2px #fff, 0 0 2px #fff"
+                    : "0 0 2.5px #000, 0 0 2.5px #000, 0 0 2.5px #000",
+                }}
+              >
+                {label}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
   const renderLoadedSleeve = () => {
     return (
       <div style={{
@@ -136,105 +232,18 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
         </>
       )}
       controls={(
-        <WeightStepper
-          value={weight}
-          onPick={onWeightChange}
-          compact={compact}
-          showLastHint={false}
-          embedded
-        />
+        <div style={{ display: "flex", flexDirection: "column", gap: compact ? 8 : 10, minWidth: 0 }}>
+          <WeightStepper
+            value={weight}
+            onPick={onWeightChange}
+            compact={compact}
+            showLastHint={false}
+            embedded
+          />
+          {plateLoader}
+        </div>
       )}
-    >
-      {/* Plate Loader buttons row */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ color: T.muted, fontFamily: T.mono, fontSize: 9, fontWeight: 700, letterSpacing: 0.6 }}>
-            ADD PLATES (PER SIDE)
-          </span>
-          {loadedPlates.length > 0 && (
-            <button
-              onClick={handleClear}
-              style={{
-                background: "transparent",
-                border: 0,
-                color: T.red,
-                fontFamily: T.mono,
-                fontSize: 9,
-                fontWeight: 700,
-                letterSpacing: 0.4,
-                cursor: "pointer",
-                padding: "2px 4px",
-              }}
-            >
-              RESET TO BAR (45LB)
-            </button>
-          )}
-        </div>
-        <div style={{ display: "flex", gap: compact ? 3 : 4, justifyContent: "space-between" }}>
-          {PLATE_SIZES.map(p => {
-            const label = p === 0.5 ? '.5' : p;
-            return (
-              <button
-                key={p}
-                onClick={() => handleAddPlate(p)}
-                style={{
-                  flex: 1,
-                  minWidth: 0,
-                  height: compact ? 46 : 72,
-                  background: "rgba(255,255,255,0.02)",
-                  border: "1px solid rgba(255,255,255,0.04)",
-                  borderRadius: compact ? 7 : 8,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  transition: "all 120ms ease",
-                  padding: 0,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.05)";
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
-                  const inner = e.currentTarget.querySelector('.inner-plate');
-                  if (inner) inner.style.transform = "scale(1.08)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.02)";
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.04)";
-                  const inner = e.currentTarget.querySelector('.inner-plate');
-                  if (inner) inner.style.transform = "scale(1)";
-                }}
-              >
-                <div
-                  className="inner-plate"
-                  style={{
-                    width: B_WIDTHS[p],
-                    height: scaled(B_HEIGHTS[p]),
-                    background: PLATE_COLORS[p].bg,
-                    color: PLATE_COLORS[p].text,
-                    fontSize: compact ? (p >= 25 ? 11 : p >= 10 ? 10 : 9) : (p >= 25 ? 14 : p >= 10 ? 12.5 : 11),
-                    fontWeight: 900,
-                    fontFamily: T.mono,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderRadius: 2,
-                    boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
-                    transition: "transform 100ms",
-                    whiteSpace: "nowrap",
-                    overflow: "visible",
-                    textShadow: PLATE_COLORS[p].text === "#1E293B"
-                      ? "0 0 2px #fff, 0 0 2px #fff, 0 0 2px #fff"
-                      : "0 0 2.5px #000, 0 0 2.5px #000, 0 0 2.5px #000",
-                  }}
-                >
-                  {label}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    </WeightSelectionFrame>
+    />
   );
 }
 
