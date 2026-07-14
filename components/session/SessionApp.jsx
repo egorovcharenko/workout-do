@@ -22,7 +22,7 @@ import { ExerciseCard } from "./ExerciseCard";
 import { StatsPane } from "./StatsPane";
 import { DurationReadout } from "./DurationReadout";
 import { buildExerciseDurationHistory, estimateExerciseDurationMeta } from "@/lib/legacy/duration-estimates";
-import { mergeTemplateAndSavedSet } from "@/lib/legacy/exercise-history";
+import { mergeTemplateAndSavedSet, shouldKeepRemovedWarmup } from "@/lib/legacy/exercise-history";
 
 // ─── file: workout-session-app.js ───
 
@@ -114,7 +114,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
                 const ss = savedWarmups[i];
                 if (ts) {
                   mergedWarmups.push(mergeTemplateAndSavedSet(ex.name, ts, ss));
-                } else {
+                } else if (shouldKeepRemovedWarmup(ex.name, ss)) {
                   mergedWarmups.push(ss);
                 }
               }

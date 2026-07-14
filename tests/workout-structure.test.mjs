@@ -28,7 +28,8 @@ test("deadlift day uses low cable rows instead of bent-over barbell rows", () =>
   assert.equal(lowRow.name, "Low Row");
   assert.equal(lowRow.equipment, "cable");
   assert.equal(lowRow.sets, 3);
-  assert.equal(lowRow.warmups, 1);
+  assert.equal(lowRow.noWarmup, true);
+  assert.equal(lowRow.warmups, undefined);
   assert.equal(workout.exercises.some((exercise) => exercise.name === "Bent-Over Barbell Rows"), false);
 });
 

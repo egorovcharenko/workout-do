@@ -4,6 +4,7 @@ import {
   mergeTemplateAndSavedSet,
   previousWorkingSet,
   selectWorkingHistorySource,
+  shouldKeepRemovedWarmup,
   workingHistoryBySetNumber,
 } from "../lib/legacy/exercise-history.js";
 
@@ -84,4 +85,16 @@ test("a cable weight selected today is not overwritten by bootstrap history", ()
   const merged = mergeTemplateAndSavedSet("Lat Pulldown", template, saved);
 
   assert.equal(merged.weight, 80);
+});
+
+test("an untouched removed low-row warm-up is dropped on reload", () => {
+  const saved = { kind: "warmup", reps: null, completed: false, active: true };
+
+  assert.equal(shouldKeepRemovedWarmup("Low Row", saved), false);
+});
+
+test("a completed removed low-row warm-up remains in today's session", () => {
+  const saved = { kind: "warmup", reps: 10, completed: true, logged_at: "2026-07-14T15:00:00.000Z" };
+
+  assert.equal(shouldKeepRemovedWarmup("Low Row", saved), true);
 });
