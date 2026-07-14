@@ -61,8 +61,8 @@ function SetCard({ s, idx, exercise, onReopenSet, dur }) {
         ? (isWarm ? "rgba(217,119,6,0.12)" : "rgba(59,130,246,0.14)")
         : s.completed ? "rgba(255,255,255,0.03)" : "transparent",
       boxShadow: isCurrent
-        ? (isWarm ? "0 0 0 1.5px rgba(251,191,36,0.55), 0 4px 14px -4px rgba(217,119,6,0.45)"
-                  : "0 0 0 1.5px rgba(96,165,250,0.6), 0 4px 14px -4px rgba(59,130,246,0.5)")
+        ? (isWarm ? "inset 0 0 0 2px rgba(251,191,36,0.55), 0 4px 14px -4px rgba(217,119,6,0.45)"
+                  : "inset 0 0 0 2px rgba(96,165,250,0.6), 0 4px 14px -4px rgba(59,130,246,0.5)")
         : "none",
       border: isCurrent ? "0" : `1px ${s.completed ? "solid" : "dashed"} rgba(255,255,255,0.05)`,
       opacity: isCurrent ? 1 : s.completed ? 1 : 0.45,
