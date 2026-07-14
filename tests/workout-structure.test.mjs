@@ -20,6 +20,18 @@ test("standing overhead press and lat pulldown are independent exercises", () =>
   assert.equal(latPulldown.noWarmup, true);
 });
 
+test("deadlift day uses low cable rows instead of bent-over barbell rows", () => {
+  const workout = WORKOUTS.find((candidate) => candidate.id === "main-b");
+  const latPulldownIndex = workout.exercises.findIndex((exercise) => exercise.name === "Lat Pulldown");
+  const lowRow = workout.exercises[latPulldownIndex + 1];
+
+  assert.equal(lowRow.name, "Low Row");
+  assert.equal(lowRow.equipment, "cable");
+  assert.equal(lowRow.sets, 3);
+  assert.equal(lowRow.warmups, 1);
+  assert.equal(workout.exercises.some((exercise) => exercise.name === "Bent-Over Barbell Rows"), false);
+});
+
 test("surf pop-up follows dragon fly in both micro workouts", () => {
   for (const workoutId of ["micro-arms", "micro-delts"]) {
     const workout = WORKOUTS.find((candidate) => candidate.id === workoutId);
