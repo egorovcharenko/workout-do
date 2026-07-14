@@ -34,6 +34,7 @@ function ActiveSetBlock({ exercise, set, totalWork, totalWarmup, warmupPos, onPi
       (!exercise.grips || set.grip === set.lastGrip) &&
       bands.length === lastBands.length &&
       bands.every(b => lastBands.includes(b));
+  const hideMatchedStatus = exercise.name === "Pull-Ups" && matchesLast;
 
   const hasLast = set.lastWeight != null || set.lastBodyweight != null || set.lastReps != null;
   const range = set.targetRepRange || parseRepTargetRange(exercise.repRange);
@@ -108,9 +109,11 @@ function ActiveSetBlock({ exercise, set, totalWork, totalWarmup, warmupPos, onPi
               <span style={{ color: T.faint, fontFamily: T.mono, fontSize: 11 }}>({lastTotal}lb)</span>
             )}
           </div>
-          <span style={{ fontSize: 12, fontWeight: 600, opacity: matchesLast ? 0.7 : 1 }}>
-            {matchesLast ? "✓ matched" : "use last"}
-          </span>
+          {!hideMatchedStatus && (
+            <span style={{ fontSize: 12, fontWeight: 600, opacity: matchesLast ? 0.7 : 1 }}>
+              {matchesLast ? "✓ matched" : "use last"}
+            </span>
+          )}
         </button>
       )}
 
