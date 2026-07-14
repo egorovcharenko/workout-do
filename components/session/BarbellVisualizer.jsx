@@ -1,6 +1,7 @@
 "use client";
 import { T } from "@/lib/legacy/shared";
 import { WeightStepper } from "./Stepper";
+import { WeightSelectionFrame } from "./WeightSelection";
 
 // ─── file: workout-session-barbell-visualizer.js ───
 
@@ -96,27 +97,10 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
   };
 
   return (
-    <div style={{ width: "100%", maxWidth: compact ? 520 : undefined, display: "flex", flexDirection: "column", gap: compact ? 8 : 12, margin: `${compact ? 9 : 12}px auto 0` }}>
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: compact ? "minmax(92px, .8fr) minmax(0, 1.2fr)" : "minmax(180px, 1fr) minmax(220px, 1fr)",
-        gap: compact ? 10 : 14,
-        alignItems: "center",
-        minHeight: compact ? 96 : 120,
-        padding: compact ? "9px 10px" : "11px 12px",
-        background: "rgba(255,255,255,0.015)",
-        borderRadius: compact ? 10 : 12,
-        border: "1px solid rgba(255,255,255,0.06)",
-      }}>
-        {/* Barbell load graphic */}
-        <div style={{
-          position: "relative",
-          height: compact ? 72 : 88,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          overflow: "hidden",
-        }}>
+    <WeightSelectionFrame
+      compact={compact}
+      visual={(
+        <>
           {/* One half of the shaft, ending at the loaded sleeve. */}
           <div style={{
             position: "absolute",
@@ -149,8 +133,9 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
 
           {/* Loaded plates, inside out from the collar. */}
           {renderLoadedSleeve()}
-        </div>
-
+        </>
+      )}
+      controls={(
         <WeightStepper
           value={weight}
           onPick={onWeightChange}
@@ -158,8 +143,8 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
           showLastHint={false}
           embedded
         />
-      </div>
-
+      )}
+    >
       {/* Plate Loader buttons row */}
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -249,7 +234,7 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
           })}
         </div>
       </div>
-    </div>
+    </WeightSelectionFrame>
   );
 }
 

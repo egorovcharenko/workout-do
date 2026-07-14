@@ -1,10 +1,11 @@
 "use client";
 import { T, GRIP_LABELS, parseRepTargetRange, stageLabel } from "@/lib/legacy/shared";
-import { WeightStepper, GripSelector, BandsGrid } from "./Stepper";
+import { GripSelector, BandsGrid } from "./Stepper";
 import { StageSelector } from "./StageSelector";
 import { RepStrip } from "./RepStrip";
 import { BarbellVisualizer } from "./BarbellVisualizer";
 import { CableStackVisualizer } from "./CableStackVisualizer";
+import { EquipmentWeightSelector } from "./WeightSelection";
 import { cableStackMultiplier, isCableStackExercise } from "@/lib/legacy/cable-stack";
 
 // ─── file: workout-session-activeset.js ───
@@ -36,6 +37,11 @@ function ActiveSetBlock({ exercise, set, totalWork, totalWarmup, warmupPos, onPi
 
   const hasLast = set.lastWeight != null || set.lastBodyweight != null || set.lastReps != null;
   const range = set.targetRepRange || parseRepTargetRange(exercise.repRange);
+  const weightVisualKind = isBW
+    ? "bodyweight"
+    : /dumbbell|\bdb\b|goblet|lunge|bulgarian/i.test(exercise.name)
+      ? "dumbbell"
+      : "weight";
 
   return (
     <div style={{
@@ -129,13 +135,12 @@ function ActiveSetBlock({ exercise, set, totalWork, totalWarmup, warmupPos, onPi
       )}
 
       {!exercise.isBandsOnly && !stages && !exercise.repsOnly && !isCable && !exercise.isBarbell && (
-        <WeightStepper
+        <EquipmentWeightSelector
           value={baseW}
           last={lastBaseW || null}
           onPick={isBW ? onPickBodyweight : onPickWeight}
-          label={isBW ? "BODYWEIGHT" : null}
+          kind={weightVisualKind}
           compact
-          showLastHint={false}
         />
       )}
 
