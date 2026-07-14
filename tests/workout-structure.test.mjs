@@ -32,6 +32,17 @@ test("deadlift day uses low cable rows instead of bent-over barbell rows", () =>
   assert.equal(workout.exercises.some((exercise) => exercise.name === "Bent-Over Barbell Rows"), false);
 });
 
+test("main workout pull-ups do not show assisted progression instructions", () => {
+  for (const workoutId of ["main-a", "main-b"]) {
+    const workout = WORKOUTS.find((candidate) => candidate.id === workoutId);
+    const pullUps = workout.exercises.find((exercise) => exercise.name === "Pull-Ups");
+
+    assert.ok(pullUps);
+    assert.equal(pullUps.sets, 3);
+    assert.equal(pullUps.notes, undefined);
+  }
+});
+
 test("surf pop-up follows dragon fly in both micro workouts", () => {
   for (const workoutId of ["micro-arms", "micro-delts"]) {
     const workout = WORKOUTS.find((candidate) => candidate.id === workoutId);
