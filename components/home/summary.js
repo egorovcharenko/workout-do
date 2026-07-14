@@ -3,14 +3,14 @@
 import {
   EXERCISE_MUSCLES,
   getMuscleImpact,
-  calcSet1RM,
+  calcStoredSet1RM,
   isAssistExercise,
   isRepsOnlyExercise,
 } from "@/lib/legacy/standards";
 import { state } from "./state";
 import { MUSCLE_GROUPS } from "./shell";
 import { latestSessionDeltaPercent, trainingPoints } from "@/lib/deload-progress";
-import { effectiveExerciseWeight } from "@/lib/legacy/cable-stack";
+import { effectiveStoredExerciseWeight } from "@/lib/legacy/cable-stack";
 
 function renderWorkoutSummaryCard() {
   const history = state.history || [];
@@ -48,7 +48,7 @@ function renderWorkoutSummaryCard() {
     const ex = set.exercise;
     const r = parseInt(set.reps) || 0;
     const recordedWeight = parseFloat(set.weight_lb) || 0;
-    const w = effectiveExerciseWeight(ex, recordedWeight);
+    const w = effectiveStoredExerciseWeight(ex, recordedWeight, latest);
     // Reps-only rows carry no tonnage (older ones saved bodyweight in weight_lb).
     const vol = _repsOnly(ex) ? 0 : r * w;
     addMus(ex, vol);
@@ -59,7 +59,7 @@ function renderWorkoutSummaryCard() {
     const sum = exerciseSummary[ex];
     sum.totalVol += vol;
     sum.setsCount++;
-    const est = calcSet1RM(ex, recordedWeight, r, set.bands_json, set.grip);
+    const est = calcStoredSet1RM(ex, recordedWeight, r, set.bands_json, set.grip, latest);
     const isAssist = _assist(ex);
     if (sum.best1RM === 0 && isAssist) sum.best1RM = -Infinity;
     if (est > sum.best1RM) {
@@ -82,7 +82,7 @@ function renderWorkoutSummaryCard() {
     let vol = 0;
     (s.sets || []).forEach(set => {
       if (set.set_type === 'working' && set.reps && !_repsOnly(set.exercise)) {
-        vol += (parseInt(set.reps) || 0) * effectiveExerciseWeight(set.exercise, parseFloat(set.weight_lb) || 0);
+        vol += (parseInt(set.reps) || 0) * effectiveStoredExerciseWeight(set.exercise, parseFloat(set.weight_lb) || 0, s);
       }
     });
     if (vol > maxSessionVol) maxSessionVol = vol;
@@ -97,8 +97,8 @@ function renderWorkoutSummaryCard() {
         if (set.exercise === exName && set.set_type === 'working' && set.reps) {
           has = true;
           const recordedWeight = parseFloat(set.weight_lb) || 0, r = parseInt(set.reps) || 0;
-          const w = effectiveExerciseWeight(exName, recordedWeight);
-          const est = calcSet1RM(exName, recordedWeight, r, set.bands_json, set.grip);
+          const w = effectiveStoredExerciseWeight(exName, recordedWeight, s);
+          const est = calcStoredSet1RM(exName, recordedWeight, r, set.bands_json, set.grip, s);
           if (est > best) { best = est; bw = w; br = r; }
         }
       });

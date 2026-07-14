@@ -1,6 +1,6 @@
 // ─── file: workout-ui-home-measurements-card.js ───
 
-import { EXERCISE_MUSCLES, calcSet1RM, isRepsOnlyExercise } from "@/lib/legacy/standards";
+import { EXERCISE_MUSCLES, calcStoredSet1RM, isRepsOnlyExercise } from "@/lib/legacy/standards";
 import { state } from "./state";
 import { firstToLatestTrainingDelta } from "@/lib/deload-progress";
 import {
@@ -82,7 +82,7 @@ function renderMeasurementsCard() {
       const r = parseInt(st.reps) || 0;
       const repsOnly = isRepsOnlyExercise(st.exercise);
       if ((w <= 0 && !repsOnly) || r <= 0) return;
-      const orm = calcSet1RM(st.exercise, w, r, st.bands_json, st.grip);
+      const orm = calcStoredSet1RM(st.exercise, w, r, st.bands_json, st.grip, sess);
       if (!exerciseDates[st.exercise]) exerciseDates[st.exercise] = {};
       const current = exerciseDates[st.exercise][sess.date];
       const isDeload = !!sess.is_deload;

@@ -26,6 +26,7 @@ export type SessionDoc = {
   created_at: string; // ISO-8601 with Z
   state_json: string | null;
   is_deload: number; // 0 | 1
+  cable_weight_mode?: "total" | "per_stack";
   sets: SetRow[];
 };
 

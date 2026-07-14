@@ -13,7 +13,7 @@ import { db } from "@/lib/firebase/client";
 import { isAssistExercise, isRepsOnlyExercise } from "@/lib/legacy/standards";
 import { log } from "@/lib/log";
 import { sessionUpdateConflict } from "@/lib/session-save-scope";
-import { effectiveExerciseWeight } from "@/lib/legacy/cable-stack";
+import { effectiveStoredExerciseWeight } from "@/lib/legacy/cable-stack";
 import { isStoredSessionFinished } from "@/lib/legacy/session-status";
 import { exerciseHintsWithDeloadBootstrap, hintsFromSessions } from "@/lib/legacy/exercise-hints";
 import type {
@@ -246,7 +246,7 @@ export async function get1RMHistory(uid: string): Promise<{
         push(ormRaw, key, Math.round((rank + Math.min(reps, 19) / 20) * 1000) / 1000);
         continue;
       }
-      const w = effectiveExerciseWeight(set.exercise, set.weight_lb ? Number(set.weight_lb) : 0);
+      const w = effectiveStoredExerciseWeight(set.exercise, set.weight_lb ? Number(set.weight_lb) : 0, s);
       if (w > 0) {
         const isAssist = isAssistExercise(set.exercise);
         let bandSum = 0;
@@ -360,6 +360,7 @@ export async function saveSession(
         duration_sec: data.duration_sec ?? 0,
         notes: data.notes ?? "",
         is_deload: data.is_deload ? 1 : 0,
+        cable_weight_mode: "per_stack",
         ...(data.state_json !== undefined && data.state_json !== null
           ? { state_json: data.state_json }
           : {}),
@@ -385,6 +386,7 @@ export async function saveSession(
     created_at: nowIso,
     state_json: data.state_json ?? null,
     is_deload: data.is_deload ? 1 : 0,
+    cable_weight_mode: "per_stack",
     sets,
   };
   await setDoc(ref, docData);

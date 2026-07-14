@@ -1,10 +1,10 @@
 "use client";
 import { useState } from "react";
 import { T, localDate } from "@/lib/legacy/shared";
-import { EXERCISE_MUSCLES, getMuscleImpact, calcSet1RM, decodeStageScore, isAssistExercise } from "@/lib/legacy/standards";
+import { EXERCISE_MUSCLES, getMuscleImpact, calcSet1RM, calcStoredSet1RM, decodeStageScore, isAssistExercise } from "@/lib/legacy/standards";
 import { Sparkline } from "./Sparkline";
 import { trainingPoints } from "@/lib/deload-progress";
-import { effectiveExerciseWeight } from "@/lib/legacy/cable-stack";
+import { effectiveExerciseWeight, effectiveStoredExerciseWeight } from "@/lib/legacy/cable-stack";
 
 // ─── file: workout-session-stats-pane.js ───
 
@@ -56,7 +56,7 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
         if (muscle in muscleSets14d) muscleSets14d[muscle].push({
           date: sess.date, isToday: false,
           exercise: st.exercise,
-          weight: effectiveExerciseWeight(st.exercise, +st.weight_lb || 0),
+          weight: effectiveStoredExerciseWeight(st.exercise, +st.weight_lb || 0, sess),
           reps: parseInt(st.reps) || 0,
           weightage: getMuscleImpact(st.exercise, muscle, true),
         });
@@ -65,7 +65,7 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
         if (muscle in muscleSets14d) muscleSets14d[muscle].push({
           date: sess.date, isToday: false,
           exercise: st.exercise,
-          weight: effectiveExerciseWeight(st.exercise, +st.weight_lb || 0),
+          weight: effectiveStoredExerciseWeight(st.exercise, +st.weight_lb || 0, sess),
           reps: parseInt(st.reps) || 0,
           weightage: getMuscleImpact(st.exercise, muscle, false),
         });
@@ -119,8 +119,8 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
     let mo = lookupIsAssist ? -Infinity : 0, sv = 0, mw = lookupIsAssist ? -Infinity : 0, mr = 0;
     sets.forEach(st => {
       const recordedWeight = +st.weight_lb || 0, r = parseInt(st.reps) || 0;
-      const w = effectiveExerciseWeight(st.exercise || exercise.name, recordedWeight);
-      const orm = calcSet1RM(st.exercise || exercise.name, recordedWeight, r, st.bands_json, st.grip);
+      const w = effectiveStoredExerciseWeight(st.exercise || exercise.name, recordedWeight, sess);
+      const orm = calcStoredSet1RM(st.exercise || exercise.name, recordedWeight, r, st.bands_json, st.grip, sess);
       let bandSum = 0;
       if (lookupIsAssist && st.bands_json) {
         try {

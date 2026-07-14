@@ -1,6 +1,6 @@
 import { api } from "@/lib/db/api";
-import { EXERCISE_MUSCLES, calcSet1RM } from "@/lib/legacy/standards";
-import { effectiveExerciseWeight } from "@/lib/legacy/cable-stack";
+import { EXERCISE_MUSCLES, calcStoredSet1RM } from "@/lib/legacy/standards";
+import { effectiveExerciseWeight, effectiveStoredExerciseWeight } from "@/lib/legacy/cable-stack";
 
 // ─── file: workout-session-motivation-payload.js ───
 
@@ -66,11 +66,11 @@ function buildMotivatePayload(exercise, sid, sessionDate, history, statHistory) 
       sess.sets.forEach(st => {
         if (st.exercise !== subName || st.set_type !== 'working') return;
         const recordedWeight = +st.weight_lb || 0;
-        const w = effectiveExerciseWeight(subName, recordedWeight);
+        const w = effectiveStoredExerciseWeight(subName, recordedWeight, sess);
         const r = parseInt(st.reps) || 0;
         if (!repsOnly) { if (w > mw) mw = w; if (mw > histMaxWt) histMaxWt = mw; }
         if (r > mr) mr = r; if (mr > histMaxReps) histMaxReps = mr;
-          const o = calcSet1RM(subName, recordedWeight, r, st.bands_json, st.grip);
+          const o = calcStoredSet1RM(subName, recordedWeight, r, st.bands_json, st.grip, sess);
           if (o > mo) mo = o;
           if (mo > histMaxOrm) histMaxOrm = mo;
           if (!repsOnly) sv += w * r;
@@ -99,33 +99,30 @@ function buildMotivatePayload(exercise, sid, sessionDate, history, statHistory) 
     if (allHist.length === 0) return null;
 
     const workingSets = exercise.sets.filter(s => s.kind === "work" && s.completed);
-    const curWt   = workingSets.reduce((m, s) => Math.max(m, (() => {
+    const currentEffectiveWeight = (s) => {
       const bs = (s.bands || []).reduce((a, b) => a + b, 0);
-      return exercise.assist ? Math.max(0, (s.bodyweight || 0) - bs)
+      const recordedWeight = exercise.assist ? Math.max(0, (s.bodyweight || 0) - bs)
            : exercise.isBandsOnly ? bs
            : exercise.bandAddon ? (s.weight || 0) + bs
            : (s.weight || 0);
+      return effectiveExerciseWeight(subName, recordedWeight);
+    };
+    const curWt   = workingSets.reduce((m, s) => Math.max(m, (() => {
+      return currentEffectiveWeight(s);
     })()), 0);
     const curReps = workingSets.reduce((m, s) => Math.max(m, parseInt(s.reps) || 0), 0);
     const curOrm  = workingSets.reduce((m, s) => {
       const reps = parseInt(s.reps) || 0;
       if (exercise.repsOnly) return reps > 0 ? Math.max(m, reps) : m;
       const bs = (s.bands || []).reduce((a, b) => a + b, 0);
-      const w = exercise.assist ? Math.max(0, (s.bodyweight || 0) - bs)
-              : exercise.isBandsOnly ? bs
-              : exercise.bandAddon ? (s.weight || 0) + bs
-              : (s.weight || 0);
+      const w = currentEffectiveWeight(s);
       const isAssist = exercise.assist;
       const o = isAssist ? (reps > 1 ? (w * reps / 30.0) - bs : -bs) : ormOf(w, reps);
       return reps > 0 && w > 0 ? Math.max(m, o) : m;
     }, 0);
     const curVol = workingSets.reduce((sum, s) => {
       const reps = parseInt(s.reps) || 0;
-      const bs = (s.bands || []).reduce((a, b) => a + b, 0);
-      const w = exercise.assist ? Math.max(0, (s.bodyweight || 0) - bs)
-              : exercise.isBandsOnly ? bs
-              : exercise.bandAddon ? (s.weight || 0) + bs
-              : (s.weight || 0);
+      const w = currentEffectiveWeight(s);
       return sum + (reps > 0 && w > 0 ? w * reps : 0);
     }, 0);
 
