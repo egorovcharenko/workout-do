@@ -42,10 +42,10 @@ function ActiveSetBlock({ exercise, set, totalWork, totalWarmup, warmupPos, onPi
       borderRadius: 12,
       background: "linear-gradient(180deg, rgba(59,130,246,0.08), rgba(17,24,39,0.55))",
       boxShadow: "0 0 0 1px rgba(96,165,250,0.35), 0 8px 24px -8px rgba(59,130,246,0.4)",
-      padding: "14px 14px 16px",
-      marginTop: 14, marginBottom: 6,
+      padding: "12px 12px 14px",
+      marginTop: 12, marginBottom: 6,
     }}>
-      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12, gap: 10 }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 8, gap: 10 }}>
         {set.kind === "warmup" ? (
           <span style={{ color: T.amber, fontWeight: 700, fontSize: 17, letterSpacing: -0.2 }}>
             Warm-up
@@ -75,7 +75,7 @@ function ActiveSetBlock({ exercise, set, totalWork, totalWarmup, warmupPos, onPi
             border: matchesLast ? "1px solid rgba(96,165,250,0.35)" : "1px dashed rgba(96,165,250,0.45)",
             borderRadius: 10,
             cursor: matchesLast ? "default" : "pointer",
-            color: T.accentLight, marginBottom: 10,
+            color: T.accentLight, marginBottom: 8,
           }}
         >
           <div style={{ display: "flex", alignItems: "baseline", gap: 8, minWidth: 0 }}>
@@ -134,6 +134,8 @@ function ActiveSetBlock({ exercise, set, totalWork, totalWarmup, warmupPos, onPi
           last={lastBaseW || null}
           onPick={isBW ? onPickBodyweight : onPickWeight}
           label={isBW ? "BODYWEIGHT" : null}
+          compact
+          showLastHint={false}
         />
       )}
 
@@ -150,6 +152,7 @@ function ActiveSetBlock({ exercise, set, totalWork, totalWarmup, warmupPos, onPi
         <BarbellVisualizer
           weight={baseW || 45}
           onWeightChange={onPickWeight}
+          compact
         />
       )}
 
@@ -163,7 +166,7 @@ function ActiveSetBlock({ exercise, set, totalWork, totalWarmup, warmupPos, onPi
         />
       )}
 
-      <div style={{ marginTop: 14 }}>
+      <div style={{ marginTop: 10 }}>
         <RepStrip
           min={1} max={20}
           range={range}

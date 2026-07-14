@@ -29,7 +29,7 @@ function StepperBtn({ children, onClick, big, dim, compact = false }) {
   );
 }
 
-function WeightStepper({ value, last, pr, onPick, label, compact = false }) {
+function WeightStepper({ value, last, pr, onPick, label, compact = false, showLastHint = true }) {
   const v = parseFloat(value ?? last ?? 0);
   const step = (delta) => onPick(Math.max(0, Math.round((v + delta) * 100) / 100));
   const atLast = last != null && parseFloat(v) === parseFloat(last);
@@ -48,23 +48,25 @@ function WeightStepper({ value, last, pr, onPick, label, compact = false }) {
             <span style={{ color: T.strong, fontFamily: T.mono, fontSize: compact ? 30 : 36, fontWeight: 800, letterSpacing: -1, lineHeight: 1 }}>{v}</span>
             <span style={{ color: T.faint, fontFamily: T.mono, fontSize: compact ? 12 : 14, fontWeight: 600 }}>lb</span>
           </div>
-          <div style={{ display: "flex", gap: 8, alignItems: "center", fontFamily: T.mono, fontSize: 11, color: T.faint }}>
-            {last != null && (
-              <button onClick={() => onPick(last)} style={{
-                background: atLast ? "rgba(96,165,250,0.10)" : "transparent",
-                border: atLast ? `1px solid rgba(96,165,250,0.3)` : "1px dashed rgba(255,255,255,0.1)",
-                color: atLast ? T.accentLight : T.faint,
-                fontFamily: T.mono, fontSize: 10, fontWeight: 700, letterSpacing: 0.5,
-                padding: "3px 7px", borderRadius: 5, cursor: "pointer",
-              }}>LAST {last}</button>
-            )}
-            {!atLast && diff !== 0 && (
-              <span style={{ color: diff > 0 ? T.green : T.red, fontWeight: 700 }}>
-                {diff > 0 ? "+" : ""}{diff}
-              </span>
-            )}
-            {pr != null && <span>· PR {pr}</span>}
-          </div>
+          {(showLastHint || (!atLast && diff !== 0) || pr != null) && (
+            <div style={{ display: "flex", gap: 8, alignItems: "center", fontFamily: T.mono, fontSize: 11, color: T.faint }}>
+              {showLastHint && last != null && (
+                <button onClick={() => onPick(last)} style={{
+                  background: atLast ? "rgba(96,165,250,0.10)" : "transparent",
+                  border: atLast ? `1px solid rgba(96,165,250,0.3)` : "1px dashed rgba(255,255,255,0.1)",
+                  color: atLast ? T.accentLight : T.faint,
+                  fontFamily: T.mono, fontSize: 10, fontWeight: 700, letterSpacing: 0.5,
+                  padding: "3px 7px", borderRadius: 5, cursor: "pointer",
+                }}>LAST {last}</button>
+              )}
+              {!atLast && diff !== 0 && (
+                <span style={{ color: diff > 0 ? T.green : T.red, fontWeight: 700 }}>
+                  {diff > 0 ? "+" : ""}{diff}
+                </span>
+              )}
+              {pr != null && <span>· PR {pr}</span>}
+            </div>
+          )}
         </div>
         <StepperBtn onClick={() => step(5)} big compact={compact}>+</StepperBtn>
       </div>
