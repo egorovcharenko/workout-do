@@ -21,8 +21,10 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
   const PLATE_SIZES = [45, 35, 25, 15, 10, 5, 2.5, 1, 0.5];
   const B_WIDTHS = { 45: 28, 35: 24, 25: 20, 15: 16, 10: 14, 5: 14, 2.5: 13, 1: 12, 0.5: 11 };
   const B_HEIGHTS = { 45: 66, 35: 66, 25: 66, 15: 66, 10: 66, 5: 36, 2.5: 33, 1: 30, 0.5: 27 };
-  const compactScale = compact ? 0.68 : 1;
-  const scaled = (value) => Math.round(value * compactScale);
+  const pickerScale = compact ? 0.68 : 1;
+  const loadedScale = compact ? 1.08 : 1;
+  const scaledPicker = (value) => Math.round(value * pickerScale);
+  const scaledLoaded = (value) => Math.round(value * loadedScale);
 
   // Decompose weight into plates on one side
   const loadedPlates = [];
@@ -40,7 +42,10 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
   const handleRemovePlateAtIndex = (idx) => onWeightChange(Math.max(45, weight - loadedPlates[idx] * 2));
   const handleClear = () => onWeightChange(45);
 
-  const getPlateWidth = (p) => ({ 45: 18, 35: 14, 25: 11, 15: 9, 10: 8, 5: 8, 2.5: 7, 1: 6, 0.5: 5 }[p] || 12);
+  const getPlateWidth = (p) => {
+    const width = ({ 45: 18, 35: 14, 25: 11, 15: 9, 10: 8, 5: 8, 2.5: 7, 1: 6, 0.5: 5 }[p] || 12);
+    return compact ? Math.round(width * 1.3) : width;
+  };
   const getPlateHeight = (p) => ({ 45: 72, 35: 72, 25: 72, 15: 72, 10: 72, 5: 33, 2.5: 27, 1: 22, 0.5: 18 }[p] || 36);
 
   const plateLoader = (
@@ -111,7 +116,7 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
                 className="inner-plate"
                 style={{
                   width: B_WIDTHS[p],
-                  height: scaled(B_HEIGHTS[p]),
+                  height: scaledPicker(B_HEIGHTS[p]),
                   background: PLATE_COLORS[p].bg,
                   color: PLATE_COLORS[p].text,
                   fontSize: compact ? (p >= 25 ? 11 : p >= 10 ? 10 : 9) : (p >= 25 ? 14 : p >= 10 ? 12.5 : 11),
@@ -162,10 +167,10 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
               title="Click to remove plate"
               style={{
                 width: getPlateWidth(p),
-                height: scaled(getPlateHeight(p)),
+                height: scaledLoaded(getPlateHeight(p)),
                 background: PLATE_COLORS[p].bg,
                 color: PLATE_COLORS[p].text,
-                fontSize: compact ? (p >= 25 ? 10.5 : p >= 10 ? 9.5 : 8) : (p >= 25 ? 12.5 : p >= 10 ? 11 : 9.5),
+                fontSize: compact ? (p >= 25 ? 13.5 : p >= 10 ? 12 : 10.5) : (p >= 25 ? 12.5 : p >= 10 ? 11 : 9.5),
                 fontWeight: 900,
                 fontFamily: T.mono,
                 display: "flex",
@@ -195,14 +200,15 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
   return (
     <WeightSelectionFrame
       compact={compact}
+      visualExpanded
       visual={(
         <>
           {/* One half of the shaft, ending at the loaded sleeve. */}
           <div style={{
             position: "absolute",
-            left: "8%",
-            width: "42%",
-            height: 4,
+            left: "2%",
+            width: "48%",
+            height: compact ? 6 : 4,
             background: "linear-gradient(180deg, #94A3B8, #475569)",
             borderRadius: 1,
           }} />
@@ -211,8 +217,8 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
           <div style={{
             position: "absolute",
             left: "50%",
-            right: "8%",
-            height: 8,
+            right: "2%",
+            height: compact ? 12 : 8,
             background: "linear-gradient(180deg, #CBD5E1, #94A3B8)",
             borderRadius: "0 2px 2px 0",
           }} />
@@ -222,7 +228,7 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
             position: "absolute",
             left: "50%",
             width: 4,
-            height: 18,
+            height: compact ? 28 : 18,
             background: "#475569",
             borderRadius: 1,
           }} />

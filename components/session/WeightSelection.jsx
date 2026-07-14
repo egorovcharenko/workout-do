@@ -3,7 +3,7 @@
 import { T } from "@/lib/legacy/shared";
 import { WeightStepper } from "./Stepper";
 
-function WeightSelectionFrame({ visual, controls, children, compact = false }) {
+function WeightSelectionFrame({ visual, controls, children, compact = false, visualExpanded = false }) {
   return (
     <div style={{
       width: "100%",
@@ -26,7 +26,8 @@ function WeightSelectionFrame({ visual, controls, children, compact = false }) {
       }}>
         <div style={{
           position: "relative",
-          height: compact ? 72 : 88,
+          height: visualExpanded ? (compact ? 112 : 132) : (compact ? 72 : 88),
+          alignSelf: visualExpanded ? "start" : undefined,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
