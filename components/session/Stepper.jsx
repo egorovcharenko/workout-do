@@ -29,13 +29,13 @@ function StepperBtn({ children, onClick, big, dim, compact = false }) {
   );
 }
 
-function WeightStepper({ value, last, pr, onPick, label, compact = false, showLastHint = true }) {
+function WeightStepper({ value, last, pr, onPick, label, compact = false, showLastHint = true, embedded = false }) {
   const v = parseFloat(value ?? last ?? 0);
   const step = (delta) => onPick(Math.max(0, Math.round((v + delta) * 100) / 100));
   const atLast = last != null && parseFloat(v) === parseFloat(last);
   const diff = last != null ? v - last : 0;
   return (
-    <div style={{ marginTop: compact ? 9 : 14 }}>
+    <div style={{ marginTop: embedded ? 0 : (compact ? 9 : 14) }}>
       {label && (
         <div style={{ marginBottom: 6, color: T.muted, fontFamily: T.mono, fontSize: 10, fontWeight: 700, letterSpacing: 0.6 }}>
           {label}

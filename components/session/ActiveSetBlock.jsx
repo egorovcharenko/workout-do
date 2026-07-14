@@ -128,7 +128,7 @@ function ActiveSetBlock({ exercise, set, totalWork, totalWarmup, warmupPos, onPi
         />
       )}
 
-      {!exercise.isBandsOnly && !stages && !exercise.repsOnly && !isCable && (
+      {!exercise.isBandsOnly && !stages && !exercise.repsOnly && !isCable && !exercise.isBarbell && (
         <WeightStepper
           value={baseW}
           last={lastBaseW || null}

@@ -1,5 +1,6 @@
 "use client";
 import { T } from "@/lib/legacy/shared";
+import { WeightStepper } from "./Stepper";
 
 // ─── file: workout-session-barbell-visualizer.js ───
 
@@ -95,70 +96,68 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: compact ? 8 : 12, marginTop: compact ? 9 : 12 }}>
-      {/* Barbell load graphic */}
+    <div style={{ width: "100%", maxWidth: compact ? 520 : undefined, display: "flex", flexDirection: "column", gap: compact ? 8 : 12, margin: `${compact ? 9 : 12}px auto 0` }}>
       <div style={{
-        position: "relative",
-        height: compact ? 62 : 88,
+        display: "grid",
+        gridTemplateColumns: compact ? "minmax(92px, .8fr) minmax(0, 1.2fr)" : "minmax(180px, 1fr) minmax(220px, 1fr)",
+        gap: compact ? 10 : 14,
+        alignItems: "center",
+        minHeight: compact ? 96 : 120,
+        padding: compact ? "9px 10px" : "11px 12px",
         background: "rgba(255,255,255,0.015)",
         borderRadius: compact ? 10 : 12,
         border: "1px solid rgba(255,255,255,0.06)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        overflow: "hidden",
       }}>
-        {/* One half of the shaft, ending at the loaded sleeve. */}
+        {/* Barbell load graphic */}
         <div style={{
-          position: "absolute",
-          left: "8%",
-          width: "42%",
-          height: 4,
-          background: "linear-gradient(180deg, #94A3B8, #475569)",
-          borderRadius: 1,
-        }} />
-
-        {/* Single sleeve. */}
-        <div style={{
-          position: "absolute",
-          left: "50%",
-          right: "8%",
-          height: 8,
-          background: "linear-gradient(180deg, #CBD5E1, #94A3B8)",
-          borderRadius: "0 2px 2px 0",
-        }} />
-
-        {/* Collar / sleeve stop. */}
-        <div style={{
-          position: "absolute",
-          left: "50%",
-          width: 4,
-          height: 18,
-          background: "#475569",
-          borderRadius: 1,
-        }} />
-
-        {/* Loaded plates, inside out from the collar. */}
-        {renderLoadedSleeve()}
-
-        {/* Total load display on the shaft side. */}
-        <div style={{
-          position: "absolute",
-          left: "28%",
-          transform: "translateX(-50%)",
-          background: "rgba(11,15,20,0.9)",
-          border: `1px solid rgba(255,255,255,0.08)`,
-          borderRadius: 8,
-          padding: "4px 10px",
-          fontFamily: T.mono,
-          fontSize: 13,
-          fontWeight: 800,
-          color: T.strong,
-          boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
-          pointerEvents: "none",
+          position: "relative",
+          height: compact ? 72 : 88,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "hidden",
         }}>
-          {weight} <span style={{ color: T.faint, fontSize: 10, fontWeight: 500 }}>lb</span>
+          {/* One half of the shaft, ending at the loaded sleeve. */}
+          <div style={{
+            position: "absolute",
+            left: "8%",
+            width: "42%",
+            height: 4,
+            background: "linear-gradient(180deg, #94A3B8, #475569)",
+            borderRadius: 1,
+          }} />
+
+          {/* Single sleeve. */}
+          <div style={{
+            position: "absolute",
+            left: "50%",
+            right: "8%",
+            height: 8,
+            background: "linear-gradient(180deg, #CBD5E1, #94A3B8)",
+            borderRadius: "0 2px 2px 0",
+          }} />
+
+          {/* Collar / sleeve stop. */}
+          <div style={{
+            position: "absolute",
+            left: "50%",
+            width: 4,
+            height: 18,
+            background: "#475569",
+            borderRadius: 1,
+          }} />
+
+          {/* Loaded plates, inside out from the collar. */}
+          {renderLoadedSleeve()}
         </div>
+
+        <WeightStepper
+          value={weight}
+          onPick={onWeightChange}
+          compact={compact}
+          showLastHint={false}
+          embedded
+        />
       </div>
 
       {/* Plate Loader buttons row */}
