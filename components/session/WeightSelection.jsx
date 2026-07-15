@@ -26,8 +26,9 @@ function WeightSelectionFrame({ visual, controls, children, compact = false, vis
       }}>
         <div style={{
           position: "relative",
-          height: visualExpanded ? (compact ? 112 : 132) : (compact ? 72 : 88),
-          alignSelf: visualExpanded ? "start" : undefined,
+          height: visualExpanded ? undefined : (compact ? 72 : 88),
+          minHeight: visualExpanded ? (compact ? 112 : 132) : undefined,
+          alignSelf: visualExpanded ? "stretch" : undefined,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",

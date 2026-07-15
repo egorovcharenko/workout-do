@@ -22,9 +22,7 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
   const B_WIDTHS = { 45: 28, 35: 24, 25: 20, 15: 16, 10: 14, 5: 14, 2.5: 13, 1: 12, 0.5: 11 };
   const B_HEIGHTS = { 45: 66, 35: 66, 25: 66, 15: 66, 10: 66, 5: 36, 2.5: 33, 1: 30, 0.5: 27 };
   const pickerScale = compact ? 0.68 : 1;
-  const loadedScale = compact ? 1.08 : 1;
   const scaledPicker = (value) => Math.round(value * pickerScale);
-  const scaledLoaded = (value) => Math.round(value * loadedScale);
 
   // Decompose weight into plates on one side
   const loadedPlates = [];
@@ -149,6 +147,8 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
       <div style={{
         position: "absolute",
         left: "50%",
+        top: "6%",
+        height: "88%",
         marginLeft: 3,
         display: "flex",
         flexDirection: "row",
@@ -167,7 +167,7 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
               title="Click to remove plate"
               style={{
                 width: getPlateWidth(p),
-                height: scaledLoaded(getPlateHeight(p)),
+                height: `${Math.round((getPlateHeight(p) / 72) * 100)}%`,
                 background: PLATE_COLORS[p].bg,
                 color: PLATE_COLORS[p].text,
                 fontSize: compact ? (p >= 25 ? 13.5 : p >= 10 ? 12 : 10.5) : (p >= 25 ? 12.5 : p >= 10 ? 11 : 9.5),
@@ -207,6 +207,8 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
           <div style={{
             position: "absolute",
             left: "2%",
+            top: "50%",
+            transform: "translateY(-50%)",
             width: "48%",
             height: compact ? 6 : 4,
             background: "linear-gradient(180deg, #94A3B8, #475569)",
@@ -218,6 +220,8 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
             position: "absolute",
             left: "50%",
             right: "2%",
+            top: "50%",
+            transform: "translateY(-50%)",
             height: compact ? 12 : 8,
             background: "linear-gradient(180deg, #CBD5E1, #94A3B8)",
             borderRadius: "0 2px 2px 0",
@@ -227,6 +231,8 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
           <div style={{
             position: "absolute",
             left: "50%",
+            top: "50%",
+            transform: "translateY(-50%)",
             width: 4,
             height: compact ? 28 : 18,
             background: "#475569",
