@@ -10,6 +10,7 @@ export type SetRow = {
   set_number: number;
   reps: string | number | null;
   weight_lb: number | null;
+  load_type?: "belt" | null;
   bands_json: string | null;
   grip: string | null;
   completed: number;
@@ -62,6 +63,7 @@ export type Settings = {
 // old /api/last-session and /api/exercise-hints returned.
 export type HintValue = {
   weight_lb: number | null;
+  load_type?: "belt" | null;
   reps: string | number | null;
   bands_json: string | null;
   grip: string | null;

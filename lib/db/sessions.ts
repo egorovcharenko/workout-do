@@ -16,6 +16,7 @@ import { sessionUpdateConflict } from "@/lib/session-save-scope";
 import { effectiveStoredExerciseWeight } from "@/lib/legacy/cable-stack";
 import { isStoredSessionFinished } from "@/lib/legacy/session-status";
 import { exerciseHintsWithDeloadBootstrap, hintsFromSessions } from "@/lib/legacy/exercise-hints";
+import { isStoredBeltLoad, storedBeltLoad } from "@/lib/legacy/belt-load";
 import type {
   HintMap,
   SessionDoc,
@@ -238,6 +239,13 @@ export async function get1RMHistory(uid: string): Promise<{
       // Reps-only exercise: graded on reps (mirrors calcSet1RM).
       if (isRepsOnlyExercise(set.exercise)) {
         push(ormRaw, key, reps);
+        if (isStoredBeltLoad(set)) {
+          const beltWeight = storedBeltLoad(set);
+          if (beltWeight > 0) {
+            push(wtRaw, key, beltWeight);
+            volRaw.set(key, (volRaw.get(key) ?? 0) + beltWeight * reps);
+          }
+        }
         continue;
       }
       // Staged exercise: progress score = stage rank + reps fraction.
@@ -314,6 +322,7 @@ export type SavePayload = {
     set_number?: number;
     reps?: string | number;
     weight_lb?: number | null;
+    load_type?: "belt" | null;
     bands_json?: string | null;
     grip?: string | null;
     logged_at?: string | null;
@@ -332,6 +341,7 @@ export async function saveSession(
     set_number: s.set_number ?? 0,
     reps: s.reps ?? "",
     weight_lb: s.weight_lb ?? null,
+    load_type: s.load_type ?? null,
     bands_json: s.bands_json ?? null,
     grip: s.grip ?? null,
     completed: 1,

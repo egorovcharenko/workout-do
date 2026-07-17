@@ -255,7 +255,7 @@ function ExerciseCardContent({ exercise, sessionTimes, durationMeta, supersetTag
           onApplyLast={() => {
             if (exercise.mode === "bodyweight") {
               onPickBodyweight(activeIdx, activeSet.lastBodyweight || 175);
-            } else if (!exercise.isBandsOnly && !exercise.repsOnly) {
+            } else if (!exercise.isBandsOnly && (!exercise.repsOnly || exercise.beltLoad)) {
               onPickWeight(activeIdx, activeSet.lastWeight || 0);
             }
             if ((exercise.grips || exercise.stages) && activeSet.lastGrip) onPickGrip(activeIdx, activeSet.lastGrip);

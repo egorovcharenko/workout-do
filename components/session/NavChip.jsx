@@ -6,7 +6,7 @@ import { cableStackMultiplier } from "@/lib/legacy/cable-stack";
 
 function navSetDisplay(s, exercise) {
   const weightMultiplier = cableStackMultiplier(exercise.name);
-  if (exercise.repsOnly) {
+  if (exercise.repsOnly && !exercise.beltLoad) {
     const targetRange = parseRepTargetRange(exercise.repRange);
     const targetReps = targetRange && targetRange[0] === targetRange[1] ? targetRange[0] : null;
     if (s.completed) return { repsOnly: true, reps: s.reps, state: "done", kind: s.kind };
@@ -33,12 +33,15 @@ function navSetDisplay(s, exercise) {
   const lastBandSum = (s.lastBands || []).reduce((a, b) => a + b, 0);
   const cur = isAssist ? Math.max(0, baseW - bandSum) : (isBandsOnly ? bandSum : baseW + bandSum);
   const prevW = isAssist ? Math.max(0, lastBaseW - lastBandSum) : (isBandsOnly ? lastBandSum : lastBaseW + lastBandSum);
-  if (s.completed) return { lb: cur, reps: s.reps, state: "done", kind: s.kind, weightMultiplier };
+  const beltPrefix = exercise.beltLoad && cur > 0 ? "+" : "";
+  if (s.completed) return { lb: `${beltPrefix}${cur || (exercise.beltLoad ? "BW" : "")}`, reps: s.reps, state: "done", kind: s.kind, weightMultiplier };
   if (s.active) {
     const reps = s.reps != null ? s.reps : (s.lastReps != null ? s.lastReps : null);
-    return { lb: cur || prevW, reps, state: "current", kind: s.kind, weightMultiplier };
+    const shown = cur || prevW;
+    return { lb: exercise.beltLoad ? (shown > 0 ? `+${shown}` : "BW") : shown, reps, state: "current", kind: s.kind, weightMultiplier };
   }
-  return { lb: prevW || cur, reps: s.lastReps != null ? s.lastReps : null, state: "upcoming", preview: true, kind: s.kind, weightMultiplier };
+  const shown = prevW || cur;
+  return { lb: exercise.beltLoad ? (shown > 0 ? `+${shown}` : "BW") : shown, reps: s.lastReps != null ? s.lastReps : null, state: "upcoming", preview: true, kind: s.kind, weightMultiplier };
 }
 
 function SetChip({ d, k, onClick }) {

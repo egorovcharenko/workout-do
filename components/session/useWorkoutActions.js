@@ -2,6 +2,7 @@ import { SWAP_GROUPS, WORKOUTS, TEST_MODE } from "@/lib/legacy/shared";
 import { applySwaps } from "@/lib/legacy/standards";
 import { saveSwaps, loadSkippedExercises, saveSkippedExercises, saveDeferred, saveBodyweight, saveSessionSets, serializeForSave, finishSavePayload, activateNextSet } from "@/lib/legacy/session-persistence";
 import { flattenTemplate, applyDeloadPrescription, transitionActiveSetAfterLog } from "@/lib/legacy/session-utils";
+import { isBeltLoadExercise } from "@/lib/legacy/belt-load";
 
 // ─── file: workout-session-actions.js ───
 
@@ -333,6 +334,7 @@ function useWorkoutActions({
       noWarmup: official ? !!official.noWarmup : false,
       assist: official ? !!official.assist : false,
       repsOnly: official ? !!official.repsOnly : false,
+      beltLoad: isBeltLoadExercise(name),
       rest: official ? (official.rest || 60) : 60,
       video: official ? (official.video || null) : null,
       grips: official ? (official.grips || null) : null,

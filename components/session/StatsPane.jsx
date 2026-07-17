@@ -1,10 +1,11 @@
 "use client";
 import { useState } from "react";
 import { T, localDate } from "@/lib/legacy/shared";
-import { EXERCISE_MUSCLES, getMuscleImpact, calcSet1RM, calcStoredSet1RM, decodeStageScore, isAssistExercise } from "@/lib/legacy/standards";
+import { EXERCISE_MUSCLES, getMuscleImpact, calcSet1RM, calcStoredSet1RM, decodeStageScore, isAssistExercise, isRepsOnlyExercise } from "@/lib/legacy/standards";
 import { Sparkline } from "./Sparkline";
 import { trainingPoints } from "@/lib/deload-progress";
 import { effectiveExerciseWeight, effectiveStoredExerciseWeight } from "@/lib/legacy/cable-stack";
+import { isStoredBeltLoad, storedBeltLoad } from "@/lib/legacy/belt-load";
 
 // ─── file: workout-session-stats-pane.js ───
 
@@ -56,7 +57,7 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
         if (muscle in muscleSets14d) muscleSets14d[muscle].push({
           date: sess.date, isToday: false,
           exercise: st.exercise,
-          weight: effectiveStoredExerciseWeight(st.exercise, +st.weight_lb || 0, sess),
+          weight: isRepsOnlyExercise(st.exercise) ? storedBeltLoad(st) : effectiveStoredExerciseWeight(st.exercise, +st.weight_lb || 0, sess),
           reps: parseInt(st.reps) || 0,
           weightage: getMuscleImpact(st.exercise, muscle, true),
         });
@@ -65,7 +66,7 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
         if (muscle in muscleSets14d) muscleSets14d[muscle].push({
           date: sess.date, isToday: false,
           exercise: st.exercise,
-          weight: effectiveStoredExerciseWeight(st.exercise, +st.weight_lb || 0, sess),
+          weight: isRepsOnlyExercise(st.exercise) ? storedBeltLoad(st) : effectiveStoredExerciseWeight(st.exercise, +st.weight_lb || 0, sess),
           reps: parseInt(st.reps) || 0,
           weightage: getMuscleImpact(st.exercise, muscle, false),
         });
@@ -119,7 +120,7 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
     let mo = lookupIsAssist ? -Infinity : 0, sv = 0, mw = lookupIsAssist ? -Infinity : 0, mr = 0;
     sets.forEach(st => {
       const recordedWeight = +st.weight_lb || 0, r = parseInt(st.reps) || 0;
-      const w = effectiveStoredExerciseWeight(st.exercise || exercise.name, recordedWeight, sess);
+      const w = exercise.beltLoad ? storedBeltLoad(st) : effectiveStoredExerciseWeight(st.exercise || exercise.name, recordedWeight, sess);
       const orm = calcStoredSet1RM(st.exercise || exercise.name, recordedWeight, r, st.bands_json, st.grip, sess);
       let bandSum = 0;
       if (lookupIsAssist && st.bands_json) {
@@ -132,9 +133,13 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
       if (displayW > mw) mw = displayW;
       if (r > mr) mr = r;
       if (isRepsOnly) {
-        // reps-only: 1RM slot holds reps; weight/volume are meaningless
-        // (older rows saved bodyweight in weight_lb).
+        // Reps remain the main score. Explicitly typed belt loads also get a
+        // separate added-weight and plate-volume history.
         if (r > 0 && orm > mo) mo = orm;
+        if (exercise.beltLoad && isStoredBeltLoad(st) && w > 0) {
+          if (w > mw) mw = w;
+          sv += w * r;
+        }
       } else if (w > 0 && r > 0) {
         if (orm > mo) mo = orm;
         sv += w * r;
@@ -178,6 +183,7 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
     const r = parseInt(s.reps) || 0;
     if (isRepsOnly) {
       if (r > 0 && r > todayOrm) todayOrm = r;
+      if (exercise.beltLoad && r > 0 && w > 0) todayVol += w * r;
       return;
     }
     if (r > 0 && w > 0) {
@@ -243,6 +249,8 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
             : (v => `${Math.round(v)} lb`)}
           showTip={showTip} hideTip={hideTip} />
         {!isRepsOnly && <Sparkline exerciseName={exercise.name} data={volHist} valueKey="vol" color="#34D399" label="VOLUME" fmt={v => `${Math.round(v).toLocaleString()} lb`} showTip={showTip} hideTip={hideTip} />}
+        {exercise.beltLoad && <Sparkline exerciseName={exercise.name} data={wtHist} valueKey="wt" color="#C084FC" label="ADDED LOAD" fmt={v => `+${Math.round(v)} lb`} showTip={showTip} hideTip={hideTip} />}
+        {exercise.beltLoad && <Sparkline exerciseName={exercise.name} data={volHist} valueKey="vol" color="#34D399" label="PLATE VOLUME" fmt={v => `${Math.round(v).toLocaleString()} lb`} showTip={showTip} hideTip={hideTip} />}
       </Section>
 
       {(primaryList.length > 0 || secondaryList.length > 0) && (
@@ -285,6 +293,7 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
               : <KV k="1RM est" v={`${Math.round(bestOrm)} lb`} />
           )}
           {!isRepsOnly && !exercise.stages && (exercise.assist ? bestWt !== -Infinity : bestWt > 0) && <KV k="Top weight" v={`${bestWt} lb`} />}
+          {exercise.beltLoad && bestWt > 0 && <KV k="Top added load" v={`+${bestWt} lb`} />}
           {bestReps > 0 && <KV k="Top reps" v={String(bestReps)} />}
           {bestVol > 0 && <KV k="Top volume" v={`${bestVol.toLocaleString()} lb`} />}
         </Section>

@@ -11,6 +11,7 @@ import { state } from "./state";
 import { MUSCLE_GROUPS } from "./shell";
 import { latestSessionDeltaPercent, trainingPoints } from "@/lib/deload-progress";
 import { effectiveStoredExerciseWeight } from "@/lib/legacy/cable-stack";
+import { storedBeltLoad } from "@/lib/legacy/belt-load";
 
 function renderWorkoutSummaryCard() {
   const history = state.history || [];
@@ -48,16 +49,17 @@ function renderWorkoutSummaryCard() {
     const ex = set.exercise;
     const r = parseInt(set.reps) || 0;
     const recordedWeight = parseFloat(set.weight_lb) || 0;
-    const w = effectiveStoredExerciseWeight(ex, recordedWeight, latest);
-    // Reps-only rows carry no tonnage (older ones saved bodyweight in weight_lb).
-    const vol = _repsOnly(ex) ? 0 : r * w;
+    const beltLoad = storedBeltLoad(set);
+    const w = _repsOnly(ex) ? beltLoad : effectiveStoredExerciseWeight(ex, recordedWeight, latest);
+    const vol = r * w;
     addMus(ex, vol);
 
     if (!exerciseSummary[ex]) {
-      exerciseSummary[ex] = { bestW: 0, bestR: 0, best1RM: 0, totalVol: 0, setsCount: 0, historyWeights: [] };
+      exerciseSummary[ex] = { bestW: 0, bestR: 0, best1RM: 0, bestBeltLoad: 0, totalVol: 0, setsCount: 0, historyWeights: [] };
     }
     const sum = exerciseSummary[ex];
     sum.totalVol += vol;
+    if (beltLoad > sum.bestBeltLoad) sum.bestBeltLoad = beltLoad;
     sum.setsCount++;
     const est = calcStoredSet1RM(ex, recordedWeight, r, set.bands_json, set.grip, latest);
     const isAssist = _assist(ex);
@@ -81,8 +83,11 @@ function renderWorkoutSummaryCard() {
   const historyData = sameWorkoutHistory.map(s => {
     let vol = 0;
     (s.sets || []).forEach(set => {
-      if (set.set_type === 'working' && set.reps && !_repsOnly(set.exercise)) {
-        vol += (parseInt(set.reps) || 0) * effectiveStoredExerciseWeight(set.exercise, parseFloat(set.weight_lb) || 0, s);
+      if (set.set_type === 'working' && set.reps) {
+        const weight = _repsOnly(set.exercise)
+          ? storedBeltLoad(set)
+          : effectiveStoredExerciseWeight(set.exercise, parseFloat(set.weight_lb) || 0, s);
+        vol += (parseInt(set.reps) || 0) * weight;
       }
     });
     if (vol > maxSessionVol) maxSessionVol = vol;
@@ -254,7 +259,7 @@ function renderWorkoutSummaryCard() {
       </div>
     </div>
     <div style="margin-top:3px;color:#6B7280;font-size:10.5px;font-family:${MONO}">${_repsOnly(e.exName)
-      ? `Top <span style="color:#D1D5DB;font-weight:700">${e.sum.bestR} reps</span> · ${e.sum.setsCount} sets`
+      ? `Top <span style="color:#D1D5DB;font-weight:700">${e.sum.bestR} reps</span>${e.sum.bestBeltLoad > 0 ? ` · +${e.sum.bestBeltLoad}lb belt` : ''} · ${e.sum.setsCount} sets`
       : `Top <span style="color:#D1D5DB;font-weight:700">${fmtW(e.sum.bestW)}×${e.sum.bestR}</span> · 1RM ${Math.round(e.sum.best1RM)} · ${e.sum.setsCount} sets`}</div>
   </div>`;
   }).join('');

@@ -6,6 +6,7 @@ import { RepStrip } from "./RepStrip";
 import { BarbellVisualizer } from "./BarbellVisualizer";
 import { CableStackVisualizer } from "./CableStackVisualizer";
 import { EquipmentWeightSelector } from "./WeightSelection";
+import { BeltPlateVisualizer } from "./BeltPlateVisualizer";
 import { cableStackMultiplier, isCableStackExercise } from "@/lib/legacy/cable-stack";
 
 // ─── file: workout-session-activeset.js ───
@@ -26,7 +27,7 @@ function ActiveSetBlock({ exercise, set, totalWork, totalWarmup, warmupPos, onPi
 
   const stages = exercise.stages || null;
   const matchesLast = exercise.repsOnly
-    ? (set.lastReps != null && (!exercise.grips || set.grip === set.lastGrip))
+    ? (set.lastReps != null && (!exercise.grips || set.grip === set.lastGrip) && (!exercise.beltLoad || (set.weight || 0) === (set.lastWeight || 0)))
     : stages
     ? (set.lastReps != null && set.grip === set.lastGrip)
     : (set.lastReps != null) &&
@@ -88,14 +89,14 @@ function ActiveSetBlock({ exercise, set, totalWork, totalWarmup, warmupPos, onPi
           <div style={{ display: "flex", alignItems: "baseline", gap: 8, minWidth: 0 }}>
             <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, fontFamily: T.mono, opacity: 0.75 }}>LAST</span>
             <span style={{ fontFamily: T.mono, fontSize: 14, fontWeight: 700, color: "#DBEAFE" }}>
-              {exercise.repsOnly ? (
+              {exercise.repsOnly && !exercise.beltLoad ? (
                 <>
                   {set.lastReps || "—"}<span style={{ color: T.faint, fontWeight: 500 }}> reps</span>
                   {exercise.grips && set.lastGrip && <span style={{ color: T.muted, fontWeight: 500 }}> · {GRIP_LABELS[set.lastGrip]?.label || set.lastGrip}</span>}
                 </>
               ) : (
                 <>
-                  {stages ? (stageLabel(stages, set.lastGrip) || "—") : `${lastBaseW || "—"}${cableMultiplier === 2 ? "×2" : ""}`}
+                  {exercise.beltLoad ? (set.lastWeight > 0 ? `+${set.lastWeight} lb` : "Bodyweight") : stages ? (stageLabel(stages, set.lastGrip) || "—") : `${lastBaseW || "—"}${cableMultiplier === 2 ? "×2" : ""}`}
                   {!stages && lastBands.length > 0 && (
                     <span style={{ color: T.bands }}> {isBW ? "−" : "+"} {lastBands.join("+")}</span>
                   )}
@@ -143,6 +144,15 @@ function ActiveSetBlock({ exercise, set, totalWork, totalWarmup, warmupPos, onPi
           last={lastBaseW || null}
           onPick={isBW ? onPickBodyweight : onPickWeight}
           kind={weightVisualKind}
+          compact
+        />
+      )}
+
+      {exercise.beltLoad && (
+        <BeltPlateVisualizer
+          weight={set.weight || 0}
+          last={set.lastWeight ?? null}
+          onWeightChange={onPickWeight}
           compact
         />
       )}
