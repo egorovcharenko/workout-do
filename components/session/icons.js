@@ -3,56 +3,62 @@
 
 (function() {
   if (typeof window === "undefined") return;
-  const base = "https://cdn.jsdelivr.net/gh/JahelCuadrado/ExerciseGymGifsDB@main/";
-  
-  const gifMap = {
+
+  const sprite = (sheet, column, row, height = 300) => ({
+    src: `/exercises/sprites/${sheet}.png`,
+    column,
+    row,
+    height
+  });
+
+  const imageMap = {
     // Core Exercises
     "Pull-Ups": "/exercises/pull-up.png",
-    "Band Bicep Curls": "biceps/band-alternating-biceps-curl.gif",
-    "Band Romanian Deadlift": "glutes/band-stiff-leg-deadlift.gif",
-    "Band Row": "upper-back/band-one-arm-standing-low-row.gif",
-    "Band Squat": "glutes/band-squat.gif",
-    "Band Torso Rotation": "abs/band-horizontal-pallof-press.gif",
-    "Cable Tricep Pushdowns": "triceps/cable-pushdown.gif",
-    "Band Tricep Pushdowns": "triceps/cable-pushdown.gif",
-    "Barbell Back Squat": "glutes/barbell-full-squat.gif",
-    "Barbell Bench Press": "pectorals/barbell-bench-press.gif",
-    "Barbell RDL": "glutes/barbell-romanian-deadlift.gif",
-    "Barbell Shrugs": "traps/barbell-shrug.gif",
-    "Bent-Over Barbell Rows": "upper-back/barbell-bent-over-row.gif",
-    "Bulgarian Split Squat": "quads/dumbbell-single-leg-split-squat.gif",
-    "Cable Torso Rotation": "abs/cable-twist.gif",
+    "Band Bicep Curls": sprite("band", 0, 0),
+    "Band Romanian Deadlift": sprite("band", 1, 0),
+    "Band Row": sprite("band", 2, 0),
+    "Band Squat": sprite("band", 0, 1),
+    "Band Torso Rotation": sprite("band", 1, 1),
+    "Cable Tricep Pushdowns": sprite("cable", 0, 0),
+    "Band Tricep Pushdowns": sprite("band", 2, 1),
+    "Barbell Back Squat": sprite("barbell", 0, 0),
+    "Barbell Bench Press": sprite("barbell", 1, 0),
+    "Barbell RDL": sprite("barbell", 2, 0),
+    "Barbell Shrugs": sprite("barbell", 0, 1),
+    "Bent-Over Barbell Rows": sprite("barbell", 1, 1),
+    "Bulgarian Split Squat": sprite("legs-arms", 0, 0),
+    "Cable Torso Rotation": sprite("cable", 1, 0),
     "Dragon Fly Progression": "/exercises/dragon-fly/strict-dragon-fly.png",
     "Surf Pop-Up": "/exercises/surf-pop-up-two-step.png",
-    "Calf Raises": "calves/dumbbell-standing-calf-raise.gif",
-    "Dips": "triceps/triceps-dip.gif",
-    "Dumbbell Bent-Over Rows": "upper-back/dumbbell-bent-over-row.gif",
-    "Dumbbell Bicep Curls": "biceps/dumbbell-alternate-biceps-curl.gif",
-    "Dumbbell Flat Bench Press": "pectorals/dumbbell-bench-press.gif",
-    "Dumbbell Hammer Curls": "biceps/dumbbell-hammer-curl.gif",
-    "Dumbbell Lateral Raises": "delts/dumbbell-lateral-raise.gif",
-    "Dumbbell Romanian Deadlift": "glutes/dumbbell-romanian-deadlift.gif",
-    "Dumbbell Shrugs": "traps/dumbbell-shrug.gif",
-    "Cable Face Pulls": "delts/cable-standing-rear-delt-row-with-rope.gif",
-    "Face Pulls": "delts/cable-standing-rear-delt-row-with-rope.gif",
-    "Goblet Squat": "glutes/kettlebell-goblet-squat.gif",
-    "Hanging Knee Raise": "abs/hanging-leg-hip-raise.gif",
-    "Incline Barbell Press": "pectorals/barbell-incline-bench-press.gif",
-    "Incline DB Curls": "biceps/dumbbell-incline-biceps-curl.gif",
-    "Incline Dumbbell Press": "pectorals/dumbbell-incline-bench-press.gif",
-    "Lat Pulldown": "lats/cable-bar-lateral-pulldown.gif",
-    "Low Row": "upper-back/cable-low-seated-row.gif",
-    "Lunges": "glutes/dumbbell-lunge.gif",
-    "Overhead Dumbbell Press": "delts/dumbbell-standing-overhead-press.gif",
-    "Overhead Tricep Extension": "triceps/dumbbell-standing-triceps-extension.gif",
-    "Pallof Press": "abs/band-horizontal-pallof-press.gif",
-    "Reverse Flyes": "delts/dumbbell-reverse-fly.gif",
-    "Seated Overhead Press": "delts/barbell-seated-overhead-press.gif",
-    "Single-Arm Cable Lateral Raise": "delts/cable-lateral-raise.gif",
-    "Single-Arm Dumbbell Rows": "upper-back/dumbbell-one-arm-bent-over-row.gif",
-    "Single-Leg DB RDL": "glutes/dumbbell-single-leg-deadlift.gif",
+    "Calf Raises": sprite("barbell", 2, 2),
+    "Dips": sprite("cable", 1, 2),
+    "Dumbbell Bent-Over Rows": sprite("dumbbell", 0, 2, 323.5),
+    "Dumbbell Bicep Curls": sprite("legs-arms", 1, 1),
+    "Dumbbell Flat Bench Press": sprite("dumbbell", 0, 0, 323.5),
+    "Dumbbell Hammer Curls": sprite("legs-arms", 2, 1),
+    "Dumbbell Lateral Raises": sprite("dumbbell", 0, 1, 323.5),
+    "Dumbbell Romanian Deadlift": sprite("dumbbell", 2, 2, 323.5),
+    "Dumbbell Shrugs": sprite("dumbbell", 2, 1, 323.5),
+    "Cable Face Pulls": sprite("cable", 2, 0),
+    "Face Pulls": sprite("cable", 0, 1),
+    "Goblet Squat": sprite("legs-arms", 1, 0),
+    "Hanging Knee Raise": sprite("legs-arms", 2, 2),
+    "Incline Barbell Press": sprite("barbell", 2, 1),
+    "Incline DB Curls": sprite("legs-arms", 0, 2),
+    "Incline Dumbbell Press": sprite("dumbbell", 1, 0, 323.5),
+    "Lat Pulldown": sprite("cable", 1, 1),
+    "Low Row": sprite("cable", 2, 1),
+    "Lunges": sprite("legs-arms", 2, 0),
+    "Overhead Dumbbell Press": sprite("dumbbell", 2, 0, 323.5),
+    "Overhead Tricep Extension": sprite("legs-arms", 1, 2),
+    "Pallof Press": sprite("band", 0, 2),
+    "Reverse Flyes": sprite("dumbbell", 1, 1, 323.5),
+    "Seated Overhead Press": sprite("barbell", 0, 2),
+    "Single-Arm Cable Lateral Raise": sprite("cable", 0, 2),
+    "Single-Arm Dumbbell Rows": sprite("dumbbell", 1, 2, 323.5),
+    "Single-Leg DB RDL": sprite("legs-arms", 0, 1),
     // "close-grip military press" is the DB's standard shoulder-width barbell OHP.
-    "Standing Overhead Press": "delts/barbell-standing-close-grip-military-press.gif"
+    "Standing Overhead Press": sprite("barbell", 1, 2)
   };
 
   const fallback = `
@@ -66,15 +72,20 @@
   `;
 
   window.getExerciseIcon = function(name) {
-    const file = gifMap[name];
-    if (!file) return fallback;
-    const src = file.startsWith("https://") || file.startsWith("/") ? file : `${base}${file}`;
-    
-    // The DB gifs are square with a white background; the media box isn't
-    // square, so contain letterboxes them — the bars must be white to blend.
+    const image = imageMap[name];
+    if (!image) return fallback;
+
+    if (typeof image === "object") {
+      return `
+        <div style="position:relative;width:100%;height:100%;background:#fff;overflow:hidden">
+          <img src="${image.src}" alt="" aria-hidden="true" style="position:absolute;width:300%;max-width:none;height:${image.height}%;left:-${image.column * 100}%;top:-${image.row * 100}%;display:block" />
+        </div>
+      `;
+    }
+
     return `
       <div style="display:flex;width:100%;height:100%;background:#fff;align-items:center;justify-content:center;overflow:hidden">
-        <img src="${src}" style="width:100%;height:100%;object-fit:contain;display:block;background:#fff" />
+        <img src="${image}" alt="" aria-hidden="true" style="width:100%;height:100%;object-fit:contain;display:block;background:#fff" />
       </div>
     `;
   };
