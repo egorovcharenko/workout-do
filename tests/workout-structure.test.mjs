@@ -20,6 +20,17 @@ test("standing overhead press and lat pulldown are independent exercises", () =>
   assert.equal(latPulldown.noWarmup, true);
 });
 
+test("main squat uses top-set and back-off progression targets", () => {
+  const workout = WORKOUTS.find((candidate) => candidate.id === "main-a");
+  const squat = workout.exercises.find((exercise) => exercise.name === "Barbell Back Squat");
+
+  assert.equal(squat.sets, 3);
+  assert.equal(squat.reps, "1x5-8, 2x8-10");
+  assert.deepEqual(squat.defaultWork, [125, 115, 115]);
+  assert.match(squat.notes, /\+5 lb at 8/);
+  assert.match(squat.notes, /both hit 10/);
+});
+
 test("deadlift day uses low cable rows instead of bent-over barbell rows", () => {
   const workout = WORKOUTS.find((candidate) => candidate.id === "main-b");
   const latPulldownIndex = workout.exercises.findIndex((exercise) => exercise.name === "Lat Pulldown");

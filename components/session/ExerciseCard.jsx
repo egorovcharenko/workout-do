@@ -5,7 +5,7 @@ import { SetCard } from "./SetCard";
 import { RestTimer } from "./RestTimer";
 import { ActiveSetBlock } from "./ActiveSetBlock";
 import { DurationReadout } from "./DurationReadout";
-import { BenchProgressionBanner } from "./BenchProgressionBanner";
+import { ProgressionBanner } from "./ProgressionBanner";
 
 // ─── file: workout-session-exercise-card.js ───
 
@@ -89,7 +89,7 @@ function ExerciseCardContent({ exercise, sessionTimes, durationMeta, supersetTag
       {!embedded && exercise.note && (
         <p style={{ margin: "6px 0 0", color: T.muted, fontSize: 12, lineHeight: 1.4 }}>{exercise.note}</p>
       )}
-      {!embedded && <BenchProgressionBanner exercise={exercise} />}
+      {!embedded && <ProgressionBanner exercise={exercise} />}
 
       {(() => { const dn = exercise.deload && (exercise.sets.find(s => s.deloadNormal) || {}).deloadNormal;
         return dn ? (
