@@ -1,11 +1,11 @@
 "use client";
 import { useState } from "react";
-import { T, localDate } from "@/lib/legacy/shared";
+import { GRIP_LABELS, T, localDate } from "@/lib/legacy/shared";
 import { EXERCISE_MUSCLES, getMuscleImpact, calcSet1RM, calcStoredSet1RM, decodeStageScore, isAssistExercise, isRepsOnlyExercise } from "@/lib/legacy/standards";
 import { Sparkline } from "./Sparkline";
-import { trainingPoints } from "@/lib/deload-progress";
 import { effectiveExerciseWeight, effectiveStoredExerciseWeight } from "@/lib/legacy/cable-stack";
 import { isStoredBeltLoad, storedBeltLoad } from "@/lib/legacy/belt-load";
+import { buildExerciseSessionHistory } from "@/lib/legacy/exercise-session-history";
 
 // ─── file: workout-session-stats-pane.js ───
 
@@ -18,14 +18,134 @@ const Section = ({ label, children }) => (
   </div>
 );
 
-const KV = ({ k, v }) => (
-  <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", fontSize: 11, borderBottom: `1px solid ${T.cardBorder}` }}>
-    <span style={{ color: T.faint, fontFamily: T.mono }}>{k}</span>
-    <span style={{ color: T.strong, fontFamily: T.mono, fontWeight: 700 }}>{v}</span>
-  </div>
-);
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-function StatsPane({ exercise, history, statHistory, exercises }) {
+function displayDate(value) {
+  const [year, month, day] = String(value || "").split("-");
+  if (!year || !month || !day) return value || "—";
+  const suffix = year === String(new Date().getFullYear()) ? "" : ` '${year.slice(-2)}`;
+  return `${MONTHS[Number(month) - 1] || month} ${Number(day)}${suffix}`;
+}
+
+function bandLoad(set) {
+  if (!set?.bands_json) return 0;
+  try {
+    const bands = JSON.parse(set.bands_json);
+    return Array.isArray(bands) ? bands.reduce((sum, weight) => sum + (Number(weight) || 0), 0) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function formatWeight(value) {
+  const weight = Math.round((Number(value) || 0) * 100) / 100;
+  return Number.isInteger(weight) ? String(weight) : String(weight).replace(/0+$/, "").replace(/\.$/, "");
+}
+
+function historicalSetLabel(set, session, exercise) {
+  const reps = parseInt(set.reps, 10) || 0;
+  const repLabel = reps === 1 ? "1 rep" : `${reps} reps`;
+  const grip = GRIP_LABELS[set.grip]?.label || set.grip;
+  const repDetail = grip ? `${repLabel} · ${grip}` : repLabel;
+
+  if (exercise.stages) {
+    const stage = exercise.stages.find((item) => item.id === set.grip);
+    return { value: stage?.label || set.grip || "Stage", detail: repLabel };
+  }
+  if (exercise.beltLoad) {
+    const load = storedBeltLoad(set);
+    return load > 0
+      ? { value: `+${formatWeight(load)} lb`, detail: repDetail }
+      : { value: "Bodyweight", detail: repDetail };
+  }
+  if (exercise.assist) {
+    const assistance = bandLoad(set);
+    return assistance > 0
+      ? { value: `−${formatWeight(assistance)} lb`, detail: `${repLabel} · assist` }
+      : { value: "Bodyweight", detail: repLabel };
+  }
+  if (exercise.repsOnly) return { value: repLabel, detail: "" };
+
+  const weight = effectiveStoredExerciseWeight(
+    set.exercise || exercise.name,
+    Number(set.weight_lb) || 0,
+    session,
+  );
+  return weight > 0
+    ? { value: `${formatWeight(weight)} lb`, detail: repDetail }
+    : { value: repLabel, detail: "" };
+}
+
+function PreviousSessions({ history, exercise, sessionId }) {
+  const { rows, columnCount } = buildExerciseSessionHistory(history, exercise.name, sessionId);
+  if (!rows.length) {
+    return (
+      <Section label="PREVIOUS SESSIONS">
+        <div style={{ color: T.faint, fontFamily: T.mono, fontSize: 10 }}>No previous sessions yet.</div>
+      </Section>
+    );
+  }
+
+  const dateWidth = 78;
+  const setWidth = 104;
+  const border = `1px solid ${T.cardBorder}`;
+  return (
+    <Section label={`PREVIOUS SESSIONS · ${rows.length}`}>
+      <div style={{ overflowX: "auto", border, borderRadius: 9, WebkitOverflowScrolling: "touch" }}>
+        <table style={{ width: dateWidth + columnCount * setWidth, borderCollapse: "collapse", tableLayout: "fixed" }}>
+          <colgroup>
+            <col style={{ width: dateWidth }} />
+            {Array.from({ length: columnCount }, (_, index) => <col key={index} style={{ width: setWidth }} />)}
+          </colgroup>
+          <thead>
+            <tr>
+              <th scope="col" style={{ position: "sticky", left: 0, zIndex: 2, padding: "7px 8px", borderBottom: border, background: "#111827", color: T.faint, fontFamily: T.mono, fontSize: 8, fontWeight: 800, letterSpacing: 0.7, textAlign: "left" }}>DATE</th>
+              {Array.from({ length: columnCount }, (_, index) => (
+                <th key={index} scope="col" style={{ padding: "7px 8px", borderBottom: border, borderLeft: border, color: T.faint, fontFamily: T.mono, fontSize: 8, fontWeight: 800, letterSpacing: 0.7, textAlign: "left" }}>
+                  SET {index + 1}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(({ session, sets }, rowIndex) => {
+              const isLast = rowIndex === rows.length - 1;
+              return (
+                <tr key={session.id || `${session.date}-${rowIndex}`} style={{ background: rowIndex % 2 ? "rgba(255,255,255,0.012)" : "transparent" }}>
+                  <th
+                    scope="row"
+                    title={session.workout_name || session.date}
+                    style={{ position: "sticky", left: 0, zIndex: 1, padding: "9px 8px", borderBottom: isLast ? "none" : border, background: rowIndex % 2 ? "#121925" : "#111827", color: T.muted, fontFamily: T.mono, fontSize: 9, fontWeight: 700, textAlign: "left" }}>
+                    {displayDate(session.date)}
+                    {!!session.is_deload && <span style={{ display: "block", marginTop: 3, color: T.amber, fontSize: 7, letterSpacing: 0.5 }}>DELOAD</span>}
+                  </th>
+                  {Array.from({ length: columnCount }, (_, setIndex) => {
+                    const set = sets[setIndex];
+                    const label = set ? historicalSetLabel(set, session, exercise) : null;
+                    return (
+                      <td
+                        key={setIndex}
+                        style={{ minWidth: 0, padding: "8px", borderLeft: border, borderBottom: isLast ? "none" : border }}>
+                        {label ? (
+                          <>
+                            <div title={label.value} style={{ color: T.strong, fontFamily: T.mono, fontSize: 10, fontWeight: 800, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{label.value}</div>
+                            {!!label.detail && <div title={label.detail} style={{ marginTop: 2, color: T.faint, fontFamily: T.mono, fontSize: 8.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{label.detail}</div>}
+                          </>
+                        ) : <span style={{ color: T.disabled, fontFamily: T.mono, fontSize: 9 }}>—</span>}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </Section>
+  );
+}
+
+function StatsPane({ exercise, history, statHistory, exercises, sessionId }) {
   const [tipState, setTip] = useState(null);
   const tip = tipState?.exerciseName === exercise?.name ? tipState : null;
 
@@ -168,7 +288,6 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
   };
   const ormHistRaw = mergeMetric((stat.orm || {})[exercise.name], "orm");
   const wtHist     = mergeMetric((stat.wt  || {})[exercise.name], "wt");
-  const repsHist   = mergeMetric((stat.reps|| {})[exercise.name], "reps");
   const volHistRaw = mergeMetric((stat.vol || {})[exercise.name], "vol");
 
   let todayOrm = exercise.assist ? -Infinity : 0, todayVol = 0;
@@ -210,18 +329,6 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
   const volHist = (todayVol > 0)
     ? [...volHistRaw.filter(d => d.date !== chartTodayDateStr), { date: chartTodayDateStr, vol: todayVol, isDeload: !!window.SESSION_DELOAD }]
     : volHistRaw;
-  const ormTraining = trainingPoints(ormHist);
-  const wtTraining = trainingPoints(wtHist);
-  const repsTraining = trainingPoints(repsHist);
-  const volTraining = trainingPoints(volHist);
-  const bestOrm = ormTraining.length ? Math.max(...ormTraining.map(d => d.orm !== undefined ? +d.orm : -Infinity)) : (exercise.assist ? -Infinity : 0);
-  const bestWt = wtTraining.length ? Math.max(...wtTraining.map(d => d.wt !== undefined ? +d.wt : -Infinity)) : (exercise.assist ? -Infinity : 0);
-  const bestReps = repsTraining.length ? Math.max(...repsTraining.map(d => +d.reps || 0)) : 0;
-  const bestVol = volTraining.length ? Math.max(...volTraining.map(d => +d.vol || 0)) : 0;
-
-  const hasPRs = exercise.assist
-    ? (bestOrm !== -Infinity || bestWt !== -Infinity || bestVol > 0)
-    : (bestOrm > 0 || bestWt > 0 || bestVol > 0);
   const primaryList = (muscleInfo.primary || []);
   const secondaryList = (muscleInfo.secondary || []);
 
@@ -285,19 +392,7 @@ function StatsPane({ exercise, history, statHistory, exercises }) {
         </Section>
       )}
 
-      {hasPRs && (
-        <Section label="PRS">
-          {!isRepsOnly && (exercise.assist ? bestOrm !== -Infinity : bestOrm > 0) && (
-            exercise.stages
-              ? <KV k="Best stage" v={(() => { const d = decodeStageScore(bestOrm); const st = exercise.stages[d.stage - 1]; return `${st ? st.label : `S${d.stage}`} × ${d.reps}`; })()} />
-              : <KV k="1RM est" v={`${Math.round(bestOrm)} lb`} />
-          )}
-          {!isRepsOnly && !exercise.stages && (exercise.assist ? bestWt !== -Infinity : bestWt > 0) && <KV k="Top weight" v={`${bestWt} lb`} />}
-          {exercise.beltLoad && bestWt > 0 && <KV k="Top added load" v={`+${bestWt} lb`} />}
-          {bestReps > 0 && <KV k="Top reps" v={String(bestReps)} />}
-          {bestVol > 0 && <KV k="Top volume" v={`${bestVol.toLocaleString()} lb`} />}
-        </Section>
-      )}
+      <PreviousSessions history={history} exercise={exercise} sessionId={sessionId} />
 
       {tip && (
         <div style={{

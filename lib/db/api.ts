@@ -40,6 +40,7 @@ export const api = {
   lastSession: (workout: string) => getLastSession(uid(), workout),
   hints: () => getExerciseHints(uid()),
   history: (limit = 20) => getHistory(uid(), limit),
+  allHistory: () => getHistory(uid(), Number.POSITIVE_INFINITY),
   history1RM: () => get1RMHistory(uid()),
   activeSessions: () => getActiveSessions(uid()),
   settings: () => getSettings(uid()),

@@ -50,7 +50,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
     // settings goes first: it's the cheapest query but gates deload/bodyweight,
     // and a single-threaded dev server processes requests in arrival order —
     // listed last it queues behind the heavy queries and can hit fetchT's timeout.
-    (async () => { try { const results = await Promise.allSettled([ api.settings(), api.lastSession(workout.name), api.todaySession(workout.name), api.hints(), api.history(100), api.history1RM() ]);
+    (async () => { try { const results = await Promise.allSettled([ api.settings(), api.lastSession(workout.name), api.todaySession(workout.name), api.hints(), api.allHistory(), api.history1RM() ]);
         if (cancelled) return;
         const last = results[1].status === "fulfilled" ? results[1].value : {};
         const today = results[2].status === "fulfilled" ? results[2].value : null;
@@ -504,7 +504,8 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
             exercise={shownExercise}
             history={history}
             statHistory={statHistory}
-            exercises={exercises} />
+            exercises={exercises}
+            sessionId={sessionId} />
         </aside>
       </div>
     </div> ); }
