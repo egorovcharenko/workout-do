@@ -7,7 +7,7 @@
   
   const gifMap = {
     // Core Exercises
-    "Pull-Ups": "lats/pull-up.gif",
+    "Pull-Ups": "/exercises/pull-up.png",
     "Band Bicep Curls": "biceps/band-alternating-biceps-curl.gif",
     "Band Romanian Deadlift": "glutes/band-stiff-leg-deadlift.gif",
     "Band Row": "upper-back/band-one-arm-standing-low-row.gif",
