@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useCallback, useState, useEffect, useRef, useMemo } from "react";
 import { api } from "@/lib/db/api";
 import { canApplyResolvedSessionId, selectScopedSaveTiming } from "@/lib/session-save-scope";
 import {
@@ -24,18 +24,18 @@ import { DurationReadout } from "./DurationReadout";
 import { buildExerciseDurationHistory, estimateExerciseDurationMeta } from "@/lib/legacy/duration-estimates";
 import { mergeTemplateAndSavedSet, shouldKeepRemovedWarmup } from "@/lib/legacy/exercise-history";
 import { isBeltLoadExercise } from "@/lib/legacy/belt-load";
+import {
+  firstPendingSetIndex,
+  isResolvedSet,
+  selectedSetWeight,
+  shouldRestoreCustomExercise,
+} from "@/lib/legacy/session-mutations";
 
 // ─── file: workout-session-app.js ───
 
 function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUrl = new URLSearchParams(window.location.search).get("w");
     return (fromUrl && WORKOUTS.some(w => w.id === fromUrl)) ? fromUrl : (WORKOUTS.find(w => w.main) || WORKOUTS[0]).id; });
   const workout = useMemo(() => WORKOUTS.find(w => w.id === workoutId) || WORKOUTS[0], [workoutId]);
-  const onPickWorkout = (id) => { if (id === workoutId) return;
-    const url = new URL(window.location.href); url.searchParams.set("w", id);
-    window.history.replaceState({}, "", url);
-    setLoaded(false); setExercises([]); setSessionId(null); setHistory([]); setStatHistory([]); setSwaps({});
-    setSessionDate(localDate()); setFocused(null); resetTimers(id);
-    setWorkoutId(id); };
   const [exercises, setExercises] = useState([]);
   const [sessionDate, setSessionDate] = useState(() => localDate());
   const [loaded, setLoaded] = useState(false);
@@ -149,7 +149,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
           Object.keys(savedSetsMap).forEach(name => {
             if (!templateNames.has(name)) {
               const saved = savedSetsMap[name];
-              if (saved && saved.some(s => s.completed)) {
+              if (shouldRestoreCustomExercise(saved)) {
                 let official = null;
                 if (typeof SWAP_GROUPS !== "undefined" && typeof WORKOUTS !== "undefined") {
                   for (const g of SWAP_GROUPS) {
@@ -213,27 +213,67 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
     saveScopeRef.current = `${workout.name}:${sessionDate}`;
   }, [startedAt, elapsed, workout.name, sessionDate]);
   const saveDebounceRef = useRef(null);
-  const queueSave = (currentExercises, currentSessionId, currentStartedAt, currentElapsed) => { clearTimeout(saveDebounceRef.current);
-    const saveScope = `${workout.name}:${sessionDate}`;
-    saveDebounceRef.current = setTimeout(() => {
-      const timing = selectScopedSaveTiming(
-        saveScope,
-        saveScopeRef.current,
-        { startedAt: currentStartedAt, elapsed: currentElapsed },
-        { startedAt: startedAtRef.current, elapsed: elapsedRef.current },
-      );
-      const latestStartedAt = timing.startedAt;
-      const latestElapsed = timing.elapsed;
-      const payload = serializeForSave(currentExercises, workout.name, currentSessionId, latestStartedAt, latestElapsed, sessionDate);
-      if (payload.sets.length === 0 && !latestStartedAt && !currentSessionId) return;
-      autoSavePayload(payload, (newId) => {
-        if (canApplyResolvedSessionId(saveScope, saveScopeRef.current, currentSessionId, newId)) setSessionId(newId);
-      });
-    }, 400); };
+  const pendingSaveRef = useRef(null);
+  const flushPendingSave = useCallback(() => {
+    clearTimeout(saveDebounceRef.current);
+    saveDebounceRef.current = null;
+    const pending = pendingSaveRef.current;
+    if (!pending) return;
+    pendingSaveRef.current = null;
+    const {
+      currentExercises, currentSessionId, currentStartedAt, currentElapsed,
+      workoutName, activeDate, saveScope,
+    } = pending;
+    const timing = selectScopedSaveTiming(
+      saveScope,
+      saveScopeRef.current,
+      { startedAt: currentStartedAt, elapsed: currentElapsed },
+      { startedAt: startedAtRef.current, elapsed: elapsedRef.current },
+    );
+    const latestStartedAt = timing.startedAt;
+    const latestElapsed = timing.elapsed;
+    const payload = serializeForSave(currentExercises, workoutName, currentSessionId, latestStartedAt, latestElapsed, activeDate);
+    if (payload.sets.length === 0 && !latestStartedAt && !currentSessionId) return;
+    autoSavePayload(payload, (newId) => {
+      if (canApplyResolvedSessionId(saveScope, saveScopeRef.current, currentSessionId, newId)) setSessionId(newId);
+    });
+  }, []);
+  const queueSave = (currentExercises, currentSessionId, currentStartedAt, currentElapsed) => {
+    clearTimeout(saveDebounceRef.current);
+    pendingSaveRef.current = {
+      currentExercises,
+      currentSessionId,
+      currentStartedAt,
+      currentElapsed,
+      workoutName: workout.name,
+      activeDate: sessionDate,
+      saveScope: `${workout.name}:${sessionDate}`,
+    };
+    saveDebounceRef.current = setTimeout(flushPendingSave, 400);
+  };
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "hidden") flushPendingSave();
+    };
+    window.addEventListener("pagehide", flushPendingSave);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      flushPendingSave();
+      window.removeEventListener("pagehide", flushPendingSave);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [flushPendingSave]);
+  const onPickWorkout = (id) => { if (id === workoutId) return;
+    flushPendingSave();
+    const url = new URL(window.location.href); url.searchParams.set("w", id);
+    window.history.replaceState({}, "", url);
+    setLoaded(false); setExercises([]); setSessionId(null); setHistory([]); setStatHistory([]); setSwaps({});
+    setSessionDate(localDate()); setFocused(null); resetTimers(id);
+    setWorkoutId(id); };
   const actions = useWorkoutActions({ workout, exercises, setExercises, sessionDate, sessionId, setSessionId, startedAt, elapsed, swaps, setSwaps, dataRef, startTimer, setRest, queueSave });
   const currentIdx = (() => { let i = exercises.findIndex(e => !e.skipped && e.sets.some(s => s.active));
     if (i !== -1) return i;
-    i = exercises.findIndex(e => !e.skipped && e.sets.some(s => !s.completed));
+    i = exercises.findIndex(e => !e.skipped && e.sets.some(s => !isResolvedSet(s)));
     if (i !== -1) return i;
     return exercises.length - 1; })();
   const focusIdx = focused?.currentIdx === currentIdx ? focused.idx : null;
@@ -247,15 +287,16 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
   const onSelectExercise = (idx) => { setFocused(idx == null ? null : { idx, currentIdx });
     const ex = exercises[idx]; if (!ex || ex.skipped) return;
     const hasActiveHere = ex.sets.some(s => s.active);
-    const firstIncomplete = ex.sets.findIndex(s => !s.completed);
+    const firstIncomplete = firstPendingSetIndex(ex);
     if (!hasActiveHere && firstIncomplete !== -1) { const next = exercises.map((e) => ({ ...e, sets: e.sets.map(s => s.active ? { ...s, active: false } : s), }));
       next[idx] = { ...next[idx], sets: next[idx].sets.map((s, j) => j === firstIncomplete ? { ...s, active: true } : s), };
       actions.onPickWeight(idx, firstIncomplete, next[idx].sets[firstIncomplete].weight, next); } };
   const onSelectSet = (exIdx, setIdx) => { setFocused({ idx: exIdx, currentIdx });
     const ex = exercises[exIdx]; if (!ex || ex.skipped) return;
-    const next = exercises.map((e, idx) => idx !== exIdx ? { ...e, sets: e.sets.map(s => s.active ? { ...s, active: false } : s) } : { ...e, sets: e.sets.map((s, j) => ({ ...s, active: j === setIdx })), });
+    const next = exercises.map((e, idx) => idx !== exIdx ? { ...e, sets: e.sets.map(s => s.active ? { ...s, active: false } : s) } : { ...e, sets: e.sets.map((s, j) => ({ ...s, active: j === setIdx, userSkipped: j === setIdx ? false : s.userSkipped })), });
     const selectedSet = next[exIdx].sets[setIdx];
-    actions.onPickWeight(exIdx, setIdx, selectedSet.weight || selectedSet.lastWeight || 0, next); };
+    if (!selectedSet) return;
+    actions.onPickWeight(exIdx, setIdx, selectedSetWeight(selectedSet), next); };
   if (!loaded) { return ( <div style={{ height: "100%", overflowY: "auto" }}>
         <div style={{ maxWidth: 448, margin: "0 auto", minHeight: "100%", background: T.page }}>
           <Header workout={workout} workouts={WORKOUTS} onPickWorkout={onPickWorkout} done={0} total={0} elapsedSec={0} deload={!!window.SESSION_DELOAD} />

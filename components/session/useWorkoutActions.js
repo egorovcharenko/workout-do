@@ -4,8 +4,12 @@ import { applySwaps } from "@/lib/legacy/standards";
 import { saveSwaps, loadSkippedExercises, saveSkippedExercises, saveDeferred, saveBodyweight, saveSessionSets, serializeForSave, finishSavePayload, activateNextSet } from "@/lib/legacy/session-persistence";
 import { flattenTemplate, applyDeloadPrescription } from "@/lib/legacy/session-utils";
 import { logSetAndTransition } from "@/lib/legacy/set-logging";
-import { isBeltLoadExercise } from "@/lib/legacy/belt-load";
 import { loggedAtForSetUpdate } from "@/lib/legacy/duration-estimates";
+import {
+  buildLibraryExerciseTemplate,
+  exerciseNameExists,
+  skipRemainingWarmups,
+} from "@/lib/legacy/session-mutations";
 
 // ─── file: workout-session-actions.js ───
 
@@ -53,7 +57,7 @@ function useWorkoutActions({
   const onPickBodyweight = (eIdx, sIdx, w) => {
     startTimer();
     saveBodyweight(w);
-    const next = exercises.map(e => e.assist
+    const next = exercisesRef.current.map(e => e.assist
       ? { ...e, sets: e.sets.map(s => ({ ...s, bodyweight: w })) }
       : e);
     updateAndSave(next);
@@ -61,12 +65,13 @@ function useWorkoutActions({
 
   const onPickGrip = (eIdx, sIdx, g) => {
     startTimer();
-    const exercise = exercises[eIdx];
+    const current = exercisesRef.current;
+    const exercise = current[eIdx];
     if (!exercise?.stages) {
       updateAndSave(patchSet(eIdx, sIdx, { grip: g }));
       return;
     }
-    const next = exercises.map((candidate, index) => index !== eIdx ? candidate : ({
+    const next = current.map((candidate, index) => index !== eIdx ? candidate : ({
       ...candidate,
       sets: candidate.sets.map((set, setIndex) => {
         const isRemainingWorkingSet = set.kind === "work" && !set.completed;
@@ -78,7 +83,7 @@ function useWorkoutActions({
 
   const onToggleBand = (eIdx, sIdx, b) => {
     startTimer();
-    const next = exercises.map((e, i) => {
+    const next = exercisesRef.current.map((e, i) => {
       if (i !== eIdx) return e;
       return {
         ...e,
@@ -155,7 +160,7 @@ function useWorkoutActions({
   };
 
   const onReopenSet = (eIdx, sIdx) => {
-    const next = exercises.map((e, i) => {
+    const next = exercisesRef.current.map((e, i) => {
       if (i !== eIdx) return e;
       return {
         ...e,
@@ -174,19 +179,12 @@ function useWorkoutActions({
   };
 
   const onSkipWarmup = (eIdx) => {
-    const next = exercises.map((e, i) => {
-      if (i !== eIdx) return e;
-      const sets = e.sets.map(s => s.kind === "warmup" ? { ...s, active: false, completed: false, userSkipped: true } : s);
-      const firstWork = sets.findIndex(s => s.kind === "work" && !s.completed);
-      if (firstWork !== -1) sets[firstWork] = { ...sets[firstWork], active: true };
-      return { ...e, sets };
-    });
-    updateAndSave(next);
+    updateAndSave(skipRemainingWarmups(exercisesRef.current, eIdx));
   };
 
   const onSkipExercise = (eIdx) => {
     startTimer();
-    const next = exercises.map((e, i) => {
+    const next = exercisesRef.current.map((e, i) => {
       if (i !== eIdx) return e;
       const skipped = !e.skipped;
       const sets = e.sets.map(s => ({ ...s, active: false }));
@@ -199,19 +197,23 @@ function useWorkoutActions({
   };
 
   const onDeferExercise = (eIdx) => {
-    const target = exercises[eIdx];
+    const current = exercisesRef.current;
+    const target = current[eIdx];
     if (!target || target.superset) return;
     startTimer();
     const moved = { ...target, deferred: true, sets: target.sets.map(s => ({ ...s, active: false })) };
-    const next = [...exercises.filter((_, i) => i !== eIdx), moved];
+    const next = [...current.filter((_, i) => i !== eIdx), moved];
     activateNextSet(next);
     saveDeferred(workout.name, sessionDate, next.filter(e => e.deferred).map(e => e.name));
     updateAndSave(next);
   };
 
   const onSwapExercise = (eIdx, newName) => {
+    const current = exercisesRef.current;
+    if (exerciseNameExists(current, newName, eIdx)) return;
     startTimer();
-    const ex = exercises[eIdx];
+    const ex = current[eIdx];
+    if (!ex) return;
     const tIdx = ex.templateExIdx;
     const isSub = ex.subIdx != null;
     const swapKey = isSub ? `${tIdx}-${ex.subIdx}` : `${tIdx}`;
@@ -229,7 +231,7 @@ function useWorkoutActions({
     if (window.SESSION_DELOAD) exs = applyDeloadPrescription(exs);
     exs = exs.map((item, i) => {
       if (i === eIdx) return item;
-      const prevEx = exercises[i];
+      const prevEx = current[i];
       if (prevEx && prevEx.name === item.name) {
         return { ...item, sets: prevEx.sets.map(s => ({ ...s })) };
       }
@@ -237,7 +239,7 @@ function useWorkoutActions({
     });
     // flattenTemplate only knows the template — re-append custom-added
     // exercises so a swap doesn't erase them (and their logged sets).
-    const customs = exercises
+    const customs = current
       .filter(e => e.customAdded)
       .map(e => ({ ...e, sets: e.sets.map(s => ({ ...s, active: false })) }));
     if (customs.length) exs = [...exs, ...customs];
@@ -249,9 +251,10 @@ function useWorkoutActions({
 
   const onAddSet = (eIdx) => {
     startTimer();
-    const targetSuperset = exercises[eIdx]?.superset;
-    const subCount = targetSuperset ? exercises.filter(ex => ex.superset === targetSuperset).length : 1;
-    const next = exercises.map((e, i) => {
+    const current = exercisesRef.current;
+    const targetSuperset = current[eIdx]?.superset;
+    const subCount = targetSuperset ? current.filter(ex => ex.superset === targetSuperset).length : 1;
+    const next = current.map((e, i) => {
       const match = targetSuperset ? (e.superset === targetSuperset) : (i === eIdx);
       if (!match) return e;
       const lastWork = [...e.sets].reverse().find(s => s.kind === "work");
@@ -275,10 +278,11 @@ function useWorkoutActions({
 
   const onRemoveSet = (eIdx) => {
     startTimer();
-    const targetSuperset = exercises[eIdx]?.superset;
-    const targets = exercises.filter(e => targetSuperset ? e.superset === targetSuperset : e.id === exercises[eIdx].id);
+    const current = exercisesRef.current;
+    const targetSuperset = current[eIdx]?.superset;
+    const targets = current.filter(e => targetSuperset ? e.superset === targetSuperset : e.id === current[eIdx].id);
     const maxWork = Math.max(...targets.map(e => e.sets.filter(s => s.kind === "work").length));
-    const next = exercises.map((e, i) => {
+    const next = current.map((e, i) => {
       if (targetSuperset ? e.superset !== targetSuperset : i !== eIdx) return e;
       const workSets = e.sets.filter(s => s.kind === "work");
       if (workSets.length <= 1) return e;
@@ -297,14 +301,14 @@ function useWorkoutActions({
 
   const onRemoveWarmup = (eIdx) => {
     startTimer();
-    const next = exercises.map((e, i) => i !== eIdx ? e : ({ ...e, sets: e.sets.filter(s => s.kind !== "warmup") }));
+    const next = exercisesRef.current.map((e, i) => i !== eIdx ? e : ({ ...e, sets: e.sets.filter(s => s.kind !== "warmup") }));
     updateAndSave(next);
   };
 
   const onFinishWorkout = (elapsedSec) => {
     if (TEST_MODE) { window.location.href = "/"; return; }
     const payload = {
-      ...serializeForSave(exercises, workout.name, sessionId, startedAt, elapsedSec, sessionDate),
+      ...serializeForSave(exercisesRef.current, workout.name, sessionId, startedAt, elapsedSec, sessionDate),
       finished_at: new Date().toISOString(),
     };
     finishSavePayload(payload).catch(e => console.error("[V2-SAVE] finish error:", e)).finally(() => {
@@ -313,6 +317,8 @@ function useWorkoutActions({
   };
 
   const onAddExercise = (name) => {
+    const current = exercisesRef.current;
+    if (exerciseNameExists(current, name)) return;
     startTimer();
     let official = null;
     if (typeof SWAP_GROUPS !== "undefined" && typeof WORKOUTS !== "undefined") {
@@ -328,30 +334,17 @@ function useWorkoutActions({
       }
     }
 
-    const base = {
-      name,
-      sets: official ? (official.sets || 3) : 3,
-      reps: official ? (official.reps || "8-12") : "8-12",
-      notes: official ? (official.notes || "Added from library.") : "Added from library.",
-      equipment: official ? (official.equipment || (name.toLowerCase().includes("barbell") ? "barbell" : name.toLowerCase().includes("band") ? "band" : "dumbbell")) : (name.toLowerCase().includes("barbell") ? "barbell" : name.toLowerCase().includes("band") ? "band" : "dumbbell"),
-      noWarmup: official ? !!official.noWarmup : false,
-      assist: official ? !!official.assist : false,
-      repsOnly: official ? !!official.repsOnly : false,
-      beltLoad: isBeltLoadExercise(name),
-      rest: official ? (official.rest || 60) : 60,
-      video: official ? (official.video || null) : null,
-      grips: official ? (official.grips || null) : null,
-    };
+    const base = buildLibraryExerciseTemplate(name, official);
     let flatAdded = flattenTemplate({ exercises: [base] }, {}, dataRef.current.hints || {});
     if (window.SESSION_DELOAD) flatAdded = applyDeloadPrescription(flatAdded);
     const newEx = {
       ...flatAdded[0],
-      id: `${exercises.length}-${Date.now()}`,
-      templateExIdx: exercises.length,
+      id: `${current.length}-${Date.now()}`,
+      templateExIdx: current.length,
       customAdded: true,
     };
     if (newEx.sets.length) newEx.sets[0].active = true;
-    const next = [...exercises.map(ex => ({ ...ex, sets: ex.sets.map(s => ({ ...s, active: false })) })), newEx];
+    const next = [...current.map(ex => ({ ...ex, sets: ex.sets.map(s => ({ ...s, active: false })) })), newEx];
     updateAndSave(next);
   };
 

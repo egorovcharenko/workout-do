@@ -2,13 +2,14 @@
 import { T, SWAP_GROUPS, getSwapGroup, getSwapGroupName } from "@/lib/legacy/shared";
 import { navSetDisplay, SetChip } from "./NavChip";
 import { DurationReadout } from "./DurationReadout";
+import { isResolvedSet } from "@/lib/legacy/session-mutations";
 
 // ─── file: workout-session-nav-row.js ───
 
 function ExerciseNavRow({ i, exercises, durationMeta, shownIdx, currentIdx, onSelect, onSelectSet, onSwapExercise, swapOpenIdx, setSwapOpenIdx, showAllFamilies, setShowAllFamilies }) {
   const e = exercises[i];
-  const doneWork = e.sets.filter(s => s.completed).length;
-  const allDone = e.sets.length > 0 && e.sets.every(s => s.completed);
+  const doneWork = e.sets.filter(isResolvedSet).length;
+  const allDone = e.sets.length > 0 && e.sets.every(isResolvedSet);
   let status = "upcoming";
   if (e.skipped) status = "skipped";
   else if (allDone) status = "done";

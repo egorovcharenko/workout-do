@@ -46,3 +46,16 @@ test("rapid consecutive rep logs preserve both completed sets", () => {
   assert.equal(second[0].sets[1].completed, true);
   assert.equal(second[0].sets[2].active, true);
 });
+
+test("logging never reactivates a user-skipped set", () => {
+  const before = [exercise("Barbell Back Squat", [
+    { active: true, completed: false },
+    { active: false, completed: false, userSkipped: true },
+    { active: false, completed: false },
+  ])];
+
+  const after = logSetAndTransition(before, 0, 0, { reps: 8, completed: true });
+
+  assert.equal(after[0].sets[1].active, false);
+  assert.equal(after[0].sets[2].active, true);
+});

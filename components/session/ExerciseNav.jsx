@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { T, SWAP_GROUPS } from "@/lib/legacy/shared";
 import { ExerciseNavRow } from "./ExerciseNavRow";
 import { DurationReadout } from "./DurationReadout";
+import { isResolvedSet } from "@/lib/legacy/session-mutations";
 
 // ─── file: workout-session-exercise-nav.js ───
 
@@ -44,8 +45,8 @@ function ExerciseNav({ exercises, durationMeta, shownIdx, currentIdx, onSelect, 
   const STATUS_GLYPH = { done: "✓", current: "●", skipped: "×", upcoming: "○" };
 
   const meta = (e, i) => {
-    const doneWork = e.sets.filter(s => s.completed).length;
-    const allDone = e.sets.length > 0 && e.sets.every(s => s.completed);
+    const doneWork = e.sets.filter(isResolvedSet).length;
+    const allDone = e.sets.length > 0 && e.sets.every(isResolvedSet);
     let status = "upcoming";
     if (e.skipped) status = "skipped";
     else if (allDone) status = "done";
@@ -58,9 +59,10 @@ function ExerciseNav({ exercises, durationMeta, shownIdx, currentIdx, onSelect, 
 
   const renderLibraryModal = () => {
     if (!showAddLibrary) return null;
-    
+    const existingNames = new Set(exercises.map(exercise => exercise.name.trim().toLowerCase()));
     const filteredGroups = SWAP_GROUPS.map(grp => {
       const matchingExercises = grp.exercises.filter(opt =>
+        !existingNames.has(opt.name.trim().toLowerCase()) &&
         opt.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
       return { ...grp, exercises: matchingExercises };
