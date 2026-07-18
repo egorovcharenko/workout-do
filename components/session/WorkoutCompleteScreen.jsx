@@ -1,12 +1,24 @@
 "use client";
+import { useState } from "react";
 import { T } from "@/lib/legacy/shared";
 import { StrengthLevelUpload } from "./StrengthLevelUpload";
 
 // ─── file: workout-session-complete-screen.js ───
 
 function WorkoutCompleteScreen({ workoutName, elapsedSec, totalSets, exercises, sessionDate, onFinish }) {
+  const [finishing, setFinishing] = useState(false);
   const m = Math.floor(elapsedSec / 60);
   const s = String(elapsedSec % 60).padStart(2, "0");
+  const handleFinish = () => {
+    if (finishing) return;
+    setFinishing(true);
+    void Promise.resolve()
+      .then(onFinish)
+      .catch(error => {
+        console.error("[V2-SAVE] finish action failed:", error);
+        setFinishing(false);
+      });
+  };
 
   return (
     <div style={{
@@ -72,7 +84,10 @@ function WorkoutCompleteScreen({ workoutName, elapsedSec, totalSets, exercises, 
       </div>
 
       <button
-        onClick={onFinish}
+        type="button"
+        onClick={handleFinish}
+        disabled={finishing}
+        aria-busy={finishing}
         style={{
           width: "100%",
           maxWidth: 320,
@@ -84,14 +99,15 @@ function WorkoutCompleteScreen({ workoutName, elapsedSec, totalSets, exercises, 
           fontWeight: 700,
           padding: "12px 0",
           borderRadius: 11,
-          cursor: "pointer",
+          cursor: finishing ? "wait" : "pointer",
+          opacity: finishing ? 0.8 : 1,
           boxShadow: `0 4px 16px -4px ${T.accent}`,
           transition: "transform 150ms",
         }}
         onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.02)"}
         onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
       >
-        Finish & Exit
+        {finishing ? "Saving & exiting…" : "Finish & Exit"}
       </button>
 
       {/* A deload single (1×1 @ 80%) isn't meaningful Strength Level data. */}

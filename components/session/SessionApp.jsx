@@ -251,6 +251,11 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
     };
     saveDebounceRef.current = setTimeout(flushPendingSave, 400);
   };
+  const cancelQueuedSave = useCallback(() => {
+    clearTimeout(saveDebounceRef.current);
+    saveDebounceRef.current = null;
+    pendingSaveRef.current = null;
+  }, []);
   useEffect(() => {
     const onVisibilityChange = () => {
       if (document.visibilityState === "hidden") flushPendingSave();
@@ -270,7 +275,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
     setLoaded(false); setExercises([]); setSessionId(null); setHistory([]); setStatHistory([]); setSwaps({});
     setSessionDate(localDate()); setFocused(null); resetTimers(id);
     setWorkoutId(id); };
-  const actions = useWorkoutActions({ workout, exercises, setExercises, sessionDate, sessionId, setSessionId, startedAt, elapsed, swaps, setSwaps, dataRef, startTimer, setRest, queueSave });
+  const actions = useWorkoutActions({ workout, exercises, setExercises, sessionDate, sessionId, setSessionId, startedAt, elapsed, swaps, setSwaps, dataRef, startTimer, setRest, queueSave, cancelQueuedSave });
   const currentIdx = (() => { let i = exercises.findIndex(e => !e.skipped && e.sets.some(s => s.active));
     if (i !== -1) return i;
     i = exercises.findIndex(e => !e.skipped && e.sets.some(s => !isResolvedSet(s)));

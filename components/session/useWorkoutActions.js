@@ -5,6 +5,7 @@ import { saveSwaps, loadSkippedExercises, saveSkippedExercises, saveDeferred, sa
 import { flattenTemplate, applyDeloadPrescription } from "@/lib/legacy/session-utils";
 import { logSetAndTransition } from "@/lib/legacy/set-logging";
 import { loggedAtForSetUpdate } from "@/lib/legacy/duration-estimates";
+import { finishAndExit } from "@/lib/legacy/finish-workout";
 import {
   buildLibraryExerciseTemplate,
   exerciseNameExists,
@@ -27,10 +28,12 @@ function useWorkoutActions({
   dataRef,
   startTimer,
   setRest,
-  queueSave
+  queueSave,
+  cancelQueuedSave,
 }) {
 
   const exercisesRef = useRef(exercises);
+  const finishInFlightRef = useRef(null);
   useEffect(() => {
     exercisesRef.current = exercises;
   }, [exercises]);
@@ -306,14 +309,29 @@ function useWorkoutActions({
   };
 
   const onFinishWorkout = (elapsedSec) => {
-    if (TEST_MODE) { window.location.href = "/"; return; }
+    if (finishInFlightRef.current) return finishInFlightRef.current;
+    if (TEST_MODE) {
+      window.location.replace("/");
+      return Promise.resolve({ status: "test" });
+    }
+    cancelQueuedSave();
     const payload = {
       ...serializeForSave(exercisesRef.current, workout.name, sessionId, startedAt, elapsedSec, sessionDate),
       finished_at: new Date().toISOString(),
     };
-    finishSavePayload(payload).catch(e => console.error("[V2-SAVE] finish error:", e)).finally(() => {
-      window.location.href = "/";
+    const finishTask = finishAndExit({
+      save: () => finishSavePayload(payload),
+      exit: () => window.location.replace("/"),
+    }).then(outcome => {
+      if (outcome.status === "failed") {
+        console.error("[V2-SAVE] finish error:", outcome.error);
+      } else if (outcome.status === "timed_out") {
+        console.warn("[V2-SAVE] finish save timed out; exiting with completed session state");
+      }
+      return outcome;
     });
+    finishInFlightRef.current = finishTask;
+    return finishTask;
   };
 
   const onAddExercise = (name) => {
