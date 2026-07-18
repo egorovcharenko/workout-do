@@ -1,7 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { removeBarbellPlate, removeBeltPlate } from "../lib/legacy/plate-load.js";
+import { BELT_PLATES, decomposeBeltLoad, removeBarbellPlate, removeBeltPlate } from "../lib/legacy/plate-load.js";
+
+test("belt plate options include fractional assistance plates", () => {
+  assert.ok(BELT_PLATES.includes(1.25));
+  assert.ok(BELT_PLATES.includes(0.5));
+  assert.deepEqual(decomposeBeltLoad(1.75), [1.25, 0.5]);
+  assert.deepEqual(decomposeBeltLoad(28.75), [25, 2.5, 1.25]);
+});
 
 test("clicking a loaded belt plate removes exactly that plate", () => {
   assert.equal(removeBeltPlate(70, 45), 25);

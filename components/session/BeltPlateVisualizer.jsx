@@ -1,11 +1,10 @@
 "use client";
 
 import { T } from "@/lib/legacy/shared";
-import { removeBeltPlate } from "@/lib/legacy/plate-load";
+import { BELT_PLATES, decomposeBeltLoad, removeBeltPlate } from "@/lib/legacy/plate-load";
 import { WeightStepper } from "./Stepper";
 import { WeightSelectionFrame } from "./WeightSelection";
 
-const PLATES = [45, 35, 25, 15, 10, 5, 2.5];
 const PLATE_STYLE = {
   45: { bg: "#3B82F6", text: "#FFFFFF", size: 54 },
   35: { bg: "#EAB308", text: "#1E293B", size: 50 },
@@ -14,19 +13,11 @@ const PLATE_STYLE = {
   10: { bg: "#F8FAFC", text: "#1E293B", size: 38 },
   5: { bg: "#6B7280", text: "#FFFFFF", size: 34 },
   2.5: { bg: "#EF4444", text: "#FFFFFF", size: 30 },
+  1.25: { bg: "#06B6D4", text: "#FFFFFF", size: 28 },
+  0.5: { bg: "#A855F7", text: "#FFFFFF", size: 27 },
 };
 
-function decomposeLoad(weight) {
-  const plates = [];
-  let remaining = Math.max(0, Number(weight) || 0);
-  for (const plate of PLATES) {
-    while (remaining >= plate - 0.0001) {
-      plates.push(plate);
-      remaining = Math.round((remaining - plate) * 10) / 10;
-    }
-  }
-  return plates;
-}
+const decomposeLoad = decomposeBeltLoad;
 
 function Plate({ value, compact = false, onClick, title }) {
   const style = PLATE_STYLE[value];
@@ -95,7 +86,7 @@ function BeltPlateVisualizer({ weight, last, onWeightChange, compact = false }) 
               )}
             </div>
             <div style={{ display: "flex", gap: 5, overflowX: "auto", paddingBottom: 2 }}>
-              {PLATES.map((plate) => <Plate key={plate} value={plate} compact onClick={() => onWeightChange((Number(weight) || 0) + plate)} title={`Add ${plate} pound plate to belt`} />)}
+              {BELT_PLATES.map((plate) => <Plate key={plate} value={plate} compact onClick={() => onWeightChange((Number(weight) || 0) + plate)} title={`Add ${plate} pound plate to belt`} />)}
             </div>
           </div>
         </div>
