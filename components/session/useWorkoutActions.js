@@ -1,7 +1,9 @@
+import { useEffect, useRef } from "react";
 import { SWAP_GROUPS, WORKOUTS, TEST_MODE } from "@/lib/legacy/shared";
 import { applySwaps } from "@/lib/legacy/standards";
 import { saveSwaps, loadSkippedExercises, saveSkippedExercises, saveDeferred, saveBodyweight, saveSessionSets, serializeForSave, finishSavePayload, activateNextSet } from "@/lib/legacy/session-persistence";
-import { flattenTemplate, applyDeloadPrescription, transitionActiveSetAfterLog } from "@/lib/legacy/session-utils";
+import { flattenTemplate, applyDeloadPrescription } from "@/lib/legacy/session-utils";
+import { logSetAndTransition } from "@/lib/legacy/set-logging";
 import { isBeltLoadExercise } from "@/lib/legacy/belt-load";
 import { loggedAtForSetUpdate } from "@/lib/legacy/duration-estimates";
 
@@ -24,7 +26,12 @@ function useWorkoutActions({
   queueSave
 }) {
 
-  const patchSet = (eIdx, sIdx, patch, base = exercises) => {
+  const exercisesRef = useRef(exercises);
+  useEffect(() => {
+    exercisesRef.current = exercises;
+  }, [exercises]);
+
+  const patchSet = (eIdx, sIdx, patch, base = exercisesRef.current) => {
     return base.map((e, i) => i !== eIdx ? e : ({
       ...e,
       sets: e.sets.map((s, j) => j !== sIdx ? s : ({ ...s, ...patch })),
@@ -32,6 +39,7 @@ function useWorkoutActions({
   };
 
   const updateAndSave = (next) => {
+    exercisesRef.current = next;
     setExercises(next);
     queueSave(next, sessionId, startedAt, elapsed);
     saveSessionSets(workout.name, sessionDate, next);
@@ -97,18 +105,22 @@ function useWorkoutActions({
 
   const onLogReps = (eIdx, sIdx, r) => {
     startTimer();
-    const set = exercises[eIdx]?.sets[sIdx];
-    let next = patchSet(eIdx, sIdx, {
+    const current = exercisesRef.current;
+    const set = current[eIdx]?.sets[sIdx];
+    if (!set) return;
+    const patch = {
       reps: r,
       completed: true,
       logged_at: loggedAtForSetUpdate(set, new Date().toISOString()),
-    });
+    };
+    const logged = patchSet(eIdx, sIdx, patch, current);
+    const next = logSetAndTransition(current, eIdx, sIdx, patch);
 
-    const ex = next[eIdx];
+    const ex = logged[eIdx];
     const inSuperset = !!ex.superset;
     let shouldRest = !inSuperset;
     if (inSuperset) {
-      const isRoundEnd = next.every((e2) => {
+      const isRoundEnd = logged.every((e2) => {
         if (e2.superset !== ex.superset || e2.skipped) return true;
         const setAtIdx = e2.sets[sIdx];
         return !setAtIdx || setAtIdx.completed;
@@ -122,9 +134,9 @@ function useWorkoutActions({
       if (sameExNextIdx !== -1) {
         nextSet = ex.sets[sameExNextIdx];
       } else {
-        const nextExIdx = next.findIndex((e, k) => k > eIdx && e.sets.some(s => !s.completed));
+        const nextExIdx = logged.findIndex((e, k) => k > eIdx && e.sets.some(s => !s.completed));
         if (nextExIdx !== -1) {
-          nextSet = next[nextExIdx].sets.find(s => !s.completed);
+          nextSet = logged[nextExIdx].sets.find(s => !s.completed);
         }
       }
 
@@ -138,21 +150,6 @@ function useWorkoutActions({
     } else {
       setRest(null);
     }
-
-    setTimeout(() => {
-      // Updaters must stay pure for React, so guard the save side effects
-      // against a double invocation of the updater.
-      let persisted = false;
-      setExercises(prev => {
-        const transitioned = transitionActiveSetAfterLog(prev, eIdx, sIdx);
-        if (!persisted) {
-          persisted = true;
-          queueSave(transitioned, sessionId, startedAt, elapsed);
-          saveSessionSets(workout.name, sessionDate, transitioned);
-        }
-        return transitioned;
-      });
-    }, 350);
 
     updateAndSave(next);
   };

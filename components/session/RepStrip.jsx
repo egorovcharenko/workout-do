@@ -23,12 +23,14 @@ function RepCell({ n, inRange, isLast, isLogged, onClick, compact = false }) {
   }
   return (
     <button
+      type="button"
+      aria-label={`Log ${n} reps`}
       onClick={onClick}
       style={{
         position: "relative", width: compact ? 34 : 38, height: compact ? 38 : 44, borderRadius: compact ? 8 : 9,
         background: bg, border, color,
         fontFamily: T.mono, fontWeight: isLogged || isLast ? 800 : 600, fontSize: compact ? 13 : 14,
-        cursor: "pointer", flexShrink: 0,
+        cursor: "pointer", flexShrink: 0, touchAction: "manipulation",
         transition: "transform 80ms ease, background 120ms ease",
         animation: isLogged ? "set-pulse 320ms ease-out" : "none",
       }}
