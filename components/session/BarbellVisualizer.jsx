@@ -1,5 +1,6 @@
 "use client";
 import { T } from "@/lib/legacy/shared";
+import { removeBarbellPlate } from "@/lib/legacy/plate-load";
 import { WeightStepper } from "./Stepper";
 import { WeightSelectionFrame } from "./WeightSelection";
 
@@ -37,7 +38,7 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
   }
 
   const handleAddPlate = (p) => onWeightChange(weight + p * 2);
-  const handleRemovePlateAtIndex = (idx) => onWeightChange(Math.max(45, weight - loadedPlates[idx] * 2));
+  const handleRemovePlateAtIndex = (idx) => onWeightChange(removeBarbellPlate(weight, loadedPlates[idx]));
   const handleClear = () => onWeightChange(45);
 
   const getPlateWidth = (p) => {
@@ -161,13 +162,18 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
             ? "0 0 2px #fff, 0 0 2px #fff, 0 0 2px #fff"
             : "0 0 2px #000, 0 0 2px #000, 0 0 2px #000";
           return (
-            <div
+            <button
+              type="button"
               key={`plate-${idx}`}
               onClick={() => handleRemovePlateAtIndex(idx)}
-              title="Click to remove plate"
+              title={`Remove ${p} pound plate per side`}
+              aria-label={`Remove ${p} pound plate per side`}
               style={{
+                position: "relative",
                 width: getPlateWidth(p),
                 height: `${Math.round((getPlateHeight(p) / 72) * 100)}%`,
+                border: 0,
+                padding: 0,
                 background: PLATE_COLORS[p].bg,
                 color: PLATE_COLORS[p].text,
                 fontSize: compact ? (p >= 25 ? 13.5 : p >= 10 ? 12 : 10.5) : (p >= 25 ? 12.5 : p >= 10 ? 11 : 9.5),
@@ -178,6 +184,7 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
                 justifyContent: "center",
                 borderRadius: 2,
                 cursor: "pointer",
+                touchAction: "manipulation",
                 boxShadow: "0 2px 4px rgba(0,0,0,0.4)",
                 userSelect: "none",
                 transition: "transform 100ms",
@@ -190,7 +197,7 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
               onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
             >
               {p === 0.5 ? '.5' : p}
-            </div>
+            </button>
           );
         })}
       </div>

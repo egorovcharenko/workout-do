@@ -1,6 +1,7 @@
 "use client";
 
 import { T } from "@/lib/legacy/shared";
+import { removeBeltPlate } from "@/lib/legacy/plate-load";
 import { WeightStepper } from "./Stepper";
 import { WeightSelectionFrame } from "./WeightSelection";
 
@@ -49,6 +50,7 @@ function Plate({ value, compact = false, onClick, title }) {
         fontSize: compact ? 9 : 11,
         fontWeight: 900,
         cursor: "pointer",
+        touchAction: "manipulation",
         padding: 0,
       }}
     >
@@ -71,13 +73,13 @@ function BeltPlateVisualizer({ weight, last, onWeightChange, compact = false }) 
           {loaded.length === 0 ? (
             <div style={{ position: "absolute", top: 72, color: T.faint, fontFamily: T.mono, fontSize: 9, fontWeight: 800 }}>BODYWEIGHT</div>
           ) : (
-            <div style={{ position: "absolute", top: 64, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              {loaded.slice(0, 4).map((plate, index) => (
-                <div key={`${plate}-${index}`} style={{ marginLeft: index ? -10 : 0, zIndex: loaded.length - index }}>
-                  <Plate value={plate} compact onClick={() => onWeightChange(Math.max(0, weight - plate))} title={`Remove ${plate} pound plate from belt`} />
+            <div style={{ position: "absolute", top: 58, left: "3%", right: "3%", display: "flex", alignItems: "center", justifyContent: loaded.length < 4 ? "center" : "flex-start", overflowX: "auto", padding: "2px 2px 18px", WebkitOverflowScrolling: "touch" }}>
+              {loaded.map((plate, index) => (
+                <div key={`${plate}-${index}`} style={{ position: "relative", flex: "0 0 auto", marginLeft: index ? -10 : 0, zIndex: loaded.length - index }}>
+                  <Plate value={plate} compact onClick={() => onWeightChange(removeBeltPlate(weight, plate))} title={`Remove ${plate} pound plate from belt`} />
                 </div>
               ))}
-              {loaded.length > 4 && <span style={{ marginLeft: 5, color: T.muted, fontFamily: T.mono, fontSize: 10 }}>+{loaded.length - 4}</span>}
+              <span style={{ position: "absolute", left: 0, right: 0, bottom: 1, color: T.faint, fontFamily: T.mono, fontSize: 7, fontWeight: 800, letterSpacing: 0.5, textAlign: "center", pointerEvents: "none" }}>TAP PLATE TO REMOVE</span>
             </div>
           )}
         </div>
