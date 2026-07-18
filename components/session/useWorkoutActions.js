@@ -3,6 +3,7 @@ import { applySwaps } from "@/lib/legacy/standards";
 import { saveSwaps, loadSkippedExercises, saveSkippedExercises, saveDeferred, saveBodyweight, saveSessionSets, serializeForSave, finishSavePayload, activateNextSet } from "@/lib/legacy/session-persistence";
 import { flattenTemplate, applyDeloadPrescription, transitionActiveSetAfterLog } from "@/lib/legacy/session-utils";
 import { isBeltLoadExercise } from "@/lib/legacy/belt-load";
+import { loggedAtForSetUpdate } from "@/lib/legacy/duration-estimates";
 
 // ─── file: workout-session-actions.js ───
 
@@ -96,7 +97,12 @@ function useWorkoutActions({
 
   const onLogReps = (eIdx, sIdx, r) => {
     startTimer();
-    let next = patchSet(eIdx, sIdx, { reps: r, completed: true, logged_at: new Date().toISOString() });
+    const set = exercises[eIdx]?.sets[sIdx];
+    let next = patchSet(eIdx, sIdx, {
+      reps: r,
+      completed: true,
+      logged_at: loggedAtForSetUpdate(set, new Date().toISOString()),
+    });
 
     const ex = next[eIdx];
     const inSuperset = !!ex.superset;

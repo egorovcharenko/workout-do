@@ -3,7 +3,9 @@ import assert from "node:assert/strict";
 import {
   addLiveExerciseTime,
   buildExerciseDurationHistory,
+  currentSessionExerciseTimes,
   estimateExerciseDurationMeta,
+  loggedAtForSetUpdate,
   sessionExerciseDurations,
 } from "../lib/legacy/duration-estimates.js";
 
@@ -74,4 +76,27 @@ test("current exercise actual time keeps ticking after the last logged set", () 
   );
   assert.equal(result[0], 120);
   assert.equal(result[1], 180);
+});
+
+test("reopening a logged set keeps its exercise duration", () => {
+  const startedAt = Date.parse("2026-07-01T10:00:00.000Z");
+  const result = currentSessionExerciseTimes([
+    {
+      name: "Barbell Back Squat",
+      sets: [
+        { completed: true, logged_at: "2026-07-01T10:02:00.000Z" },
+        { completed: false, logged_at: "2026-07-01T10:04:00.000Z" },
+      ],
+    },
+  ], startedAt);
+
+  assert.equal(result.byExercise[0], 240);
+  assert.equal(result.bySet["2026-07-01T10:04:00.000Z"], 120);
+});
+
+test("correcting a logged set preserves its original timestamp", () => {
+  const original = "2026-07-01T10:04:00.000Z";
+  const correctionTime = "2026-07-01T10:20:00.000Z";
+  assert.equal(loggedAtForSetUpdate({ logged_at: original }, correctionTime), original);
+  assert.equal(loggedAtForSetUpdate({}, correctionTime), correctionTime);
 });
