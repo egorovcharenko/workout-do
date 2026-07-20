@@ -24,13 +24,13 @@ import type {
   SetRow,
 } from "./types";
 
-// Workouts renamed in July 2026; sessions saved before then keep the old
-// workout_name. Name-based lookups match old and new names together so
-// history continuity (last-session prefills, resume) survives the rename.
+// Sessions saved before a rename keep their original workout_name. Name-based
+// lookups match every old name so prefills, history, and resume stay continuous.
 const WORKOUT_NAME_ALIASES: Record<string, string[]> = {
-  "Main: Squat": ["Main A"],
-  "Main: Deadlift": ["Main B", "Main: RDL"],
-  "Micro: Arms": ["Micro: Arms & Core"],
+  "Squat Focus": ["Main A", "Main: Squat"],
+  "Dips Focus": ["Micro: Arms & Core", "Micro: Arms"],
+  "RDL Focus": ["Main B", "Main: RDL", "Main: Deadlift"],
+  "Shrugs Focus": ["Micro: Delts & Traps"],
 };
 
 const DRAGONFLY_STAGE_RANK: Record<string, number> = {

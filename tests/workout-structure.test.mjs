@@ -2,8 +2,19 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 
-import { DRAGONFLY_STAGES, WORKOUTS, parseRepTargetRange } from "../lib/legacy/shared.js";
+import { DRAGONFLY_STAGES, LEGACY_WORKOUT_NAMES, WORKOUTS, parseRepTargetRange } from "../lib/legacy/shared.js";
 import { isRepsOnlyExercise } from "../lib/legacy/standards.js";
+
+test("program workouts use exercise-led focus names and preserve old aliases", () => {
+  assert.deepEqual(
+    WORKOUTS.filter((workout) => workout.program).map((workout) => workout.name),
+    ["Squat Focus", "Dips Focus", "RDL Focus", "Shrugs Focus"],
+  );
+  assert.equal(LEGACY_WORKOUT_NAMES["Main: Squat"], "Squat Focus");
+  assert.equal(LEGACY_WORKOUT_NAMES["Micro: Arms"], "Dips Focus");
+  assert.equal(LEGACY_WORKOUT_NAMES["Main: Deadlift"], "RDL Focus");
+  assert.equal(LEGACY_WORKOUT_NAMES["Micro: Delts & Traps"], "Shrugs Focus");
+});
 
 test("standing overhead press and lat pulldown are independent exercises", () => {
   const workout = WORKOUTS.find((candidate) => candidate.id === "main-a");

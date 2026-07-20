@@ -15,19 +15,23 @@ function renderCalendar() {
   const monthName = targetDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
 
   // Short badge per workout so the calendar shows WHICH session happened,
-  // not just that one did. Mains are solid; each micro is an OUTLINE badge in
-  // the hue of the main it follows (rotation: Squat → arms → Deadlift → delts), so the two
+  // not just that one did. The two accessory sessions use outline badges in
+  // the hue of the strength session they follow, so the two
   // color pairs read as the two halves of the program cycle. Unknown/legacy
   // names fall back to a solid gray badge.
   const WORKOUT_BADGES = {
-    "Main: Squat": { label: "Squat", color: "#3b82f6" },
-    "Main: Deadlift": { label: "Deadlift", color: "#10b981" },
-    "Micro: Arms": { label: "arms", color: "#3b82f6", micro: true },
-    "Micro: Delts & Traps": { label: "delts", color: "#10b981", micro: true },
+    "Squat Focus": { label: "Squat", color: "#3b82f6" },
+    "Dips Focus": { label: "Dips", color: "#3b82f6", micro: true },
+    "RDL Focus": { label: "RDL", color: "#10b981" },
+    "Shrugs Focus": { label: "Shrugs", color: "#10b981", micro: true },
     // Pre-rename session names (history rows are normalized at load; kept as a fallback).
     "Main A": { label: "Squat", color: "#3b82f6" },
     "Main B": { label: "Deadlift", color: "#10b981" },
     "Main: RDL": { label: "Deadlift", color: "#10b981" },
+    "Main: Squat": { label: "Squat", color: "#3b82f6" },
+    "Main: Deadlift": { label: "RDL", color: "#10b981" },
+    "Micro: Arms": { label: "Dips", color: "#3b82f6", micro: true },
+    "Micro: Delts & Traps": { label: "Shrugs", color: "#10b981", micro: true },
     "Micro: Arms & Core": { label: "arms", color: "#3b82f6", micro: true },
     "Squat Day": { label: "SQ", color: "#60a5fa" },
     "Deadlift Day": { label: "DL", color: "#34d399" },

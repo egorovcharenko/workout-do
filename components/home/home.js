@@ -65,11 +65,7 @@ function renderWorkoutMuscleMap(w) {
 }
 
 function renderWorkoutCard(w, isSuggested, isOngoing, logged, expected, pct) {
-  const kindLabel = w => w.kind === 'micro' ? 'Micro' : w.kind === 'optional' ? 'Optional' : 'Main';
-  const deloadOn = isDeloadActive(window.USER_SETTINGS || {});
-  const deloadPill = deloadOn
-    ? `<span style="font-size:8px;font-weight:800;letter-spacing:0.5px;color:#b45309;background:#fef3c7;border:1px solid #fcd34d;padding:2px 5px;border-radius:5px;font-family:ui-monospace,Menlo,monospace;vertical-align:middle;margin-right:5px">DELOAD</span>`
-    : '';
+  const kindLabel = w => w.kind === 'optional' ? 'Optional' : 'Workout';
   const rowHTML = ex => {
     const s = state.lastSession[`${ex.name}|working|1`] || state.lastSession[`${ex.name}|working|2`] || state.lastSession[`${ex.name}|working|3`];
     const weightVal = s ? (s.weight_lb || '—') : '—', repsVal = s ? (s.reps || '—') : '—';
@@ -110,7 +106,7 @@ function renderWorkoutCard(w, isSuggested, isOngoing, logged, expected, pct) {
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px;gap:6px">
           <span style="font-size:14px;font-weight:800;color:${isSuggested ? '#1d4ed8' : '#111827'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-            ${deloadPill}${isSuggested && isOngoing ? '⚡ ' : ''}${w.name}
+            ${isSuggested && isOngoing ? '⚡ ' : ''}${w.name}
           </span>
           <span style="font-size:10px;color:${isSuggested ? '#1d4ed8' : '#9ca3af'};font-weight:700;flex-shrink:0;opacity:0.85">
             ${infoLabel}
@@ -231,7 +227,8 @@ function compressPlanSets(sets) {
 }
 
 function planEntryToText(e) {
-  const lines = [e.note ? `${e.workout} -- ${e.note}` : e.workout];
+  const workoutName = LEGACY_WORKOUT_NAMES[e.workout] || e.workout;
+  const lines = [e.note ? `${workoutName} -- ${e.note}` : workoutName];
   (e.items || []).forEach(it => lines.push(`  ${it.add ? "+ " : ""}${it.name}: ${compressPlanSets(it.sets)}`));
   return lines.join("\n");
 }
@@ -291,6 +288,9 @@ async function reconcileWorkoutPlan() {
 
 function renderPlanCard() {
   const entries = parseWorkoutPlan(window.USER_SETTINGS || {});
+  if (!entries.length) {
+    return `<button onclick="openPlanEditor()" style="border:0;background:transparent;color:#9ca3af;cursor:pointer;font-size:11px;font-weight:650;padding:5px 7px">Plan</button>`;
+  }
   const rows = entries.map((e, i) => {
     const first = i === 0;
     return `
@@ -298,7 +298,7 @@ function renderPlanCard() {
         <span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;font-family:ui-monospace,Menlo,monospace;${first ? 'background:#dbeafe;color:#1d4ed8' : 'background:#f3f4f6;color:#9ca3af'}">${i + 1}</span>
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:baseline;gap:6px">
-            <span style="font-size:13px;font-weight:700;color:${first ? '#1d4ed8' : '#111827'}">${escapeHtml(e.workout)}</span>
+            <span style="font-size:13px;font-weight:700;color:${first ? '#1d4ed8' : '#111827'}">${escapeHtml(LEGACY_WORKOUT_NAMES[e.workout] || e.workout)}</span>
             ${first ? '<span style="font-size:9px;font-weight:800;color:#1d4ed8;opacity:0.7;letter-spacing:0.5px;font-family:ui-monospace,Menlo,monospace">UP NEXT</span>' : ''}
           </div>
           ${e.note ? `<div style="font-size:11.5px;color:#6b7280;line-height:1.45;margin-top:1px">${escapeHtml(e.note)}</div>` : ''}
@@ -308,12 +308,19 @@ function renderPlanCard() {
   }).join("");
   return `
     <div class="card" style="padding:12px 14px;margin-bottom:10px;background:white;border:1px solid #e5e7eb">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${entries.length ? '4px' : '0'}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
         <span style="font-size:13px;font-weight:800;color:#374151">📋 Plan</span>
         <button onclick="openPlanEditor()" style="border:0;cursor:pointer;font-weight:800;font-size:11px;letter-spacing:0.5px;padding:5px 12px;border-radius:9999px;font-family:ui-monospace,Menlo,monospace;background:#f3f4f6;color:#6b7280">EDIT</button>
       </div>
-      ${entries.length ? rows : '<div style="font-size:11px;color:#9ca3af;margin-top:4px">No planned workouts — following the standard rotation. Tap EDIT to queue workouts with notes.</div>'}
+      ${rows}
     </div>`;
+}
+
+function renderDeloadControl(deloadOn) {
+  const label = deloadOn
+    ? `Deload · ${deloadDaysLeft(window.USER_SETTINGS)}d left`
+    : 'Deload';
+  return `<button onclick="toggleDeload()" style="border:0;cursor:pointer;font-size:11px;font-weight:650;padding:5px 7px;border-radius:7px;${deloadOn ? 'background:#fffbeb;color:#b45309' : 'background:transparent;color:#9ca3af'}">${label}</button>`;
 }
 
 function renderPlanEditor() {
@@ -453,7 +460,7 @@ function renderHome() {
   const program = WORKOUTS.filter(w => w.program);
   const byId = id => WORKOUTS.find(w => w.id === id);
 
-  const ORDER = ['Main: Squat', 'Micro: Arms', 'Main: Deadlift', 'Micro: Delts & Traps'];
+  const ORDER = ['Squat Focus', 'Dips Focus', 'RDL Focus', 'Shrugs Focus'];
   let lastCompletedName = null;
   for (const s of (state.history || [])) {
     const name = LEGACY_WORKOUT_NAMES[s.workout_name] || s.workout_name;
@@ -466,7 +473,7 @@ function renderHome() {
   if (lastCompletedName) {
     const idx = ORDER.indexOf(lastCompletedName);
     const nextName = ORDER[(idx + 1) % ORDER.length];
-    const map = { 'Main: Squat': 'main-a', 'Micro: Arms': 'micro-arms', 'Main: Deadlift': 'main-b', 'Micro: Delts & Traps': 'micro-delts' };
+    const map = { 'Squat Focus': 'main-a', 'Dips Focus': 'micro-arms', 'RDL Focus': 'main-b', 'Shrugs Focus': 'micro-delts' };
     nextW = byId(map[nextName]) || byId('main-a');
   }
   // A non-empty plan overrides the rotation: its front entry is up next.
@@ -511,21 +518,14 @@ function renderHome() {
     return renderWorkoutCard(w, isSuggested, isOngoing, logged, expected, pct);
   }).join('<div style="height:10px"></div>');
 
-  const deloadCardHTML = `
-  <div class="card" style="padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;${deloadOn ? 'background:#fffbeb;border:1px solid #fcd34d' : 'background:white;border:1px solid #e5e7eb'}">
-    <div style="min-width:0">
-      <span style="font-size:13px;font-weight:700;color:${deloadOn ? '#b45309' : '#374151'}">Deload week</span>
-      <span style="font-size:11px;color:#9ca3af;display:block">${deloadOn ? `1 set @ 80% weight · auto-ends in ${deloadDaysLeft(window.USER_SETTINGS)}d` : 'Light week: 1 set @ 80% per exercise'}</span>
-    </div>
-    <button onclick="toggleDeload()" style="flex-shrink:0;border:0;cursor:pointer;font-weight:800;font-size:11px;letter-spacing:0.5px;padding:6px 14px;border-radius:9999px;font-family:ui-monospace,Menlo,monospace;${deloadOn ? 'background:#f59e0b;color:white' : 'background:#f3f4f6;color:#6b7280'}">${deloadOn ? 'ON' : 'OFF'}</button>
-  </div>
-`;
-
   const workoutListHTML = `
-  ${deloadCardHTML}
-  ${renderPlanCard()}
+  ${planEntries.length ? renderPlanCard() : ''}
   <div style="display:flex;flex-direction:column;margin-bottom:8px;">
     ${workoutsHTML}
+  </div>
+  <div style="display:flex;justify-content:flex-end;align-items:center;gap:4px;margin:-2px 0 8px">
+    ${!planEntries.length ? renderPlanCard() : ''}
+    ${renderDeloadControl(deloadOn)}
   </div>
   <div style="text-align:right;margin-bottom:16px;">
     <span style="font-size:11px; color:#9ca3af;">🧪 Test (nothing saved):
