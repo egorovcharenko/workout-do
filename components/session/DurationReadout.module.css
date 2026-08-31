@@ -1,0 +1,77 @@
+.readout {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+  font-family: ui-monospace, Menlo, monospace;
+}
+
+.metric {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.label {
+  color: #6b7280;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .55px;
+  text-transform: uppercase;
+}
+
+.value {
+  color: #9ca3af;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.expected .label,
+.expected .value {
+  color: #60a5fa;
+}
+
+.actual .label,
+.actual .value {
+  color: #34d399;
+}
+
+.separator {
+  color: rgba(107,114,128,.55);
+  font-size: 9px;
+}
+
+.nav {
+  display: flex;
+  margin-top: 4px;
+}
+
+.nav .label {
+  font-size: 7px;
+}
+
+.nav .value {
+  font-size: 9px;
+}
+
+.card {
+  display: flex;
+  margin-top: 5px;
+}
+
+.header {
+  gap: 6px;
+}
+
+.header .metric {
+  padding: 3px 6px;
+  border: 1px solid rgba(255,255,255,.05);
+  border-radius: 6px;
+  background: rgba(255,255,255,.02);
+}
+
+.header .separator {
+  display: none;
+}

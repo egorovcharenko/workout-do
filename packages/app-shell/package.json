@@ -1,0 +1,17 @@
+{
+  "name": "@personal-suite/app-shell",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./styles.css": "./src/styles.css"
+  },
+  "dependencies": {
+    "@personal-suite/app-registry": "*",
+    "@personal-suite/design-system": "*"
+  },
+  "peerDependencies": {
+    "react": ">=19.2.4"
+  }
+}

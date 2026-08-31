@@ -1,0 +1,17 @@
+node_modules/
+.next/
+packages/*/node_modules/
+coverage/
+*.tsbuildinfo
+
+.env
+.env.local
+.env.*.local
+!.env.example
+!.env.local.example
+
+.vercel/
+.firebase/
+.serviceAccount.json
+firebase-debug.log
+.DS_Store

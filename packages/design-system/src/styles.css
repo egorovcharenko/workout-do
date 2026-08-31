@@ -1,0 +1,153 @@
+:root {
+  --suite-font-sans: var(
+    --font-geist-sans,
+    "Geist",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif
+  );
+  --suite-font-mono: var(
+    --font-geist-mono,
+    "Geist Mono",
+    "SFMono-Regular",
+    Consolas,
+    monospace
+  );
+
+  --suite-space-1: 0.25rem;
+  --suite-space-2: 0.5rem;
+  --suite-space-3: 0.75rem;
+  --suite-space-4: 1rem;
+  --suite-space-5: 1.5rem;
+  --suite-space-6: 2rem;
+  --suite-space-7: 3rem;
+
+  --suite-radius-sm: 0.5rem;
+  --suite-radius-md: 0.75rem;
+  --suite-radius-lg: 1rem;
+  --suite-radius-xl: 1.5rem;
+  --suite-radius-round: 999px;
+
+  --suite-control-height: 2.75rem;
+  --suite-motion-fast: 120ms;
+  --suite-motion-standard: 180ms;
+  --suite-ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --suite-shadow-raised: 0 18px 52px rgba(0, 0, 0, 0.28);
+}
+
+.personal-suite-shell {
+  --suite-accent: #ffffff;
+  --suite-on-accent: #ffffff;
+  --suite-ui-surface: rgba(255, 255, 255, 0.055);
+  --suite-ui-surface-hover: rgba(255, 255, 255, 0.085);
+  --suite-ui-border: rgba(255, 255, 255, 0.12);
+  --suite-ui-muted: rgba(255, 255, 255, 0.6);
+  font-family: var(--suite-font-sans);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  accent-color: var(--suite-accent);
+}
+
+.personal-suite-shell[data-suite-app="home"],
+.personal-suite-shell[data-suite-app="workouts"],
+.personal-suite-shell[data-suite-app="westie-lab"] {
+  --suite-on-accent: #151515;
+}
+
+.personal-suite-shell[data-suite-app="westie-lab"] {
+  --suite-ui-surface: rgba(255, 255, 255, 0.56);
+  --suite-ui-surface-hover: rgba(255, 255, 255, 0.78);
+  --suite-ui-border: rgba(23, 22, 18, 0.18);
+  --suite-ui-muted: rgba(23, 22, 18, 0.62);
+}
+
+.personal-suite-shell :where(button, input, textarea, select) {
+  font: inherit;
+}
+
+.personal-suite-shell
+  :where(button, a, input, textarea, select, summary):focus-visible {
+  outline: 2px solid var(--suite-accent);
+  outline-offset: 3px;
+}
+
+.personal-suite-shell ::selection {
+  background: color-mix(in srgb, var(--suite-accent) 38%, transparent);
+}
+
+.suite-ui-surface {
+  border: 1px solid var(--suite-ui-border);
+  border-radius: var(--suite-radius-xl);
+  background: var(--suite-ui-surface);
+  box-shadow: var(--suite-shadow-raised);
+}
+
+.suite-ui-button {
+  display: inline-flex;
+  min-height: var(--suite-control-height);
+  padding: 0 var(--suite-space-4);
+  border: 1px solid var(--suite-ui-border);
+  border-radius: var(--suite-radius-md);
+  align-items: center;
+  justify-content: center;
+  gap: var(--suite-space-2);
+  background: var(--suite-ui-surface);
+  color: inherit;
+  font-weight: 650;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--suite-motion-fast) var(--suite-ease-standard),
+    border-color var(--suite-motion-fast) var(--suite-ease-standard),
+    color var(--suite-motion-fast) var(--suite-ease-standard),
+    transform var(--suite-motion-fast) var(--suite-ease-standard);
+}
+
+.suite-ui-button:hover {
+  background: var(--suite-ui-surface-hover);
+}
+
+.suite-ui-button:active {
+  transform: translateY(1px);
+}
+
+.suite-ui-button--primary {
+  border-color: color-mix(in srgb, var(--suite-accent) 78%, transparent);
+  background: var(--suite-accent);
+  color: var(--suite-on-accent);
+}
+
+.suite-ui-button--primary:hover {
+  background: color-mix(in srgb, var(--suite-accent) 88%, white);
+}
+
+.suite-ui-field {
+  min-height: var(--suite-control-height);
+  padding: 0 var(--suite-space-3);
+  border: 1px solid var(--suite-ui-border);
+  border-radius: var(--suite-radius-md);
+  background: var(--suite-ui-surface);
+  color: inherit;
+}
+
+.suite-ui-field::placeholder {
+  color: var(--suite-ui-muted);
+}
+
+.suite-ui-eyebrow,
+.suite-ui-meta {
+  color: var(--suite-ui-muted);
+  font-family: var(--suite-font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .suite-ui-button {
+    transition: none;
+  }
+}

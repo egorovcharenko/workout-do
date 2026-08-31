@@ -1,0 +1,16 @@
+{
+  "name": "@personal-suite/design-system",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./fonts": "./src/fonts.ts",
+    "./styles.css": "./src/styles.css"
+  },
+  "dependencies": {
+    "geist": "^1.7.0"
+  },
+  "peerDependencies": {
+    "next": ">=16.2.10"
+  }
+}
