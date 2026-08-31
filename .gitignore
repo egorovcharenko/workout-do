@@ -15,3 +15,7 @@ coverage/
 .serviceAccount.json
 firebase-debug.log
 .DS_Store
+
+# Local agent context; not part of the product repository.
+/AGENTS.md
+/sources/
