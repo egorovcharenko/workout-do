@@ -1,6 +1,6 @@
 "use client";
 import { T } from "@/lib/legacy/shared";
-import { removeBarbellPlate } from "@/lib/legacy/plate-load";
+import { BARBELL_PLATES, decomposeBarbellLoad, removeBarbellPlate } from "@/lib/legacy/plate-load";
 import { WeightStepper } from "./Stepper";
 import { WeightSelectionFrame } from "./WeightSelection";
 
@@ -19,23 +19,14 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
     0.5: { bg: "#A855F7", text: "#FFFFFF" }, // purple
   };
 
-  const PLATE_SIZES = [45, 35, 25, 15, 10, 5, 2.5, 1, 0.5];
+  const PLATE_SIZES = BARBELL_PLATES;
   const B_WIDTHS = { 45: 28, 35: 24, 25: 20, 15: 16, 10: 14, 5: 14, 2.5: 13, 1: 12, 0.5: 11 };
   const B_HEIGHTS = { 45: 66, 35: 66, 25: 66, 15: 66, 10: 66, 5: 36, 2.5: 33, 1: 30, 0.5: 27 };
   const pickerScale = compact ? 0.68 : 1;
   const scaledPicker = (value) => Math.round(value * pickerScale);
 
-  // Decompose weight into plates on one side
-  const loadedPlates = [];
-  let rem = (weight - 45) / 2;
-  if (rem > 0) {
-    for (const p of PLATE_SIZES) {
-      while (rem >= p - 0.0001) {
-        loadedPlates.push(p);
-        rem = Math.round((rem - p) * 100) / 100;
-      }
-    }
-  }
+  // Plates on one side, collar outward.
+  const loadedPlates = decomposeBarbellLoad(weight);
 
   const handleAddPlate = (p) => onWeightChange(weight + p * 2);
   const handleRemovePlateAtIndex = (idx) => onWeightChange(removeBarbellPlate(weight, loadedPlates[idx]));

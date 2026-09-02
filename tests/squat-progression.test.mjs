@@ -61,3 +61,13 @@ test("template weights stay put when there is no history", () => {
   assert.equal(result.progression.top.weight, 125);
   assert.equal(result.progression.backoff.weight, 115);
 });
+
+test("migrated back-offs pick the 90% neighbour with the fewest plate swaps", () => {
+  // 175 = 45+15+5 per side. Plain rounding of 157.5 gives 160 (45+10+2.5,
+  // four swaps); 155 (45+10) is three, so it wins.
+  const result = applySquatProgression(squatSets(175, [7, 6, 5]));
+  const work = result.sets.filter((set) => set.kind === "work");
+
+  assert.equal(result.progression.status, "transition");
+  assert.deepEqual(work.map((set) => set.weight), [175, 155, 155]);
+});
