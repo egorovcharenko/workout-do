@@ -88,6 +88,7 @@ function ActiveSetBlock({ exercise, set, totalWork, onPickWeight, onPickBodyweig
 
       {!isBW && exercise.isBarbell && (
         <BarbellVisualizer
+          exercise={exercise.name}
           weight={baseW || 45}
           onWeightChange={onPickWeight}
           compact

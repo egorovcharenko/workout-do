@@ -9,6 +9,7 @@ import {
   nearestBarbellWeightByPlateChanges,
   removeBarbellPlate,
   removeBeltPlate,
+  restackBarbellLoad,
 } from "../lib/legacy/plate-load.js";
 
 test("belt plate options include fractional assistance plates", () => {
@@ -55,4 +56,14 @@ test("nearest weight by plate changes stays within the tolerance window", () => 
   assert.equal(nearestBarbellWeightByPlateChanges(165, 148.5), 145);
   assert.equal(nearestBarbellWeightByPlateChanges(125, 112.5), 115);
   assert.equal(nearestBarbellWeightByPlateChanges(45, 20), 45);
+});
+
+test("restacking keeps the plates already on the bar", () => {
+  assert.deepEqual(restackBarbellLoad([35], 135), [35, 10]); // not a lone 45
+  assert.deepEqual(restackBarbellLoad([35, 10], 155), [35, 10, 10]);
+  assert.deepEqual(restackBarbellLoad([45, 15, 5], 165), [45, 15]); // pull the outer 5
+  assert.deepEqual(restackBarbellLoad([45, 15, 5], 145), [45, 5]);
+  assert.deepEqual(restackBarbellLoad([25], 175), [25, 35, 5]);
+  assert.deepEqual(restackBarbellLoad([], 135), [45]);
+  assert.deepEqual(restackBarbellLoad([45], 45), []);
 });

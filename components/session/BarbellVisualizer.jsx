@@ -1,12 +1,13 @@
 "use client";
 import { T } from "@/lib/legacy/shared";
-import { BARBELL_PLATES, decomposeBarbellLoad, removeBarbellPlate } from "@/lib/legacy/plate-load";
+import { BARBELL_PLATES } from "@/lib/legacy/plate-load";
+import { currentBarStack, setBarStack } from "@/lib/legacy/bar-stack";
 import { WeightStepper } from "./Stepper";
 import { WeightSelectionFrame } from "./WeightSelection";
 
 // ─── file: workout-session-barbell-visualizer.js ───
 
-function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
+function BarbellVisualizer({ exercise = null, weight, onWeightChange, compact = false }) {
   const PLATE_COLORS = {
     45: { bg: "#3B82F6", text: "#FFFFFF" }, // blue
     35: { bg: "#EAB308", text: "#1E293B" }, // yellow
@@ -25,12 +26,13 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false }) {
   const pickerScale = compact ? 0.68 : 1;
   const scaledPicker = (value) => Math.round(value * pickerScale);
 
-  // Plates on one side, collar outward.
-  const loadedPlates = decomposeBarbellLoad(weight);
+  // Plates on one side, collar outward, carried over from the previous set.
+  const loadedPlates = currentBarStack(exercise, weight);
 
-  const handleAddPlate = (p) => onWeightChange(weight + p * 2);
-  const handleRemovePlateAtIndex = (idx) => onWeightChange(removeBarbellPlate(weight, loadedPlates[idx]));
-  const handleClear = () => onWeightChange(45);
+  const setStack = (plates) => onWeightChange(setBarStack(exercise, plates));
+  const handleAddPlate = (p) => setStack([...loadedPlates, p]);
+  const handleRemovePlateAtIndex = (idx) => setStack(loadedPlates.filter((_, i) => i !== idx));
+  const handleClear = () => setStack([]);
 
   const getPlateWidth = (p) => {
     const width = ({ 45: 18, 35: 14, 25: 11, 15: 9, 10: 8, 5: 8, 2.5: 7, 1: 6, 0.5: 5 }[p] || 12);
