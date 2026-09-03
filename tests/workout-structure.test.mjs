@@ -81,20 +81,15 @@ test("micro days close with dragon fly, add leg accessories, and drop surf pop-u
   assert.equal(allNames.includes("Surf Pop-Up"), false);
 });
 
-test("rear delt flyes and incline curls are the only superset", () => {
+test("no workout uses supersets", () => {
   const wrappers = WORKOUTS.flatMap((workout) =>
-    workout.exercises.filter((exercise) => exercise.supersetExercises),
+    workout.exercises.filter((exercise) => exercise.supersetExercises || exercise.superset),
   );
-  const directGroups = WORKOUTS.flatMap((workout) =>
-    workout.exercises.filter((exercise) => exercise.superset),
-  );
-
-  assert.equal(wrappers.length, 1);
-  assert.deepEqual(
-    wrappers[0].supersetExercises.map((exercise) => exercise.name),
-    ["Single-Arm Cable Rear Delt Fly", "Incline DB Curls"],
-  );
-  assert.equal(directGroups.length, 0);
+  assert.equal(wrappers.length, 0);
+  const shrugs = WORKOUTS.find((workout) => workout.id === "micro-delts");
+  const names = shrugs.exercises.map((exercise) => exercise.name);
+  assert.ok(names.includes("Single-Arm Cable Rear Delt Fly"));
+  assert.ok(names.includes("Incline DB Curls"));
 });
 
 test("hanging knee raises are absent from workouts and the exercise library", () => {
