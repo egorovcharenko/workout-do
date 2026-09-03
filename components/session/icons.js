@@ -56,6 +56,7 @@
     "Reverse Flyes": sprite("dumbbell", 1, 1, 323.5),
     "Seated Overhead Press": sprite("barbell", 0, 2),
     "Single-Arm Cable Lateral Raise": sprite("cable", 0, 2),
+    "Single-Arm Cable Rear Delt Fly": sprite("cable", 0, 2),
     "Single-Arm Dumbbell Rows": sprite("dumbbell", 1, 2, 323.5),
     "Single-Leg DB RDL": sprite("legs-arms", 0, 1),
     // "close-grip military press" is the DB's standard shoulder-width barbell OHP.

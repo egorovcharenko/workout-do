@@ -48,6 +48,7 @@ const exerciseNames = [
   "Reverse Flyes",
   "Seated Overhead Press",
   "Single-Arm Cable Lateral Raise",
+  "Single-Arm Cable Rear Delt Fly",
   "Single-Arm Dumbbell Rows",
   "Single-Leg DB RDL",
   "Standing Overhead Press"

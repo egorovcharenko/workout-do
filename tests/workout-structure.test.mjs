@@ -81,7 +81,7 @@ test("micro days close with dragon fly, add leg accessories, and drop surf pop-u
   assert.equal(allNames.includes("Surf Pop-Up"), false);
 });
 
-test("face pulls and incline curls are the only superset", () => {
+test("rear delt flyes and incline curls are the only superset", () => {
   const wrappers = WORKOUTS.flatMap((workout) =>
     workout.exercises.filter((exercise) => exercise.supersetExercises),
   );
@@ -92,7 +92,7 @@ test("face pulls and incline curls are the only superset", () => {
   assert.equal(wrappers.length, 1);
   assert.deepEqual(
     wrappers[0].supersetExercises.map((exercise) => exercise.name),
-    ["Cable Face Pulls", "Incline DB Curls"],
+    ["Single-Arm Cable Rear Delt Fly", "Incline DB Curls"],
   );
   assert.equal(directGroups.length, 0);
 });
