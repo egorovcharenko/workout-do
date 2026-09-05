@@ -24,7 +24,7 @@ function WeightSelectionFrame({ visual, controls, children, compact = false, vis
         borderRadius: compact ? 10 : 12,
         border: "1px solid rgba(255,255,255,0.06)",
       }}>
-        <div style={{
+        {visual && <div style={{
           order: stacked ? 1 : undefined,
           position: "relative",
           height: visualExpanded ? undefined : (compact ? 52 : 64),
@@ -36,7 +36,7 @@ function WeightSelectionFrame({ visual, controls, children, compact = false, vis
           overflow: "hidden",
         }}>
           {visual}
-        </div>
+        </div>}
         <div style={{ minWidth: 0 }}>{controls}</div>
       </div>
       {children}

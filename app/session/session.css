@@ -223,3 +223,8 @@ button { font-family: inherit; }
 .active-set-barbell .rep-entry-dock { margin-top: 4px; }
 .active-set-barbell .set-rep-heading { padding-top: 2px; }
 .active-set-barbell .asb-skip { margin-top: 4px !important; }
+
+.barbell-weight-heading { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.barbell-weight-heading > span { flex-shrink: 0; }
+.loaded-plate-controls { display: flex; gap: 4px; min-width: 0; overflow-x: auto; padding: 3px; }
+.loaded-plate-controls button { flex: 0 0 auto; min-width: 30px; height: 28px; padding: 0 5px; border: 0; border-radius: 4px; font: 800 12px var(--suite-font-mono); cursor: pointer; }
