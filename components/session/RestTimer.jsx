@@ -33,9 +33,7 @@ function RestTimer({ rest, onAdd, onSkip, onToggle }) {
 
       <div className={styles.controls}>
         <button type="button" onClick={() => onAdd(15)} className={styles.secondary}>+15 sec</button>
-        <button type="button" onClick={onToggle} className={styles.secondary} aria-label={paused ? "Resume rest timer" : "Pause rest timer"}>
-          {paused ? "Resume" : "Pause"}
-        </button>
+        {paused && <button type="button" onClick={onToggle} className={styles.secondary} aria-label="Resume rest timer">Resume</button>}
         <button type="button" onClick={onSkip} className={styles.primary}>
           {done ? "Start next set" : "Skip rest"}
         </button>
