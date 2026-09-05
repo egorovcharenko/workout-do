@@ -13,7 +13,7 @@ import { isCableStackExercise } from "@/lib/legacy/cable-stack";
 
 // BarbellVisualizer component has been extracted to its own file: /workout-session-barbell-visualizer.js
 
-function ActiveSetBlock({ exercise, set, totalWork, onPickWeight, onPickBodyweight, onPickGrip, onToggleBand, onClearBands, onLogReps, onSkipWarmup }) {
+function ActiveSetBlock({ exercise, set, totalWork, onPickWeight, onPickBodyweight, onPickGrip, onToggleBand, onClearBands, onLogReps }) {
   const isBW = exercise.mode === "bodyweight";
   const isCable = isCableStackExercise(exercise.name, exercise.equipment);
   const bands = set.bands || [];
@@ -116,14 +116,7 @@ function ActiveSetBlock({ exercise, set, totalWork, onPickWeight, onPickBodyweig
         />
       </div>
 
-      {set.kind === "warmup" && (
-        <div className="asb-skip" style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
-          <button onClick={onSkipWarmup} style={{
-            background: "transparent", border: 0, color: "#A1A1AA",
-            fontFamily: "inherit", fontWeight: 500, fontSize: 13, padding: "4px 0", cursor: "pointer",
-          }}>Skip warmup →</button>
-        </div>
-      )}
+
     </div>
   );
 }

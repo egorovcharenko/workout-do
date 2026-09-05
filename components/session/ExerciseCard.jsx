@@ -9,7 +9,7 @@ import { ProgressionBanner } from "./ProgressionBanner";
 
 // ─── file: workout-session-exercise-card.js ───
 
-function ExerciseCardContent({ exercise, sessionTimes, durationMeta, supersetTag, embedded, rest, onRestAdd, onRestSkip, onRestToggle, onPickWeight, onPickBodyweight, onPickGrip, onToggleBand, onClearBands, onLogReps, onSkipWarmup, onSkipExercise, onSwapExercise, onReopenSet, onAddSet, onRemoveSet, onRemoveWarmup }) {
+function ExerciseCardContent({ exercise, sessionTimes, durationMeta, supersetTag, embedded, rest, onRestAdd, onRestSkip, onRestToggle, onPickWeight, onPickBodyweight, onPickGrip, onToggleBand, onClearBands, onLogReps, onSkipExercise, onSwapExercise, onReopenSet, onAddSet, onRemoveSet, onRemoveWarmup }) {
   const [showAllFamilies, setShowAllFamilies] = useState(false);
   const [showVariants, setShowVariants] = useState(false);
   const currentFamilyName = getSwapGroupName(exercise.name) || "Other";
@@ -250,7 +250,6 @@ function ExerciseCardContent({ exercise, sessionTimes, durationMeta, supersetTag
           onToggleBand={(b) => onToggleBand(activeIdx, b)}
           onClearBands={() => onClearBands(activeIdx)}
           onLogReps={(r) => onLogReps(activeIdx, r)}
-          onSkipWarmup={onSkipWarmup}
           onApplyLast={() => {
             if (exercise.mode === "bodyweight") {
               onPickBodyweight(activeIdx, activeSet.lastBodyweight || 175);
@@ -270,8 +269,7 @@ function ExerciseCardContent({ exercise, sessionTimes, durationMeta, supersetTag
         {footerBtn("− set", onRemoveSet, !canRemove)}
         {footerBtn("× skip exercise", onSkipExercise)}
         <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
-          {/* "Skip warmup" lives on the active warm-up set itself (ActiveSetBlock);
-              the footer only offers removing the warm-up ramp once past it. */}
+          {/* Offer removing the warm-up ramp once past it. */}
           {hasWarmup && !warmupActive && footerBtn("× warmup", onRemoveWarmup)}
         </div>
       </div>
