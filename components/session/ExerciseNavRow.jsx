@@ -50,46 +50,38 @@ function ExerciseNavRow({ i, exercises, durationMeta, shownIdx, currentIdx, onSe
     }}>{tag}</span>
   );
 
-  const chipRow = (e) => {
-    const work = e.sets;
-    if (!work.length) return null;
+  const chipRow = (exercise) => {
+    const groups = [
+      { kind: "warmup", label: "Warm-up" },
+      { kind: "work", label: "Work" },
+    ];
     return (
-      <div className="nav-chips" style={{ display: "flex", flexWrap: "wrap", gap: 7, marginTop: 10 }}>
-        {work.map((s, k) => (
-          <SetChip
-            key={k}
-            k={k}
-            d={navSetDisplay(s, e)}
-            onClick={(ev) => {
-              ev.stopPropagation();
-              if (onSelectSet) onSelectSet(i, k);
-            }}
-          />
-        ))}
+      <div className="nav-chips">
+        {groups.map(({ kind, label }) => {
+          const sets = exercise.sets.map((set, index) => ({ set, index }))
+            .filter(({ set }) => kind === "warmup" ? set.kind === "warmup" : set.kind !== "warmup");
+          if (!sets.length) return null;
+          return (
+            <div key={kind} className="nav-set-group">
+              <div className="nav-set-label">{label}</div>
+              <div className="nav-set-grid">
+                {sets.map(({ set, index }) => (
+                  <SetChip key={index} k={index} d={navSetDisplay(set, exercise)}
+                    onClick={(ev) => {
+                      ev.stopPropagation();
+                      if (onSelectSet) onSelectSet(i, index);
+                    }} />
+                ))}
+              </div>
+            </div>
+          );
+        })}
       </div>
     );
   };
 
-  const styleTag = (
-    <style>{`
-      .exercise-card-media {
-        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease, border-radius 0.25s ease;
-        transform-origin: right center;
-        z-index: 10;
-      }
-      .exercise-card-media:hover {
-        transform: scale(2.8);
-        box-shadow: 0 12px 36px rgba(0,0,0,0.7);
-        z-index: 100;
-        border-radius: 8px !important;
-        border-left: none !important;
-      }
-    `}</style>
-  );
-
   return (
-    <div className="nav-row" style={{ padding: "11px 106px 11px 12px", position: "relative" }}>
-      {styleTag}
+    <div className="nav-row" style={{ padding: "11px 12px", position: "relative" }}>
       <div onClick={() => onSelect(i)} role="button" style={{
         display: "flex", alignItems: "center", gap: 9, cursor: "pointer",
       }}>
@@ -124,31 +116,6 @@ function ExerciseNavRow({ i, exercises, durationMeta, shownIdx, currentIdx, onSe
           <div style={{ height: "100%", width: `${Math.round((doneWork / e.sets.length) * 100)}%`, background: allDone ? T.green : T.accentLight, transition: "width 240ms ease" }} />
         </div>
       )}
-
-      <div 
-        className="exercise-card-media"
-        style={{
-          position: "absolute",
-          top: 0,
-          right: 0,
-          bottom: 0,
-          width: 96,
-          background: "rgba(255, 255, 255, 0.02)",
-          borderLeft: "1px solid rgba(255, 255, 255, 0.08)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          overflow: "hidden",
-          borderTopRightRadius: 11,
-          borderBottomRightRadius: 11,
-        }}
-      >
-        {window.getExerciseIcon ? (
-          <div dangerouslySetInnerHTML={{ __html: window.getExerciseIcon(e.name) }} style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }} />
-        ) : (
-          <span style={{ fontSize: 12 }}>📷</span>
-        )}
-      </div>
 
       {!e.skipped && hasVariants && swapOpen && (() => {
         const currentFamilyName = getSwapGroupName(e.name) || "Other";

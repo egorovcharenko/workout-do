@@ -66,18 +66,18 @@ function SetChip({ d, k, onClick }) {
     }
   }
   return (
-    <span key={k} onClick={onClick} style={{
-      display: "inline-flex", alignItems: "baseline", gap: 1,
-      padding: "5px 9px", borderRadius: 8,
+    <button type="button" key={k} onClick={onClick} aria-label={`Select ${d.kind === "warmup" ? "warm-up" : "working"} set ${k + 1}`} style={{
+      display: "flex", alignItems: "center", justifyContent: "center", gap: 2, minWidth: 0, width: "100%", minHeight: 32,
+      padding: "5px 3px", borderRadius: 6,
       border: box.border, background: box.background, color: box.color,
       fontFamily: T.mono, fontSize: 12.5, fontWeight: 700,
-      fontStyle: d.preview ? "italic" : "normal", whiteSpace: "nowrap",
+      fontStyle: "normal", whiteSpace: "nowrap",
       cursor: onClick ? "pointer" : "default",
     }}>
       {d.repsOnly
         ? (d.reps != null ? d.reps : "—")
         : <>{d.lb || "—"}{d.weightMultiplier === 2 && <span style={{ color: box.xColor, fontWeight: 600, fontSize: 10 }}>×2</span>}<span style={{ color: box.xColor, fontWeight: 400, fontSize: 11 }}>×</span>{d.reps != null ? d.reps : "—"}</>}
-    </span>
+    </button>
   );
 }
 

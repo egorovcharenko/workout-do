@@ -152,8 +152,7 @@ button { font-family: inherit; }
   .nav-rail-label { margin-bottom: 4px !important; }
   .nav-rail-progress { margin-bottom: 8px !important; }
   .nav-rail-list { gap: 6px !important; }
-  .nav-row { padding: 6px 64px 8px 10px !important; }
-  .exercise-card-media { width: 54px !important; }
+  .nav-row { padding: 6px 10px 8px !important; }
   .nav-chips { margin-top: 5px !important; gap: 5px !important; }
   .nav-group-bar { padding: 6px 12px 4px !important; }
   .nav-then { margin: 3px 0 !important; }
@@ -235,3 +234,8 @@ button { font-family: inherit; }
 .history-best .history-top-value { color: #93C5FD; }
 .history-best-date { color: #9CA3AF; font: 9px var(--suite-font-mono); text-align: right; }
 .history-full-log > summary { cursor: pointer; color: #9CA3AF; padding: 10px 0; font: 10px var(--suite-font-mono); }
+
+.nav-chips { display: flex; flex-direction: column; gap: 7px; margin-top: 9px; }
+.nav-set-label { color: #9CA3AF; font: 600 9px var(--suite-font-mono); margin-bottom: 4px; }
+.nav-set-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+.nav-set-grid button:focus-visible { outline: 2px solid #93C5FD; outline-offset: 2px; }
