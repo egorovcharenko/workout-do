@@ -30,7 +30,7 @@ function ActiveSetBlock({ exercise, set, totalWork, onPickWeight, onPickBodyweig
       : "weight";
 
   return (
-    <div className="active-set-block" style={{
+    <div className={`active-set-block${exercise.isBarbell ? " active-set-barbell" : ""}`} style={{
       borderRadius: 12,
       background: "linear-gradient(180deg, rgba(59,130,246,0.08), rgba(17,24,39,0.55))",
       boxShadow: "0 0 0 1px rgba(96,165,250,0.35), 0 8px 24px -8px rgba(59,130,246,0.4)",

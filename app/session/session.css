@@ -219,3 +219,7 @@ button { font-family: inherit; }
   .barbell-weight-layout { padding: 6px !important; }
   .barbell-weight-layout button { width: 32px !important; }
 }
+
+.active-set-barbell .rep-entry-dock { margin-top: 4px; }
+.active-set-barbell .set-rep-heading { padding-top: 2px; }
+.active-set-barbell .asb-skip { margin-top: 4px !important; }
