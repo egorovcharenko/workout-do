@@ -30,10 +30,7 @@ function BarbellVisualizer({ exercise = null, weight, onWeightChange, compact = 
 
   const plateLoader = (
     <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
-        <span style={{ color: T.muted, fontFamily: T.mono, fontSize: 9, fontWeight: 700, letterSpacing: 0.6 }}>
-          ADD PLATES (PER SIDE)
-        </span>
+      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
         {loadedPlates.length > 0 && (
           <button
             onClick={handleClear}
