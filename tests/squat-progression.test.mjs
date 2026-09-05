@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { applySquatProgression } from "../lib/legacy/squat-progression.js";
+import { applySquatProgression, optimizeMigratedSquatBackoffs } from "../lib/legacy/squat-progression.js";
 
 function squatSets(topWeight, reps, backoffWeight = topWeight) {
   return [
@@ -70,4 +70,46 @@ test("migrated back-offs pick the 90% neighbour with the fewest plate swaps", ()
 
   assert.equal(result.progression.status, "transition");
   assert.deepEqual(work.map((set) => set.weight), [175, 155, 155]);
+});
+
+function migratedExercise() {
+  const { sets, progression } = applySquatProgression(squatSets(135, [7, 6, 5]));
+  return { name: "Barbell Back Squat", sets, progression };
+}
+
+test("initial migration accounts for all warm-up plates", () => {
+  const sets = [45, 75, 95].map(weight => ({ kind: "warmup", weight }));
+  sets.push(...squatSets(135, [7, 6, 5]).filter(s => s.kind === "work"));
+  const result = applySquatProgression(sets);
+  assert.equal(result.progression.backoff.weight, 125);
+});
+
+test("live migration uses manually loaded plates and preserves set metadata", () => {
+  const ex = migratedExercise();
+  ex.sets[1].completed = true;
+  ex.sets[2].active = true;
+  const next = optimizeMigratedSquatBackoffs(ex, 1, [15, 10, 15, 5]);
+  assert.equal(next.progression.backoff.weight, 125);
+  assert.deepEqual(next.sets.slice(2).map(s => s.weight), [125, 125]);
+  assert.equal(next.sets[2].active, true);
+  assert.equal(next.sets[2].lastWeight, 135);
+  assert.match(next.progression.detail, /125 lb/);
+  assert.notEqual(next.sets, ex.sets);
+});
+
+test("live optimization preserves established, planned, deload, edited and logged prescriptions", () => {
+  for (const change of [
+    ex => { ex.progression.backoff.migrated = false; },
+    ex => { ex.planPrescribed = true; },
+    ex => { ex.deload = true; },
+    ex => { ex.sets[2].weight = 100; },
+    ex => { ex.sets[2].completed = true; },
+    ex => { ex.sets[2].userSkipped = true; },
+  ]) {
+    const ex = migratedExercise(); change(ex);
+    assert.equal(optimizeMigratedSquatBackoffs(ex, 1, [15, 10, 15, 5]), ex);
+  }
+  const ex = migratedExercise();
+  assert.equal(optimizeMigratedSquatBackoffs(ex, 0, [25]), ex, "warm-up log does not retarget");
+  assert.equal(optimizeMigratedSquatBackoffs(ex, 1, null), ex, "no physical stack means no live retarget");
 });

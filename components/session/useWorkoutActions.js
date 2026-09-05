@@ -4,6 +4,8 @@ import { applySwaps } from "@/lib/legacy/standards";
 import { saveSwaps, loadSkippedExercises, saveSkippedExercises, saveDeferred, saveBodyweight, saveSessionSets, serializeForSave, finishSavePayload, abandonSession, clearSessionState, activateNextSet } from "@/lib/legacy/session-persistence";
 import { flattenTemplate, applyDeloadPrescription } from "@/lib/legacy/session-utils";
 import { logSetAndTransition } from "@/lib/legacy/set-logging";
+import { recordedBarStack } from "@/lib/legacy/bar-stack";
+import { optimizeMigratedSquatBackoffs } from "@/lib/legacy/squat-progression";
 import { loggedAtForSetUpdate } from "@/lib/legacy/duration-estimates";
 import { finishAndExit } from "@/lib/legacy/finish-workout";
 import { abandonAndExit } from "@/lib/legacy/abandon-workout";
@@ -125,6 +127,10 @@ function useWorkoutActions({
       logged_at: loggedAtForSetUpdate(set, new Date().toISOString()),
     };
     const next = logSetAndTransition(current, eIdx, sIdx, patch);
+    if (!set.completed) {
+      next[eIdx] = optimizeMigratedSquatBackoffs(next[eIdx], sIdx,
+        recordedBarStack(current[eIdx].name, set.weight));
+    }
 
     const ex = next[eIdx];
     // The transition owns set selection — read the newly active set back out

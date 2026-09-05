@@ -40,8 +40,8 @@ test("barbell plates decompose per side, largest first", () => {
 test("plate changes count everything outside the shared inner stack", () => {
   assert.equal(barbellPlateChanges(175, 165), 1); // pull the 5
   assert.equal(barbellPlateChanges(175, 155), 3); // pull 15 + 5, add 10
-  assert.equal(barbellPlateChanges(155, 165), 2); // swap 10 for 15
-  assert.equal(barbellPlateChanges(125, 145), 4); // 35+5 -> 45+5: the outer 5 comes off too
+  assert.equal(barbellPlateChanges(155, 165), 1); // keep 45+10, add 5
+  assert.equal(barbellPlateChanges(125, 145), 1); // keep 35+5, add 10
   assert.equal(barbellPlateChanges(135, 135), 0);
 });
 
@@ -66,4 +66,14 @@ test("restacking keeps the plates already on the bar", () => {
   assert.deepEqual(restackBarbellLoad([25], 175), [25, 35, 5]);
   assert.deepEqual(restackBarbellLoad([], 135), [45]);
   assert.deepEqual(restackBarbellLoad([45], 45), []);
+});
+
+ test("nearby back-off uses the physical warm-up stack rather than a fresh decomposition", () => {
+  let plates = [];
+  for (const weight of [45, 75, 95, 135]) plates = restackBarbellLoad(plates, weight);
+  assert.deepEqual(plates, [15, 10, 15, 5]);
+  assert.equal(nearestBarbellWeightByPlateChanges(135, 121.5, { previousPlates: plates }), 125);
+  assert.equal(barbellPlateChanges(135, 125, 45, plates), 1);
+  assert.equal(barbellPlateChanges(135, 120, 45, plates), 4);
+  assert.deepEqual(plates, [15, 10, 15, 5], "scoring never changes the loaded stack");
 });
