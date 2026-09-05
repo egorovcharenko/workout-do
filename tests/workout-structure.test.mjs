@@ -116,3 +116,14 @@ test("every dragon fly stage uses a bundled illustration", () => {
     assert.equal(existsSync(new URL(`../public${stage.demoUrl}`, import.meta.url)), true);
   }
 });
+
+test("squat templates include a fourth warmup before the working sets", () => {
+  const templates = [...WORKOUTS.flatMap(w => w.exercises), ...SWAP_GROUPS.flatMap(g => g.exercises)]
+    .filter(ex => ex.name === "Barbell Back Squat");
+  assert.ok(templates.length > 0);
+  for (const squat of templates) {
+    assert.equal(squat.warmups, 4);
+    assert.deepEqual(squat.defaultWarmup, [45, 75, 95, 115]);
+    assert.equal(squat.defaultWarmupReps[3], 3);
+  }
+});
