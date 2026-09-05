@@ -106,7 +106,6 @@ function ActiveSetBlock({ exercise, set, totalWork, onPickWeight, onPickBodyweig
       )}
 
       <div className="rep-entry-dock">
-        {set.lastReps != null && <div className="set-rep-heading">Last: {set.lastReps}</div>}
         <RepStrip
           min={1} max={20}
           range={range}

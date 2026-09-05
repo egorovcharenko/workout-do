@@ -212,14 +212,12 @@ button { font-family: inherit; }
 .barbell-plate-swatch { position: absolute; left: 5px; right: 5px; bottom: 4px; height: 3px; border-radius: 2px; background: var(--plate-color); }
 .barbell-plate-option:hover { background: #253449; border-color: #64748B; }
 .active-set-block button:focus-visible { outline: 2px solid #93C5FD; outline-offset: 3px; }
-.set-rep-heading { padding: 8px 4px 0; color: #86EFAC; font-size: 11px; text-align: right; }
 @media (max-width: 380px) {
   .barbell-weight-layout { padding: 6px !important; }
   .barbell-weight-layout button { width: 32px !important; }
 }
 
 .active-set-barbell .rep-entry-dock { margin-top: 4px; }
-.active-set-barbell .set-rep-heading { padding-top: 2px; }
 
 .barbell-weight-heading { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .barbell-weight-heading > span { flex-shrink: 0; }
