@@ -58,7 +58,7 @@ function SetCard({ s, idx, exercise, onReopenSet, dur }) {
 
   return (
     <button ref={btnRef} onClick={tappable ? () => onReopenSet(idx) : undefined} disabled={!tappable} style={{
-      padding: "8px 4px 7px", borderRadius: 9,
+      padding: "7px 9px", borderRadius: 9,
       cursor: tappable ? "pointer" : "default",
       background: isCurrent
         ? (isWarm ? "rgba(217,119,6,0.12)" : "rgba(59,130,246,0.14)")
@@ -68,10 +68,11 @@ function SetCard({ s, idx, exercise, onReopenSet, dur }) {
                   : "inset 0 0 0 2px rgba(96,165,250,0.6), 0 4px 14px -4px rgba(59,130,246,0.5)")
         : "none",
       border: isCurrent ? "0" : `1px ${s.completed ? "solid" : "dashed"} rgba(255,255,255,0.05)`,
-      opacity: isCurrent ? 1 : s.completed ? 1 : 0.45,
-      display: "flex", flexDirection: "row", alignItems: "baseline", justifyContent: "center", gap: 6,
+      opacity: 1,
+      display: "flex", flexDirection: "column", alignItems: "stretch", justifyContent: "center", gap: 5,
       flex: "1 0 auto", flexShrink: 0, transition: "all 200ms ease",
     }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 6 }}>
       <span style={{ color: isWarm ? T.amber : isCurrent ? T.accentLight : T.faint, fontFamily: T.mono, fontSize: 9, fontWeight: 800, letterSpacing: 0.7 }}>
         {setStripLabel(s, exercise.sets)}
       </span>
@@ -82,31 +83,32 @@ function SetCard({ s, idx, exercise, onReopenSet, dur }) {
           : null;
         const isPreview = s.reps == null && (targetReps != null || s.lastReps != null);
         const repText = s.reps ?? targetReps ?? s.lastReps ?? "—";
-        const repColor = isPreview ? T.muted : (s.completed || isCurrent) ? T.strong : T.faint;
+        const repColor = isPreview ? T.muted : (s.completed || isCurrent) ? T.strong : T.text;
         if (exercise.repsOnly && !exercise.beltLoad) {
           return (
             <div style={{ display: "flex", alignItems: "baseline", gap: 3, fontFamily: T.mono }}>
-              <span style={{ color: repColor, fontSize: 16, fontWeight: 700, letterSpacing: -0.3, fontStyle: isPreview ? "italic" : "normal" }}>{repText}</span>
+              <span style={{ color: repColor, fontSize: 16, fontWeight: 700, letterSpacing: -0.3, fontStyle: "normal" }}>{repText}</span>
               <span style={{ color: T.disabled, fontSize: 10 }}>reps</span>
             </div>
           );
         }
         return (
           <div style={{ display: "flex", alignItems: "baseline", gap: 2, fontFamily: T.mono }}>
-            <span style={{ color: (s.completed || isCurrent) ? T.strong : T.faint, fontSize: 16, fontWeight: 700, letterSpacing: -0.3 }}>{exercise.beltLoad ? (totalLb > 0 ? `+${totalLb}` : "BW") : stages ? (curRank > 0 ? `S${curRank}` : "—") : weightDisplay}</span>
+            <span style={{ color: (s.completed || isCurrent) ? T.strong : T.text, fontSize: 16, fontWeight: 700, letterSpacing: -0.3 }}>{exercise.beltLoad ? (totalLb > 0 ? `+${totalLb}` : "BW") : stages ? (curRank > 0 ? `S${curRank}` : "—") : weightDisplay}</span>
             <span style={{ color: T.disabled, fontSize: 11 }}>×</span>
-            <span style={{ color: repColor, fontSize: 16, fontWeight: 700, letterSpacing: -0.3, fontStyle: isPreview ? "italic" : "normal" }}>{repText}</span>
+            <span style={{ color: repColor, fontSize: 16, fontWeight: 700, letterSpacing: -0.3, fontStyle: "normal" }}>{repText}</span>
           </div>
         );
       })()}
-      {s.completed ? (
-        <span style={{ color: deltaColor, fontFamily: T.mono, fontSize: 10, fontWeight: 700 }}>
+      {isCurrent && <span style={{ color: isWarm ? T.amber : T.accentLight, fontSize: 9 }}>●</span>}
+      </div>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8, fontFamily: T.mono, fontSize: 10 }}>
+        <span style={{ color: T.muted }}>Last <strong style={{ color: T.text, fontWeight: 700 }}>{s.lastReps ?? "—"}</strong>{s.lastReps != null ? " reps" : ""}</span>
+        {s.completed && <span style={{ color: deltaColor, fontWeight: 700 }}>
           {deltaText}
-          {dur != null && <span style={{ color: T.disabled, fontWeight: 500, fontSize: 9 }}> · {fmtSetDuration(dur)}</span>}
-        </span>
-      ) : isCurrent ? (
-        <span style={{ color: isWarm ? T.amber : T.accentLight, fontFamily: T.mono, fontSize: 10, fontWeight: 700 }}>●</span>
-      ) : null}
+          {dur != null && <span style={{ color: T.muted, fontWeight: 500, fontSize: 9 }}> · {fmtSetDuration(dur)}</span>}
+        </span>}
+      </div>
     </button>
   );
 }
