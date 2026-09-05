@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { buildExerciseSessionHistory } from "../lib/legacy/exercise-session-history.js";
+import { buildExerciseSessionHistory, selectTopSet } from "../lib/legacy/exercise-session-history.js";
 
 const workingSet = (exercise, setNumber, weight, reps) => ({
   exercise,
@@ -69,4 +69,16 @@ test("exercise history keeps legacy rows without ids when there is no active ses
   ], "Dips");
 
   assert.equal(result.rows.length, 1);
+});
+
+test("top set keeps weight and reps from the same attempt and breaks load ties by reps", () => {
+  const sets = [{ weight_lb: 115, reps: 12 }, { weight_lb: 135, reps: 6 }, { weight_lb: 135, reps: 7 }, { weight_lb: 145, reps: 0 }];
+  assert.equal(selectTopSet(sets), sets[2]);
+  assert.equal(selectTopSet([]), null);
+});
+
+test("top set supports reps only and least-assisted comparisons", () => {
+  const sets = [{ assistance: 20, reps: 12 }, { assistance: 0, reps: 5 }, { assistance: 0, reps: 8 }];
+  assert.equal(selectTopSet(sets, s => -s.assistance), sets[2]);
+  assert.equal(selectTopSet(sets, () => 0), sets[0]);
 });

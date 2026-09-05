@@ -226,3 +226,12 @@ button { font-family: inherit; }
 .barbell-weight-heading > span { flex-shrink: 0; }
 .loaded-plate-controls { display: flex; gap: 4px; min-width: 0; overflow-x: auto; padding: 3px; }
 .loaded-plate-controls button { flex: 0 0 auto; min-width: 30px; height: 28px; padding: 0 5px; border: 0; border-radius: 4px; font: 800 12px var(--suite-font-mono); cursor: pointer; }
+
+.history-top-set { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 8px 0; font-family: var(--suite-font-mono); }
+.history-top-date { flex-shrink: 0; color: #9CA3AF; font-size: 10px; }
+.history-top-value { min-width: 0; color: #F3F4F6; font-size: 12px; font-weight: 750; text-align: right; overflow-wrap: anywhere; }
+.history-top-detail { color: #9CA3AF; font-size: 10px; font-weight: 500; }
+.history-best { padding: 0 10px 7px; margin-bottom: 4px; border: 1px solid #344052; border-radius: 8px; background: #152131; }
+.history-best .history-top-value { color: #93C5FD; }
+.history-best-date { color: #9CA3AF; font: 9px var(--suite-font-mono); text-align: right; }
+.history-full-log > summary { cursor: pointer; color: #9CA3AF; padding: 10px 0; font: 10px var(--suite-font-mono); }

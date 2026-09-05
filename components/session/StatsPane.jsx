@@ -5,7 +5,7 @@ import { beltAdjustedRepScore, calcSet1RM, calcStoredSet1RM, decodeStageScore, i
 import { Sparkline } from "./Sparkline";
 import { effectiveExerciseWeight, effectiveStoredExerciseWeight } from "@/lib/legacy/cable-stack";
 import { isStoredBeltLoad, storedBeltLoad } from "@/lib/legacy/belt-load";
-import { buildExerciseSessionHistory } from "@/lib/legacy/exercise-session-history";
+import { buildExerciseSessionHistory, selectTopSet } from "@/lib/legacy/exercise-session-history";
 
 // ─── file: workout-session-stats-pane.js ───
 
@@ -76,6 +76,14 @@ function historicalSetLabel(set, session, exercise) {
     : { value: repLabel, detail: "" };
 }
 
+function historySetLoad(set, session, exercise) {
+  if (exercise.stages) return exercise.stages.findIndex(stage => stage.id === set.grip);
+  if (exercise.beltLoad) return storedBeltLoad(set);
+  if (exercise.assist) return -bandLoad(set);
+  if (exercise.repsOnly) return 0;
+  return effectiveStoredExerciseWeight(set.exercise || exercise.name, Number(set.weight_lb) || 0, session);
+}
+
 function PreviousSessions({ history, exercise, sessionId }) {
   const { rows, columnCount } = buildExerciseSessionHistory(history, exercise.name, sessionId);
   if (!rows.length) {
@@ -86,11 +94,32 @@ function PreviousSessions({ history, exercise, sessionId }) {
     );
   }
 
+  const topSets = rows.map(({ session, sets }) => {
+    const set = selectTopSet(sets, candidate => historySetLoad(candidate, session, exercise));
+    return set ? { session, set, reps: set.reps, load: historySetLoad(set, session, exercise) } : null;
+  }).filter(Boolean);
+  const best = selectTopSet(topSets, entry => entry.load);
+  const summaryRow = (entry, heading, key = heading) => {
+    const label = historicalSetLabel(entry.set, entry.session, exercise);
+    return (
+      <div className="history-top-set" key={key}>
+        <span className="history-top-date">{heading}</span>
+        <span className="history-top-value">{label.value}{label.detail && <span className="history-top-detail"> · {label.detail}</span>}</span>
+      </div>
+    );
+  };
+
   const dateWidth = 78;
   const setWidth = 104;
   const border = `1px solid ${T.cardBorder}`;
   return (
-    <Section label={`PREVIOUS SESSIONS · ${rows.length}`}>
+    <Section label="TOP SETS">
+      {best && <div className="history-best">{summaryRow(best, "BEST")}
+        <div className="history-best-date">{displayDate(best.session.date)}</div>
+      </div>}
+      {topSets.slice(0, 3).map((entry, index) => summaryRow(entry, displayDate(entry.session.date), entry.session.id || index))}
+      <details className="history-full-log">
+        <summary>All sessions · {rows.length}</summary>
       <div style={{ overflowX: "auto", border, borderRadius: 9, WebkitOverflowScrolling: "touch" }}>
         <table style={{ width: dateWidth + columnCount * setWidth, borderCollapse: "collapse", tableLayout: "fixed" }}>
           <colgroup>
@@ -141,6 +170,7 @@ function PreviousSessions({ history, exercise, sessionId }) {
           </tbody>
         </table>
       </div>
+      </details>
     </Section>
   );
 }
