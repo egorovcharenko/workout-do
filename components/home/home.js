@@ -113,6 +113,7 @@ function renderWorkoutCard(w, isSuggested, isOngoing, logged, expected, pct) {
           </span>
         </div>
         <div style="display:flex;flex-direction:column;gap:4px">${rowsHTML}</div>
+        ${isSuggested ? `<div style="margin-top:10px;font-size:12px;color:#2563eb;font-weight:800">${isOngoing ? 'Resume workout' : 'Start workout'} →</div>` : ''}
       </div>
       <div style="flex-shrink:0;display:flex;align-items:center;gap:10px">
         ${renderWorkoutMuscleMap(w)}
