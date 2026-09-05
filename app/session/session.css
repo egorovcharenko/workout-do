@@ -207,9 +207,9 @@ button { font-family: inherit; }
 /* Full-width load controls keep all adjustments within the active set card. */
 .barbell-weight-layout { min-width: 0; }
 .barbell-weight-layout button { touch-action: manipulation; }
-.barbell-plate-picker { display: grid; grid-template-columns: repeat(auto-fit, minmax(48px, 1fr)); gap: 6px; }
-.barbell-plate-option { min-width: 0; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 8px 4px; border: 1px solid #344052; border-radius: 8px; background: #182230; color: #F3F4F6; font: 700 13px var(--suite-font-mono); cursor: pointer; }
-.barbell-plate-swatch { width: 4px; height: 22px; border-radius: 2px; background: var(--plate-color); flex-shrink: 0; }
+.barbell-plate-picker { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 4px; }
+.barbell-plate-option { position: relative; min-width: 0; min-height: 38px; display: flex; align-items: center; justify-content: center; padding: 4px 1px 7px; border: 1px solid #344052; border-radius: 8px; background: #182230; color: #F3F4F6; font: 700 11px var(--suite-font-mono); cursor: pointer; }
+.barbell-plate-swatch { position: absolute; left: 5px; right: 5px; bottom: 4px; height: 3px; border-radius: 2px; background: var(--plate-color); }
 .barbell-plate-option:hover { background: #253449; border-color: #64748B; }
 .active-set-block button:focus-visible { outline: 2px solid #93C5FD; outline-offset: 3px; }
 .set-rep-heading { padding: 8px 4px 0; color: #86EFAC; font-size: 11px; text-align: right; }
