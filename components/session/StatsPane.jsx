@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { GRIP_LABELS, T, localDate } from "@/lib/legacy/shared";
-import { EXERCISE_MUSCLES, getMuscleImpact, beltAdjustedRepScore, calcSet1RM, calcStoredSet1RM, decodeStageScore, isAssistExercise, isRepsOnlyExercise } from "@/lib/legacy/standards";
+import { beltAdjustedRepScore, calcSet1RM, calcStoredSet1RM, decodeStageScore, isAssistExercise } from "@/lib/legacy/standards";
 import { Sparkline } from "./Sparkline";
 import { effectiveExerciseWeight, effectiveStoredExerciseWeight } from "@/lib/legacy/cable-stack";
 import { isStoredBeltLoad, storedBeltLoad } from "@/lib/legacy/belt-load";
@@ -145,89 +145,19 @@ function PreviousSessions({ history, exercise, sessionId }) {
   );
 }
 
-function StatsPane({ exercise, history, statHistory, exercises, sessionId }) {
+function StatsPane({ exercise, history, statHistory, sessionId }) {
   const [tipState, setTip] = useState(null);
   const tip = tipState?.exerciseName === exercise?.name ? tipState : null;
 
   if (!exercise) return null;
   const today = localDate();
   const todayMs = Date.parse(today + 'T00:00:00Z');
-  const windowStartMs = todayMs - 14 * 86400000;
   
   const showTip = (e, content) => {
     const r = e.currentTarget.getBoundingClientRect();
     setTip({ exerciseName: exercise.name, content, x: r.left + r.width / 2, y: r.top - 4 });
   };
   const hideTip = () => setTip(null);
-
-  const muscleInfo = EXERCISE_MUSCLES[exercise.name] || { primary: [], secondary: [] };
-
-  const muscleSets14d = {};
-  (muscleInfo.primary || []).forEach(m => muscleSets14d[m] = []);
-  (muscleInfo.secondary || []).forEach(m => muscleSets14d[m] = []);
-  for (const sess of (history || [])) {
-    if (!sess.date || sess.date === today) continue;
-    const sessMs = Date.parse(sess.date + 'T00:00:00Z');
-    if (sessMs <= windowStartMs || sessMs > todayMs) continue;
-    for (const st of (sess.sets || [])) {
-      if (st.set_type !== 'working') continue;
-      const mm = EXERCISE_MUSCLES[st.exercise];
-      if (!mm) continue;
-      for (const muscle of (mm.primary || [])) {
-        if (muscle in muscleSets14d) muscleSets14d[muscle].push({
-          date: sess.date, isToday: false,
-          exercise: st.exercise,
-          weight: isRepsOnlyExercise(st.exercise) ? storedBeltLoad(st) : effectiveStoredExerciseWeight(st.exercise, +st.weight_lb || 0, sess),
-          reps: parseInt(st.reps) || 0,
-          weightage: getMuscleImpact(st.exercise, muscle, true),
-        });
-      }
-      for (const muscle of (mm.secondary || [])) {
-        if (muscle in muscleSets14d) muscleSets14d[muscle].push({
-          date: sess.date, isToday: false,
-          exercise: st.exercise,
-          weight: isRepsOnlyExercise(st.exercise) ? storedBeltLoad(st) : effectiveStoredExerciseWeight(st.exercise, +st.weight_lb || 0, sess),
-          reps: parseInt(st.reps) || 0,
-          weightage: getMuscleImpact(st.exercise, muscle, false),
-        });
-      }
-    }
-  }
-
-  const chartTodayDate = new Date(todayMs).toISOString().slice(0, 10);
-  for (const e of exercises) {
-    const em = EXERCISE_MUSCLES[e.name];
-    if (!em || e.skipped) continue;
-    for (const s of e.sets) {
-      if (!s.completed || s.kind !== 'work') continue;
-      const bs = (s.bands || []).reduce((a, b) => a + b, 0);
-      const recordedWeight = e.assist ? Math.max(0, (s.bodyweight || 0) - bs)
-                    : e.isBandsOnly ? bs
-                    : e.bandAddon ? (s.weight || 0) + bs
-                    : (s.weight || 0);
-      const weight = effectiveExerciseWeight(e.name, recordedWeight);
-      for (const muscle of (em.primary || [])) {
-        if (muscle in muscleSets14d) muscleSets14d[muscle].push({
-          date: chartTodayDate, isToday: true,
-          exercise: e.name,
-          weight,
-          reps: parseInt(s.reps) || 0,
-          weightage: getMuscleImpact(e.name, muscle, true),
-        });
-      }
-      for (const muscle of (em.secondary || [])) {
-        if (muscle in muscleSets14d) muscleSets14d[muscle].push({
-          date: chartTodayDate, isToday: true,
-          exercise: e.name,
-          weight,
-          reps: parseInt(s.reps) || 0,
-          weightage: getMuscleImpact(e.name, muscle, false),
-        });
-      }
-    }
-  }
-
-  Object.values(muscleSets14d).forEach(arr => arr.sort((a, b) => a.date.localeCompare(b.date)));
 
   const stat = statHistory || {};
   const isRepsOnly = !!exercise.repsOnly;
@@ -331,8 +261,6 @@ function StatsPane({ exercise, history, statHistory, exercises, sessionId }) {
   const volHist = (todayVol > 0)
     ? [...volHistRaw.filter(d => d.date !== chartTodayDateStr), { date: chartTodayDateStr, vol: todayVol, isDeload: !!window.SESSION_DELOAD }]
     : volHistRaw;
-  const primaryList = (muscleInfo.primary || []);
-  const secondaryList = (muscleInfo.secondary || []);
 
   return (
     <div
@@ -361,38 +289,6 @@ function StatsPane({ exercise, history, statHistory, exercises, sessionId }) {
         {exercise.beltLoad && <Sparkline exerciseName={exercise.name} data={wtHist} valueKey="wt" color="#C084FC" label="ADDED LOAD" fmt={v => `+${Math.round(v)} lb`} showTip={showTip} hideTip={hideTip} />}
         {exercise.beltLoad && <Sparkline exerciseName={exercise.name} data={volHist} valueKey="vol" color="#34D399" label="PLATE VOLUME" fmt={v => `${Math.round(v).toLocaleString()} lb`} showTip={showTip} hideTip={hideTip} />}
       </Section>
-
-      {(primaryList.length > 0 || secondaryList.length > 0) && (
-        <Section label="MUSCLE LOAD · SETS/WK · 14 DAYS">
-          {[...primaryList.map(m => ({ m, isPrimary: true })), ...secondaryList.map(m => ({ m, isPrimary: false }))].map(({ m, isPrimary }) => {
-            const events = muscleSets14d[m] || [];
-            const weekly = events.reduce((a, ev) => a + (ev.weightage || 0), 0) / 2;
-            const lo = 10, hi = 20, max = 25;
-            const color = weekly < lo ? "#F87171" : weekly <= hi ? "#34D399" : "#FBBF24";
-            const pct = Math.min(weekly / max, 1) * 100;
-            const impact = isPrimary ? null : Math.round(getMuscleImpact(exercise.name, m, false) * 100);
-            return (
-              <div key={m}
-                onMouseEnter={(e) => showTip(e, `${events.length} sets in 14 days · target ${lo}–${hi}/wk`)}
-                onMouseLeave={hideTip}
-                style={{ display: "flex", alignItems: "center", gap: 8, padding: "3.5px 0" }}>
-                <span style={{
-                  width: 108, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                  color: isPrimary ? T.text : T.faint, fontFamily: T.mono, fontSize: 9.5, fontWeight: isPrimary ? 800 : 600,
-                  letterSpacing: 0.4, textTransform: "uppercase",
-                }}>{m.replace("_", " ")}{impact != null ? ` ·${impact}%` : ""}</span>
-                <div style={{ flex: 1, height: 6, borderRadius: 3, background: "rgba(255,255,255,0.05)", position: "relative", overflow: "hidden" }}>
-                  <div style={{ position: "absolute", left: `${lo / max * 100}%`, width: `${(hi - lo) / max * 100}%`, top: 0, bottom: 0, background: "rgba(255,255,255,0.07)" }} />
-                  <div style={{ position: "absolute", left: 0, width: `${pct}%`, top: 0, bottom: 0, borderRadius: 3, background: color, opacity: isPrimary ? 0.9 : 0.55 }} />
-                </div>
-                <span style={{ width: 34, flexShrink: 0, textAlign: "right", color, fontFamily: T.mono, fontSize: 10.5, fontWeight: 800 }}>
-                  {weekly ? weekly.toFixed(1) : "0"}
-                </span>
-              </div>
-            );
-          })}
-        </Section>
-      )}
 
       <PreviousSessions history={history} exercise={exercise} sessionId={sessionId} />
 
