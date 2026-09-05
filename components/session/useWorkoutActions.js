@@ -4,7 +4,7 @@ import { applySwaps } from "@/lib/legacy/standards";
 import { saveSwaps, loadSkippedExercises, saveSkippedExercises, saveDeferred, saveBodyweight, saveSessionSets, serializeForSave, finishSavePayload, abandonSession, clearSessionState, activateNextSet } from "@/lib/legacy/session-persistence";
 import { flattenTemplate, applyDeloadPrescription } from "@/lib/legacy/session-utils";
 import { logSetAndTransition } from "@/lib/legacy/set-logging";
-import { recordedBarStack } from "@/lib/legacy/bar-stack";
+import { platesForSet, setBarStack } from "@/lib/legacy/bar-stack";
 import { optimizeMigratedSquatBackoffs } from "@/lib/legacy/squat-progression";
 import { loggedAtForSetUpdate } from "@/lib/legacy/duration-estimates";
 import { finishAndExit } from "@/lib/legacy/finish-workout";
@@ -57,9 +57,17 @@ function useWorkoutActions({
     saveSessionSets(workout.name, sessionDate, next);
   };
 
-  const onPickWeight = (eIdx, sIdx, w, base) => {
+  const onPickWeight = (eIdx, sIdx, w, base, plates) => {
     startTimer();
-    updateAndSave(patchSet(eIdx, sIdx, { weight: w }, base));
+    const previous = (base || exercisesRef.current)[eIdx]?.sets[sIdx];
+    let barPlates = plates ?? (previous?.weight === w ? previous?.barPlates : undefined);
+    const exercise = (base || exercisesRef.current)[eIdx];
+    // Navigation supplies a base array. Only explicit load edits change the bar.
+    if (!base && exercise?.isBarbell && !previous?.completed) {
+      barPlates = platesForSet(exercise.name, { ...previous, weight: w, barPlates });
+      setBarStack(exercise.name, barPlates);
+    }
+    updateAndSave(patchSet(eIdx, sIdx, { weight: w, barPlates }, base));
   };
 
   const onPickBodyweight = (eIdx, sIdx, w) => {
@@ -126,10 +134,14 @@ function useWorkoutActions({
       completed: true,
       logged_at: loggedAtForSetUpdate(set, new Date().toISOString()),
     };
+    if (current[eIdx].isBarbell) {
+      patch.barPlates = platesForSet(current[eIdx].name, set);
+      if (!set.completed) setBarStack(current[eIdx].name, patch.barPlates);
+    }
     const next = logSetAndTransition(current, eIdx, sIdx, patch);
     if (!set.completed) {
       next[eIdx] = optimizeMigratedSquatBackoffs(next[eIdx], sIdx,
-        recordedBarStack(current[eIdx].name, set.weight));
+        patch.barPlates);
     }
 
     const ex = next[eIdx];
