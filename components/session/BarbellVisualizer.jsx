@@ -101,6 +101,9 @@ function BarbellVisualizer({ exercise = null, weight, onWeightChange, compact = 
                 {loadedPlateControls}
               </div>
             )}
+            quantum={1}
+            fineStep={1}
+            minimum={45}
             value={weight}
             onPick={onWeightChange}
             compact={compact}

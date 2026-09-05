@@ -1,5 +1,6 @@
 "use client";
 import { T } from "@/lib/legacy/shared";
+import { adjustWeight } from "@/lib/legacy/weight-adjustment";
 
 // ─── file: workout-session-stepper.js ───
 
@@ -29,9 +30,9 @@ function StepperBtn({ children, onClick, big, dim, compact = false }) {
   );
 }
 
-function WeightStepper({ value, last, pr, onPick, label, compact = false, showLastHint = true, embedded = false }) {
+function WeightStepper({ value, last, pr, onPick, label, compact = false, showLastHint = true, embedded = false, fineStep = 2.5, minimum = 0, quantum = 0.01 }) {
   const v = parseFloat(value ?? last ?? 0);
-  const step = (delta) => onPick(Math.max(0, Math.round((v + delta) * 100) / 100));
+  const step = (delta) => onPick(adjustWeight(v, delta, minimum, quantum));
   const atLast = last != null && parseFloat(v) === parseFloat(last);
   const diff = last != null ? v - last : 0;
   return (
@@ -43,7 +44,7 @@ function WeightStepper({ value, last, pr, onPick, label, compact = false, showLa
       )}
       <div style={{ display: "flex", alignItems: "center", gap: compact ? 6 : 8 }}>
         <StepperBtn onClick={() => step(-5)} big compact={compact}>−</StepperBtn>
-        <StepperBtn onClick={() => step(-2.5)} dim compact={compact}>−2.5</StepperBtn>
+        <StepperBtn onClick={() => step(-fineStep)} dim compact={compact}>−{fineStep}</StepperBtn>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
             <span style={{ color: T.strong, fontFamily: T.mono, fontSize: compact ? 28 : 34, fontWeight: 800, letterSpacing: -1, lineHeight: 1 }}>{v}</span>
@@ -69,7 +70,7 @@ function WeightStepper({ value, last, pr, onPick, label, compact = false, showLa
             </div>
           )}
         </div>
-        <StepperBtn onClick={() => step(2.5)} dim compact={compact}>+2.5</StepperBtn>
+        <StepperBtn onClick={() => step(fineStep)} dim compact={compact}>+{fineStep}</StepperBtn>
         <StepperBtn onClick={() => step(5)} big compact={compact}>+</StepperBtn>
       </div>
     </div>
