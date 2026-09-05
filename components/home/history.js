@@ -1,7 +1,7 @@
 // ─── file: workout-ui-history.js ───
 // UI rendering logic for the History tab of Workout Tracker
 
-import { WORKOUTS } from "@/lib/legacy/shared";
+import { ALL_WORKOUTS as WORKOUTS } from "@/lib/legacy/shared";
 import {
   EXERCISE_MUSCLES,
   getMuscleImpact,

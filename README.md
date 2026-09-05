@@ -50,6 +50,11 @@ Port of the old flat-file app in the `egorovcharenko/workout-tracker` GitHub rep
   the server-issued id onto late payloads — calling `api.save` directly can duplicate sessions.
 - Per-session UI state (swaps, skipped, deferred, deload) lives in the session doc's `state_json`
   and hydrates the in-memory `_sessionStateCache` keyed `${workoutName}:${date}`.
+- Four-week blocks live in `settings/app.training_block` as JSON. `lib/training-block.js` resolves
+  the 28-day calendar rotation and expiry without rewriting the regular templates or plan queue.
+  Block sessions save their instance in `state_json.trainingBlock`; their previous-set hints are
+  scoped to that run and workout (A and B separately), and excluded from regular-program prefills.
+  Resuming an existing session keeps its saved block context even after the block ends.
 
 ## Shared suite packages
 

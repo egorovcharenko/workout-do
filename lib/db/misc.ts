@@ -7,10 +7,12 @@ import {
   limit as qLimit,
   orderBy,
   query,
+  runTransaction,
   setDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/client";
 import type { MeasurementDoc, Settings } from "./types";
+import { createTrainingBlock, localCalendarDate, parseTrainingBlock, trainingBlockStatus } from "@/lib/training-block";
 
 // ---------------- settings ----------------
 // Single doc users/{uid}/settings/app holding {gender, birth_date, bodyweight}.
@@ -34,6 +36,32 @@ export async function saveSettings(uid: string, data: Record<string, unknown>) {
   const clean: Record<string, string> = {};
   for (const [k, v] of Object.entries(data)) clean[k] = String(v);
   await setDoc(settingsRef(uid), clean, { merge: true });
+}
+
+export async function startTrainingBlock(uid: string, startDate: string) {
+  const block = createTrainingBlock(startDate, crypto.randomUUID());
+  await runTransaction(db(), async transaction => {
+    const ref = settingsRef(uid);
+    const snapshot = await transaction.get(ref);
+    const current = trainingBlockStatus(snapshot.data());
+    if (current.status === "active" || current.status === "scheduled") {
+      throw new Error("A block is already scheduled or running. Reload to see it.");
+    }
+    transaction.set(ref, { training_block: JSON.stringify(block) }, { merge: true });
+  });
+  return block;
+}
+
+export async function endTrainingBlock(uid: string, instanceId: string) {
+  return runTransaction(db(), async transaction => {
+    const ref = settingsRef(uid);
+    const snapshot = await transaction.get(ref);
+    const block = parseTrainingBlock(snapshot.data());
+    if (!block || block.instanceId !== instanceId) throw new Error("The block changed. Reload and try again.");
+    const ended = { ...block, status: "ended", endedOn: localCalendarDate() };
+    transaction.set(ref, { training_block: JSON.stringify(ended) }, { merge: true });
+    return ended;
+  });
 }
 
 // ---------------- exercise notes ----------------

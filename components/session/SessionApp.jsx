@@ -1,15 +1,16 @@
 "use client";
 import React, { useCallback, useState, useEffect, useRef, useMemo } from "react";
+import Link from "next/link";
 import { api } from "@/lib/db/api";
 import { canApplyResolvedSessionId, selectScopedSaveTiming } from "@/lib/session-save-scope";
 import {
-  TEST_MODE, T, GRIP_LABELS, WORKOUTS, localDate, SWAP_GROUPS, isDeloadActive, planEntryForWorkout,
+  TEST_MODE, T, GRIP_LABELS, WORKOUTS, ALL_WORKOUTS, BLOCK_WORKOUTS, localDate, SWAP_GROUPS, isDeloadActive, planEntryForWorkout,
   estimateActiveWorkoutDuration,
 } from "@/lib/legacy/shared";
 import { applySwaps } from "@/lib/legacy/standards";
 import {
   loadSwaps, saveSwaps, loadSkippedExercises, loadDeferred, applyDeferredOrder,
-  loadSessionSets, serializeForSave, autoSavePayload, hydrateToday, activateNextSet,
+  loadSessionSets, serializeForSave, autoSavePayload, hydrateToday, activateNextSet, setSessionTrainingBlock,
 } from "@/lib/legacy/session-persistence";
 import { flattenTemplate, applyDeloadPrescription, applyPlanPrescription, computeSessionTimes } from "@/lib/legacy/session-utils";
 import "./icons";
@@ -24,6 +25,8 @@ import { DurationReadout } from "./DurationReadout";
 import { buildExerciseDurationHistory, estimateExerciseDurationMeta } from "@/lib/legacy/duration-estimates";
 import { mergeTemplateAndSavedSet, shouldKeepRemovedWarmup } from "@/lib/legacy/exercise-history";
 import { isBeltLoadExercise } from "@/lib/legacy/belt-load";
+import { createTrainingBlock, regularToBlockWorkoutId, trainingBlockHints, trainingBlockStatus } from "@/lib/training-block";
+import { parseSessionState } from "@/lib/legacy/session-status";
 import {
   firstPendingSetIndex,
   isResolvedSet,
@@ -34,11 +37,14 @@ import {
 // ─── file: workout-session-app.js ───
 
 function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUrl = new URLSearchParams(window.location.search).get("w");
-    return (fromUrl && WORKOUTS.some(w => w.id === fromUrl)) ? fromUrl : (WORKOUTS.find(w => w.main) || WORKOUTS[0]).id; });
-  const workout = useMemo(() => WORKOUTS.find(w => w.id === workoutId) || WORKOUTS[0], [workoutId]);
+    return (fromUrl && ALL_WORKOUTS.some(w => w.id === fromUrl)) ? fromUrl : (WORKOUTS.find(w => w.main) || WORKOUTS[0]).id; });
+  const workout = useMemo(() => ALL_WORKOUTS.find(w => w.id === workoutId) || WORKOUTS[0], [workoutId]);
   const [exercises, setExercises] = useState([]);
   const [sessionDate, setSessionDate] = useState(() => localDate());
   const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState(null);
+  const [sessionBlock, setSessionBlock] = useState(null);
+  const [programWorkouts, setProgramWorkouts] = useState(WORKOUTS);
   const [sessionId, setSessionId] = useState(null);
   const [focused, setFocused] = useState(null);
   const { elapsed, startedAt, rest, setElapsed, setStartedAt, setRest, startTimer, restAdd, restSkip, restToggle, resetTimers } = useWorkoutTimers(workoutId, exercises);
@@ -53,13 +59,42 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
     (async () => { try { const results = await Promise.allSettled([ api.settings(), api.todaySession(workout.name), api.hints(), api.allHistory(), api.history1RM() ]);
         if (cancelled) return;
         const today = results[1].status === "fulfilled" ? results[1].value : null;
-        const hints = results[2].status === "fulfilled" ? results[2].value : {};
-        setHistory(results[3].status === "fulfilled" ? results[3].value || [] : []);
+        let hints = results[2].status === "fulfilled" ? results[2].value : {};
+        const allHistory = results[3].status === "fulfilled" ? results[3].value || [] : [];
+        setHistory(allHistory);
         setStatHistory(results[4].status === "fulfilled" ? results[4].value || {} : {});
         const settings = results[0].status === "fulfilled" ? results[0].value : null;
+        if (!settings || results[1].status !== "fulfilled") {
+          throw new Error("Your program or active workout could not be loaded. Reload to try again.");
+        }
         if (settings) {
           window.USER_SETTINGS = settings;
         }
+        const blockStatus = trainingBlockStatus(settings);
+        const mappedId = regularToBlockWorkoutId(workout.id);
+        if (!TEST_MODE && !today && blockStatus.status === "active" && mappedId) {
+          const url = new URL(window.location.href);
+          url.searchParams.set("w", mappedId);
+          window.history.replaceState({}, "", url);
+          setWorkoutId(mappedId);
+          return;
+        }
+        const savedState = parseSessionState(today?.state_json);
+        let blockContext = null;
+        if (workout.trainingBlockId) {
+          if (!settings || results[1].status !== "fulfilled" || results[3].status !== "fulfilled") {
+            throw new Error("The block could not be loaded. Reload to try again.");
+          }
+          blockContext = savedState?.trainingBlock || (blockStatus.status === "active" ? blockStatus.block : null);
+          if (!blockContext && TEST_MODE) blockContext = createTrainingBlock(localDate(), "preview");
+          if (!blockContext) throw new Error(blockStatus.status === "scheduled"
+            ? `This block starts ${blockStatus.block.startDate}. Your regular program is available until then.`
+            : "This block has ended. Your regular program is available on the home screen.");
+          hints = trainingBlockHints(workout, allHistory, blockContext, today?.id);
+        }
+        setSessionBlock(blockContext);
+        const menu = blockStatus.status === "active" || blockContext ? BLOCK_WORKOUTS : WORKOUTS;
+        setProgramWorkouts(menu.some(w => w.id === workout.id) ? menu : [workout, ...menu]);
         // Deload status is frozen per session: an existing today-session's
         // saved state wins over the current toggle, so flipping the toggle at
         // home mid-workout doesn't mutate an in-flight session. A saved
@@ -73,6 +108,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
         } else if (today) {
           deload = !!today.is_deload;
         }
+        if (workout.trainingBlockId) deload = false;
         window.SESSION_DELOAD = deload;
         dataRef.current = { hints: hints || {} };
         const activeDate = (today && today.date) ? today.date : localDate();
@@ -84,8 +120,9 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
             console.error("[V2] failed to parse state_json:", e);
           }
         }
+        setSessionTrainingBlock(workout.name, activeDate, blockContext);
         const swapMap = loadSwaps(workout.name, activeDate);
-        let hasNewSwap = false; if (today && today.sets) { today.sets.forEach(set => { if (set.exercise === "Barbell Back Squat" && !swapMap["0"]) { swapMap["0"] = "Barbell Back Squat";
+        let hasNewSwap = false; if (!workout.trainingBlockId && today && today.sets) { today.sets.forEach(set => { if (set.exercise === "Barbell Back Squat" && !swapMap["0"]) { swapMap["0"] = "Barbell Back Squat";
               hasNewSwap = true; }
             if (set.exercise === "Dips" && !swapMap["5-0"]) { swapMap["5-0"] = "Dips";
               hasNewSwap = true; } }); }
@@ -94,7 +131,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
         if (window.SESSION_DELOAD) exs = applyDeloadPrescription(exs);
         // Planned prescriptions (concrete weights/reps/extra exercises from
         // the plan queue) win over both hints and the deload transform.
-        exs = applyPlanPrescription(exs, planEntryForWorkout(workout.name));
+        if (!workout.trainingBlockId) exs = applyPlanPrescription(exs, planEntryForWorkout(workout.name));
         const savedSetsMap = loadSessionSets(workout.name, activeDate);
         if (savedSetsMap && Object.keys(savedSetsMap).length) {
           const templateNames = new Set(exs.map(ex => ex.name));
@@ -201,6 +238,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
         if (skippedNames.size || deferredNames.length) activateNextSet(exs);
         setExercises(exs); setLoaded(true);
       } catch (e) { console.error("[V2] mount failed:", e);
+        setLoadError(e.message || "The workout could not be loaded. Reload to try again.");
         setLoaded(true); } })(); return () => { cancelled = true; };
   }, [workout, setElapsed, setStartedAt]);
   const startedAtRef = useRef(startedAt);
@@ -271,7 +309,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
     flushPendingSave();
     const url = new URL(window.location.href); url.searchParams.set("w", id);
     window.history.replaceState({}, "", url);
-    setLoaded(false); setExercises([]); setSessionId(null); setHistory([]); setStatHistory([]); setSwaps({});
+    setLoaded(false); setLoadError(null); setSessionBlock(null); setExercises([]); setSessionId(null); setHistory([]); setStatHistory([]); setSwaps({});
     setSessionDate(localDate()); setFocused(null); resetTimers(id);
     setWorkoutId(id); };
   const actions = useWorkoutActions({ workout, exercises, setExercises, sessionDate, sessionId, setSessionId, startedAt, elapsed, swaps, setSwaps, dataRef, startTimer, setRest, queueSave, cancelQueuedSave });
@@ -303,12 +341,13 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
     actions.onPickWeight(exIdx, setIdx, selectedSetWeight(selectedSet), next); };
   if (!loaded) { return ( <div style={{ height: "100%", overflowY: "auto" }}>
         <div style={{ maxWidth: 448, margin: "0 auto", minHeight: "100%", background: T.page }}>
-          <Header workout={workout} workouts={WORKOUTS} onPickWorkout={onPickWorkout} done={0} total={0} elapsedSec={0} deload={!!window.SESSION_DELOAD} />
+          <Header workout={workout} workouts={programWorkouts} onPickWorkout={onPickWorkout} done={0} total={0} elapsedSec={0} deload={!!window.SESSION_DELOAD} />
           <div style={{ margin: "40px 16px", padding: "20px", textAlign: "center", color: T.muted, fontFamily: T.mono, fontSize: 13, border: `1px dashed ${T.cardBorder}`, borderRadius: 12 }}>
             loading workout…
           </div>
         </div>
       </div> ); }
+  if (loadError) return <div style={{ padding: 24, color: T.text }}><p role="alert">{loadError}</p><Link href="/" style={{ color: T.accentLight }}>Back to workouts</Link></div>;
   const shownIdx = (focusIdx != null && exercises[focusIdx]) ? focusIdx : (isFinished ? null : currentIdx);
   const shownExercise = shownIdx !== null ? exercises[shownIdx] : null;
   const currentTimeMs = startedAt ? startedAt + elapsed * 1000 : null;
@@ -360,7 +399,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
         <div className="session-main">
           <Header
             workout={workout}
-            workouts={WORKOUTS}
+            workouts={programWorkouts}
             onPickWorkout={onPickWorkout}
             onAbandon={isFinished ? undefined : actions.onAbandonWorkout}
             done={doneSets}
@@ -368,6 +407,9 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
             elapsedSec={elapsed}
             durationMeta={workoutDurationMeta}
             deload={!!window.SESSION_DELOAD} />
+          {sessionBlock && <div style={{ margin: "0 16px 8px", color: T.accentLight, fontSize: 12 }}>
+            4-week strength block · Regular program returns {sessionBlock.returnDate}
+          </div>}
           <div className="exercise-nav-strip">
             {nav("strip")}
           </div>

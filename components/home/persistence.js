@@ -5,6 +5,7 @@
 
 import { api } from "@/lib/db/api";
 import { LEGACY_WORKOUT_NAMES } from "@/lib/legacy/shared";
+import { trainingBlockStatus } from "@/lib/training-block";
 import { state } from "./state";
 import { render } from "./shell";
 import { reconcileWorkoutPlan } from "./home";
@@ -53,7 +54,9 @@ async function loadHomeData() {
     catch (e) { state.measurements = []; }
     // Check completed sessions off the planned-workout queue before painting,
     // so "up next" never points at a workout that was just finished.
-    try { await reconcileWorkoutPlan(); } catch (e) { console.error("[PLAN] reconcile failed:", e); }
+    if (trainingBlockStatus(settingsRes).status !== 'active') {
+      try { await reconcileWorkoutPlan(); } catch (e) { console.error("[PLAN] reconcile failed:", e); }
+    }
     state.loaded = true;
     render();
   } catch (e) {

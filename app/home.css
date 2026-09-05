@@ -66,6 +66,25 @@ html, body { background: #0B0F14; }
 .home-tests .home-label { color:var(--home-disabled); }
 .home-tests .home-chip { font-size:13px; padding:7px 10px; border-radius:8px; color:var(--home-faint); background:rgba(255,255,255,.035); }
 .home-sync { width:100%; font-size:13px; }
+.home-block { padding:15px 16px; border:1px solid rgba(96,165,250,.22); border-radius:14px; background:rgba(59,130,246,.045); }
+.home-block>.home-section-heading { margin-bottom:4px; gap:6px 12px; }
+.home-block>.home-section-heading>strong { font-size:16px; }
+.home-block .home-meta { font-size:12px; }
+.home-block .home-details>summary { padding-bottom:0; }
+.home-block-workout { margin:18px 0; }
+.home-block-workout h3 { display:flex; justify-content:space-between; gap:8px; margin:0 0 8px; font-size:15px; }
+.home-block-workout h3 span,.home-block-exercise small { color:var(--home-faint); font-weight:400; }
+.home-block-exercise { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:3px 10px; padding:9px 0; border-top:1px solid rgba(255,255,255,.05); font-size:13px; }
+.home-block-exercise strong { grid-column:1/-1; font-weight:500; }
+.home-block-exercise>span { color:var(--home-muted); font-family:var(--suite-font-mono),monospace; overflow-wrap:anywhere; }
+.home-block-rules { padding-left:18px; color:var(--home-muted); font-size:13px; line-height:1.5; }
+.home-block-rules li { margin:8px 0; }
+.home-block-actions { display:flex; align-items:flex-end; gap:10px; flex-wrap:wrap; }
+.home-block-actions label { display:flex; flex-direction:column; gap:5px; font-size:13px; color:var(--home-muted); }
+.home-block-actions input { max-width:100%; min-height:44px; border:1px solid rgba(255,255,255,.15); background:var(--home-page); color:var(--home-text); border-radius:9px; padding:8px 10px; font:inherit; }
+.home-block-error { color:var(--home-red); margin-top:10px!important; }
+.home-block button:disabled { opacity:.5; cursor:wait; }
+.home-rest-day { gap:12px; }
 .home-details summary { min-height:44px; cursor:pointer; padding:12px 0; font-size:14px; color:var(--home-muted); }
 .home-details[open] summary { margin-bottom:12px; }
 .home-details .card { margin-top:12px; }

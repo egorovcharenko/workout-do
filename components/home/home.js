@@ -4,6 +4,8 @@
 import { api } from "@/lib/db/api";
 import {
   WORKOUTS,
+  ALL_WORKOUTS,
+  BLOCK_WORKOUTS,
   T,
   LEGACY_WORKOUT_NAMES,
   localDate,
@@ -22,6 +24,9 @@ import { renderWorkoutSummaryCard } from "./summary";
 import { renderMeasurementsCard } from "./measurementsCard";
 import { render } from "./shell";
 import { recentActivity, latestLift, latestBody } from "./overview";
+import { blockWorkoutCompleted, trainingBlockStatus } from "@/lib/training-block";
+import { storedSessionProgress } from "@/lib/legacy/session-status";
+import { renderTrainingBlockCard, renderBlockRestDay, renderBlockUpcoming } from "./trainingBlock";
 
 function renderWorkoutMuscleMap(w) {
   const muscles = {};
@@ -52,6 +57,7 @@ function renderWorkoutMuscleMap(w) {
 }
 
 function displayPrescription(w) {
+  if (w.trainingBlockId) return w;
   const deload = isDeloadActive(window.USER_SETTINGS || {});
   return deload ? { ...w, exercises: w.exercises.map(ex => ({ ...ex, sets: 1 })) } : w;
 }
@@ -66,6 +72,9 @@ function renderWorkoutCard(w, isSuggested, isOngoing, logged, expected, pct) {
       <span class="home-duration">~${minutes} min</span></a>`;
   }
   const rowHTML = ex => {
+    if (w.trainingBlockId) {
+      return `<div class="home-exercise"><span>${escapeHtml(ex.name)}</span><span class="home-value">${ex.sets} sets</span></div>`;
+    }
     const last = state.lastSession[`${ex.name}|working|1`] || state.lastSession[`${ex.name}|working|2`] || state.lastSession[`${ex.name}|working|3`];
     const weight = last?.weight_lb ?? '—', reps = last?.reps ?? '—';
     const value = !last ? '—' : ex.repsOnly ? `${reps} reps` : `${weight}${cableStackMultiplier(ex.name) === 2 ? '×2' : ''} × ${reps}`;
@@ -73,9 +82,9 @@ function renderWorkoutCard(w, isSuggested, isOngoing, logged, expected, pct) {
   };
   const rows = w.exercises.map(ex => ex.supersetExercises
     ? `<div class="home-superset">${ex.supersetExercises.map(rowHTML).join('')}</div>` : rowHTML(ex)).join('');
-  const deload = isDeloadActive(window.USER_SETTINGS || {});
+  const deload = !w.trainingBlockId && isDeloadActive(window.USER_SETTINGS || {});
   const sets = planExpectedWorkingSets(w, deload);
-  const fromPlan = !isOngoing && parseWorkoutPlan(window.USER_SETTINGS || {}).length > 0;
+  const fromPlan = !w.trainingBlockId && !isOngoing && parseWorkoutPlan(window.USER_SETTINGS || {}).length > 0;
   return `<section class="home-hero" aria-label="Up next workout">
     <div class="home-hero-top"><div class="home-row-copy">
       <div class="home-kickers"><span class="home-label home-accent">${isOngoing ? 'IN PROGRESS' : fromPlan ? 'UP NEXT · FROM PLAN' : 'UP NEXT'}</span>${deload ? '<span class="home-deload-badge">DELOAD</span>' : ''}</div>
@@ -381,7 +390,9 @@ function renderOverview() {
 
 function renderHome() {
   if (!state.loaded) return renderHomeSkeleton();
-  const deloadOn = isDeloadActive(window.USER_SETTINGS || {});
+  const blockInfo = trainingBlockStatus(window.USER_SETTINGS);
+  const blockActive = blockInfo.status === 'active';
+  const deloadOn = !blockActive && isDeloadActive(window.USER_SETTINGS || {});
   const getExpectedSets = (w) => {
     let count = 0;
     w.exercises.forEach(ex => {
@@ -413,7 +424,7 @@ function renderHome() {
   };
 
   const activeSess = state._activeSessions && state._activeSessions[0];
-  const program = WORKOUTS.filter(w => w.program);
+  const program = blockActive ? BLOCK_WORKOUTS : WORKOUTS.filter(w => w.program);
   const byId = id => WORKOUTS.find(w => w.id === id);
 
   const ORDER = ['Squat Focus', 'Dips Focus', 'RDL Focus', 'Shrugs Focus'];
@@ -439,6 +450,7 @@ function renderHome() {
     const planW = WORKOUTS.find(x => x.name === planName);
     if (planW) nextW = planW;
   }
+  if (blockActive) nextW = BLOCK_WORKOUTS.find(w => w.id === blockInfo.workoutId) || BLOCK_WORKOUTS[0];
 
   let activeWorkout = nextW;
   let isOngoing = false;
@@ -447,10 +459,11 @@ function renderHome() {
   let pct = 0;
 
   if (activeSess) {
-    const w = WORKOUTS.find(x => x.name === (LEGACY_WORKOUT_NAMES[activeSess.workout_name] || activeSess.workout_name));
+    const w = ALL_WORKOUTS.find(x => x.name === (LEGACY_WORKOUT_NAMES[activeSess.workout_name] || activeSess.workout_name));
     if (w) {
-      expected = getExpectedSets(w);
-      logged = getLoggedCount(w);
+      const progress = storedSessionProgress(activeSess);
+      expected = progress?.total ?? getExpectedSets(w);
+      logged = progress?.completed ?? getLoggedCount(w);
       if (logged > 0 && logged < expected) {
         activeWorkout = w;
         isOngoing = true;
@@ -469,13 +482,16 @@ function renderHome() {
     orderedProgram.push(...program);
   }
 
-  const hero = renderWorkoutCard(activeWorkout, true, isOngoing, logged, expected, pct);
+  const completedToday = blockActive && blockWorkoutCompleted(state.history, blockInfo.block, nextW.name, localDate());
+  const hero = blockActive && !isOngoing && (!blockInfo.workoutId || completedToday)
+    ? renderBlockRestDay(!!blockInfo.workoutId && completedToday)
+    : renderWorkoutCard(activeWorkout, true, isOngoing, logged, expected, pct);
   const remaining = orderedProgram.filter(w => w.id !== activeWorkout.id).map(w => renderWorkoutCard(w, false)).join('');
   return `<main class="home-page" style="${homeTokens()}">
-    <header class="home-header"><div><div class="home-date">${getSessionDateStr()}</div><h1>Workouts</h1></div><div class="home-header-actions"><button class="home-chip" onclick="openPlanEditor()">Plan</button>${renderDeloadControl(deloadOn)}</div></header>
+    <header class="home-header"><div><div class="home-date">${getSessionDateStr()}</div><h1>Workouts</h1></div><div class="home-header-actions"><button class="home-chip" onclick="openPlanEditor()">${blockActive ? 'Regular plan' : 'Plan'}</button>${blockActive ? '' : renderDeloadControl(deloadOn)}</div></header>
     ${state.loadError ? '<p role="alert" class="home-note">Your workout data could not be loaded. Reload to try again.</p>' : ''}
-    ${renderPlanCard()}${hero}
-    <section><h2 class="home-label">Then</h2><div class="home-rotation">${remaining}</div></section>
+    ${renderTrainingBlockCard()}${blockActive ? '' : renderPlanCard()}${hero}
+    ${blockActive ? renderBlockUpcoming(blockInfo.block) : `<section><h2 class="home-label">Then</h2><div class="home-rotation">${remaining}</div></section>`}
     ${renderActivity()}${renderOverview()}
     <details class="home-details" ${state.progressOpen ? 'open' : ''} ontoggle="state.progressOpen=this.open"><summary>History & measurements</summary>${renderWorkoutSummaryCard()}${renderMeasurementsCard()}</details>
     <section class="home-tests"><h2 class="home-label">Test mode · nothing saved</h2><div>${program.filter(w => w.kind !== 'optional').map(w => `<a class="home-chip" href="/session?w=${w.id}&test=1">${escapeHtml(w.name)}</a>`).join('')}</div></section>

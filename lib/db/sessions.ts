@@ -17,6 +17,7 @@ import { effectiveStoredExerciseWeight } from "@/lib/legacy/cable-stack";
 import { isStoredSessionFinished } from "@/lib/legacy/session-status";
 import { exerciseHintsWithDeloadBootstrap } from "@/lib/legacy/exercise-hints";
 import { isStoredBeltLoad, storedBeltLoad } from "@/lib/legacy/belt-load";
+import { regularProgramSessions } from "@/lib/training-block";
 import type {
   HintMap,
   SessionDoc,
@@ -136,7 +137,7 @@ export async function getTodaySession(
  */
 export async function getExerciseHints(uid: string): Promise<HintMap> {
   const all = await fetchAllSessions(uid);
-  return exerciseHintsWithDeloadBootstrap(all.filter((s) => !isActiveSession(s))) as HintMap;
+  return exerciseHintsWithDeloadBootstrap(regularProgramSessions(all.filter((s) => !isActiveSession(s)))) as HintMap;
 }
 
 /** /api/history equivalent. */

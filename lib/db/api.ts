@@ -24,6 +24,8 @@ import {
   saveMeasurementsBulk,
   saveSettings,
   upsertExerciseNote,
+  startTrainingBlock,
+  endTrainingBlock,
 } from "./misc";
 import type { MeasurementDoc } from "./types";
 
@@ -42,6 +44,8 @@ export const api = {
   activeSessions: () => getActiveSessions(uid()),
   settings: () => getSettings(uid()),
   saveSettings: (data: Record<string, unknown>) => saveSettings(uid(), data),
+  startTrainingBlock: (startDate: string) => startTrainingBlock(uid(), startDate),
+  endTrainingBlock: (instanceId: string) => endTrainingBlock(uid(), instanceId),
   save: (body: SavePayload) => saveSession(uid(), body),
   deleteSession: async (id: string) => {
     const response = await fetch(`/api/workout-sessions/${encodeURIComponent(String(id))}`, {

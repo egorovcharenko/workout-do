@@ -10,7 +10,9 @@
 // were changed from the original.
 
 import { useEffect, useRef } from "react";
-import { WORKOUTS } from "@/lib/legacy/shared";
+import { ALL_WORKOUTS as WORKOUTS, localDate } from "@/lib/legacy/shared";
+import { api } from "@/lib/db/api";
+import { startCurrentTrainingBlock, endCurrentTrainingBlock } from "./trainingBlock";
 import { setSessionStateCache } from "@/lib/legacy/session-persistence";
 import { state } from "./state";
 import {
@@ -89,6 +91,8 @@ function initHomeApp() {
     openPlanEditor,
     closePlanEditor,
     savePlanEditor,
+    startCurrentTrainingBlock,
+    endCurrentTrainingBlock,
     // workout-ui-history.js
     getExDurs,
     renderSessionList,
@@ -148,7 +152,22 @@ export default function HomeApp() {
       }
     };
     document.addEventListener('keydown', trapPlanFocus);
-    return () => document.removeEventListener('keydown', trapPlanFocus);
+    let displayedDate = localDate();
+    const refresh = () => {
+      if (document.visibilityState !== 'visible' || state.blockBusy) return;
+      displayedDate = localDate();
+      api._invalidate();
+      loadHomeData();
+    };
+    const dayTimer = setInterval(() => {
+      if (displayedDate !== localDate()) refresh();
+    }, 30000);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      document.removeEventListener('keydown', trapPlanFocus);
+      document.removeEventListener('visibilitychange', refresh);
+      clearInterval(dayTimer);
+    };
   }, []);
 
   return <div id="app" ref={rootRef} />;
