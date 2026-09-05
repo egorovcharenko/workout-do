@@ -21,8 +21,11 @@ Port of the old flat-file app in the `egorovcharenko/workout-tracker` GitHub rep
 ## Layout
 
 - `app/` — thin route shells (`/` home, `/session`) behind AuthGate; real UI is client components.
-- `components/home/` — home tab: workout cards, plan queue, calendar, summary/measurements cards.
-  Renders via template-string HTML (`render()` in `shell.js`), not React.
+- `components/home/` — native dark home screen: plan queue, Start/Resume hero, workout rotation,
+  14-day activity, and compact strength/body summaries. Calendar and detailed history/measurement
+  controls remain expandable. Renders via template-string HTML (`render()` in `shell.js`);
+  `overview.js` derives summary values, and `app/home.css` uses the session view's shared `T` palette
+  through CSS variables. Home does not use a color-inversion filter.
 - `components/session/` — live workout session UI (React): `SessionApp.jsx` orchestrates,
   `useWorkoutActions.js` holds the mutations, autosave lives in `lib/legacy/session-persistence.js`.
 - `lib/legacy/` — ported domain logic: `shared.js` (WORKOUTS templates, SWAP_GROUPS, TEST_MODE),

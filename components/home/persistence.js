@@ -11,13 +11,17 @@ import { reconcileWorkoutPlan } from "./home";
 
 async function loadHomeData() {
   try {
-    const [histRes, activeRes, measRes, settingsRes, hintsRes] = await Promise.all([
+    const [histRes, activeRes, measRes, settingsRes, hintsRes, ormRes] = await Promise.all([
       api.history(100),
       api.activeSessions(),
       api.measurements(),
       api.settings(),
-      api.hints()
+      api.hints(),
+      api.history1RM().catch(error => { console.warn("[HOME] Strength history:", error); return null; })
     ]);
+    state.loadError = false;
+    state.ormHistory = ormRes;
+    state.ormError = ormRes == null;
     state.history = histRes;
     // Old sessions keep their pre-rename workout_name in the DB; normalize so
     // grouping, rotation, and per-workout trends treat them as the same workout.
@@ -54,6 +58,7 @@ async function loadHomeData() {
     render();
   } catch (e) {
     console.error("[HOME] Error:", e);
+    state.loadError = true;
     // Fall back to the default render rather than shimmering forever.
     state.loaded = true;
     render();

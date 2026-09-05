@@ -215,11 +215,11 @@ function renderWorkoutSummaryCard() {
     const vStr = h.volume >= 1000 ? `${(h.volume / 1000).toFixed(1)}k` : Math.round(h.volume);
     const tip = `${dl} · ${Math.round(h.volume).toLocaleString()} lb volume${h.isDeload ? ' · DELOAD' : ''}`;
     return `<div title="${tip}" style="flex:1;display:flex;flex-direction:column;align-items:center;cursor:pointer">
-    <span style="font-size:9px;font-family:${MONO};color:${h.isDeload ? '#FBBF24' : isLatest ? '#a78bfa' : '#9CA3AF'};margin-bottom:4px;font-weight:${isLatest ? '800' : '500'}">${h.isDeload ? 'DL' : vStr}</span>
+    <span style="font-size:13px;font-family:${MONO};color:${h.isDeload ? '#FBBF24' : isLatest ? '#a78bfa' : '#9CA3AF'};margin-bottom:4px;font-weight:${isLatest ? '800' : '500'}">${h.isDeload ? 'DL' : vStr}</span>
     <div style="height:44px;width:100%;display:flex;align-items:end;justify-content:center;margin-bottom:4px">
       <div style="width:16px;height:${Math.max(8, pct)}%;background:${h.isDeload ? 'rgba(251,191,36,0.28)' : isLatest ? '#a78bfa' : 'rgba(255,255,255,0.2)'};border:${h.isDeload ? '1px dashed rgba(251,191,36,0.7)' : '0'};border-radius:3px"></div>
     </div>
-    <span style="font-size:9px;font-family:${MONO};color:${isLatest ? '#a78bfa' : '#6B7280'};font-weight:${isLatest ? '800' : '500'}">${dl}</span>
+    <span style="font-size:13px;font-family:${MONO};color:${isLatest ? '#a78bfa' : '#6B7280'};font-weight:${isLatest ? '800' : '500'}">${dl}</span>
   </div>`;
   }).join('');
 
@@ -232,16 +232,16 @@ function renderWorkoutSummaryCard() {
     const t = todayVal > 0 ? fmtSets(todayVal) : '—';
     const numColor = weeklyVal >= 10 && weeklyVal <= 20 ? '#34D399' : weeklyVal > 20 ? '#FBBF24' : '#C4B5FD';
     return `<div title="${_esc(label)}: ${n} weekly sets (${t} today)" style="display:flex;align-items:center;gap:12px;padding:2px 0;cursor:default">
-    <span style="width:84px;flex-shrink:0;color:#D1D5DB;font-size:12px">${_esc(label)}</span>
+    <span style="width:84px;flex-shrink:0;color:#D1D5DB;font-size:13px">${_esc(label)}</span>
     <div style="flex:1;height:5px;background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden">
       <div style="height:100%;width:${(weeklyVal / maxWeeklySets) * 100}%;background:rgba(167,139,250,0.55);border-radius:99px"></div>
     </div>
     <div style="width:48px;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;line-height:1.2;flex-shrink:0">
-      <span style="color:${numColor};font-size:12.5px;font-weight:800;font-family:${MONO}">${n}</span>
-      <span style="color:#6B7280;font-size:9.5px;font-weight:600;font-family:${MONO}">${t}</span>
+      <span style="color:${numColor};font-size:13px;font-weight:800;font-family:${MONO}">${n}</span>
+      <span style="color:#6B7280;font-size:13px;font-weight:600;font-family:${MONO}">${t}</span>
     </div>
   </div>`;
-  }).join('') : `<div style="color:#6B7280;font-size:12px;padding:6px 0">No working sets logged.</div>`;
+  }).join('') : `<div style="color:#6B7280;font-size:13px;padding:6px 0">No working sets logged.</div>`;
 
   const exHTML = exList.map(e => {
     const pr = e.isPR;
@@ -250,44 +250,44 @@ function renderWorkoutSummaryCard() {
     return `<div style="background:${pr ? 'rgba(251,191,36,0.04)' : 'rgba(255,255,255,0.01)'};border:1px solid ${pr ? 'rgba(251,191,36,0.15)' : 'rgba(255,255,255,0.03)'};${pr ? 'border-left:3px solid #FBBF24;' : ''}border-radius:8px;padding:6px 10px">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
       <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1">
-        ${pr ? `<span style="color:#FBBF24;font-size:10px;flex-shrink:0">★</span>` : ''}
-        <span style="color:#F3F4F6;font-size:12.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc(e.exName)}</span>
+        ${pr ? `<span style="color:#FBBF24;font-size:13px;flex-shrink:0">★</span>` : ''}
+        <span style="color:#243040;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc(e.exName)}</span>
       </div>
       <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
         ${spark(e.sparkPts, e.exName)}
-        ${e.latestIsDeload ? `<span style="min-width:50px;text-align:right;color:#FBBF24;font-family:${MONO};font-size:9px;font-weight:800">DELOAD</span>` : dt ? `<span style="min-width:36px;text-align:right;color:${dc};font-family:${MONO};font-size:12px;font-weight:800">${dt}</span>` : `<span style="width:36px"></span>`}
+        ${e.latestIsDeload ? `<span style="min-width:50px;text-align:right;color:#FBBF24;font-family:${MONO};font-size:13px;font-weight:800">DELOAD</span>` : dt ? `<span style="min-width:36px;text-align:right;color:${dc};font-family:${MONO};font-size:13px;font-weight:800">${dt}</span>` : `<span style="width:36px"></span>`}
       </div>
     </div>
-    <div style="margin-top:3px;color:#6B7280;font-size:10.5px;font-family:${MONO}">${_repsOnly(e.exName)
+    <div style="margin-top:3px;color:#6B7280;font-size:13px;font-family:${MONO}">${_repsOnly(e.exName)
       ? `Top <span style="color:#D1D5DB;font-weight:700">${e.sum.bestR} reps</span>${e.sum.bestBeltLoad > 0 ? ` · +${e.sum.bestBeltLoad}lb belt` : ''} · ${e.sum.setsCount} sets`
       : `Top <span style="color:#D1D5DB;font-weight:700">${fmtW(e.sum.bestW)}×${e.sum.bestR}</span> · 1RM ${Math.round(e.sum.best1RM)} · ${e.sum.setsCount} sets`}</div>
   </div>`;
   }).join('');
 
   return `
-  <div data-noinvert style="margin-bottom:12px;overflow:hidden;background:#0B0F14;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:12px 12px 14px">
+  <div style="margin-bottom:12px;overflow:hidden;background:#0B0F14;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:12px 12px 14px">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:12px">
       <div style="min-width:140px;flex:1">
-        <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;letter-spacing:0.08em;color:${latest.is_deload ? '#FBBF24' : '#C4B5FD'};background:${latest.is_deload ? 'rgba(251,191,36,0.12)' : 'rgba(139,92,246,0.16)'};border:1px solid ${latest.is_deload ? 'rgba(251,191,36,0.35)' : 'rgba(139,92,246,0.35)'};padding:4px 10px;border-radius:99px;font-family:${MONO}">${latest.is_deload ? 'DELOAD WEEK' : '✓ DONE'}</span>
-        <h3 style="font-size:24px;font-weight:800;color:#F3F4F6;margin:6px 0 2px;letter-spacing:-0.02em;line-height:1.05">${name}</h3>
-        <span style="font-size:12px;color:#6B7280;font-family:${MONO}">${dateStr}</span>
+        <span style="display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:800;letter-spacing:0.08em;color:${latest.is_deload ? '#FBBF24' : '#C4B5FD'};background:${latest.is_deload ? 'rgba(251,191,36,0.12)' : 'rgba(139,92,246,0.16)'};border:1px solid ${latest.is_deload ? 'rgba(251,191,36,0.35)' : 'rgba(139,92,246,0.35)'};padding:4px 10px;border-radius:99px;font-family:${MONO}">${latest.is_deload ? 'DELOAD WEEK' : '✓ DONE'}</span>
+        <h3 style="font-size:24px;font-weight:800;color:#243040;margin:6px 0 2px;letter-spacing:-0.02em;line-height:1.05">${name}</h3>
+        <span style="font-size:13px;color:#6B7280;font-family:${MONO}">${dateStr}</span>
       </div>
 
       <div style="display:flex;gap:10px;align-items:center;flex-shrink:0">
         <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:6px 10px;min-width:70px;text-align:center">
-          <div style="font-size:18px;font-weight:800;color:#F3F4F6;font-family:${MONO};line-height:1">${m}<span style="font-size:10px;color:#6B7280;margin-left:2px">m</span></div>
-          <div style="font-size:8px;font-weight:800;letter-spacing:0.08em;color:#6B7280;font-family:${MONO};margin-top:4px">DURATION</div>
+          <div style="font-size:18px;font-weight:800;color:#243040;font-family:${MONO};line-height:1">${m}<span style="font-size:13px;color:#6B7280;margin-left:2px">m</span></div>
+          <div style="font-size:13px;font-weight:800;letter-spacing:0.08em;color:#6B7280;font-family:${MONO};margin-top:4px">DURATION</div>
         </div>
         <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:6px 10px;min-width:70px;text-align:center">
-          <div style="font-size:18px;font-weight:800;color:#F3F4F6;font-family:${MONO};line-height:1">${totalSets}</div>
-          <div style="font-size:8px;font-weight:800;letter-spacing:0.08em;color:#6B7280;font-family:${MONO};margin-top:4px">SETS</div>
-          <div style="font-size:8px;color:#6B7280;margin-top:2px;line-height:1">${numLifts} lifts</div>
+          <div style="font-size:18px;font-weight:800;color:#243040;font-family:${MONO};line-height:1">${totalSets}</div>
+          <div style="font-size:13px;font-weight:800;letter-spacing:0.08em;color:#6B7280;font-family:${MONO};margin-top:4px">SETS</div>
+          <div style="font-size:13px;color:#6B7280;margin-top:2px;line-height:1">${numLifts} lifts</div>
         </div>
       </div>
 
       ${historyData.length > 1 ? `
         <div style="width:180px;flex-shrink:0;display:flex;flex-direction:column;gap:6px">
-          <div style="font-size:8px;font-weight:800;letter-spacing:0.08em;color:#6B7280;font-family:${MONO};text-align:right">
+          <div style="font-size:13px;font-weight:800;letter-spacing:0.08em;color:#6B7280;font-family:${MONO};text-align:right">
             VOL TREND: <span style="color:${latest.is_deload ? '#FBBF24' : netColor};font-weight:800">${latest.is_deload ? 'DELOAD · NOT COMPARED' : netTrend == null ? '—' : `${netTrend > 0 ? '+' : ''}${netTrend}%`}</span>
           </div>
           <div style="display:flex;gap:6px;align-items:end">${bars}</div>
@@ -296,11 +296,11 @@ function renderWorkoutSummaryCard() {
     </div>
 
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin:0 2px 6px">
-      <span style="font-size:10px;font-weight:800;letter-spacing:0.1em;color:#6B7280;font-family:${MONO}">ALL EXERCISES</span>
-      <span style="font-size:11px;color:#6B7280">${numLifts} lifts · est. 1RM trend${upCount || downCount ? ` (${upCount} up · ${downCount} down)` : ''}</span>
+      <span style="font-size:13px;font-weight:800;letter-spacing:0.1em;color:#6B7280;font-family:${MONO}">ALL EXERCISES</span>
+      <span style="font-size:13px;color:#6B7280">${numLifts} lifts · est. 1RM trend${upCount || downCount ? ` (${upCount} up · ${downCount} down)` : ''}</span>
     </div>
     <div style="display:grid;grid-template-columns:1fr;gap:10px">
-      ${exHTML || '<div style="color:#6B7280;font-size:12px;padding:8px 0">No working sets logged.</div>'}
+      ${exHTML || '<div style="color:#6B7280;font-size:13px;padding:8px 0">No working sets logged.</div>'}
     </div>
   </div>
 `;

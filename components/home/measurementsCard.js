@@ -110,7 +110,7 @@ function renderMeasurementsCard() {
     };
   }).sort((a, b) => b.latestMs - a.latestMs || b.latestOrm - a.latestOrm);
 
-  const COLORS = ["#3b82f6", "#10b981", "#8b5cf6", "#f59e0b", "#ec4899", "#06b6d4", "#f43f5e", "#14b8a6"];
+  const COLORS = ["#3b82f6", "#34D399", "#8b5cf6", "#f59e0b", "#ec4899", "#06b6d4", "#f43f5e", "#14b8a6"];
   const exColors = {};
   exercisesList.forEach((ex, idx) => {
     exColors[ex.name] = COLORS[idx % COLORS.length];
@@ -128,7 +128,7 @@ function renderMeasurementsCard() {
   let rowsHTML = '';
   if (groupData.length === 0) {
     rowsHTML = `
-    <div style="text-align:center;padding:24px 0;color:#9ca3af;font-size:12px;border:1px dashed rgba(0,0,0,0.1);border-radius:8px;margin-top:12px">
+    <div style="text-align:center;padding:24px 0;color:#9ca3af;font-size:13px;border:1px dashed rgba(255,255,255,0.1);border-radius:8px;margin-top:12px">
       No progress data logged yet.
     </div>`;
   } else {
@@ -191,21 +191,21 @@ function renderMeasurementsCard() {
 
           const diffColor = delta ? delta.color : '#9ca3af';
           const diffText = delta
-            ? `<span style="font-size:10px;font-weight:700;color:${diffColor};width:42px;text-align:right;flex-shrink:0">${delta.sign}${Math.abs(delta.d).toFixed(1)}</span>`
-            : `<span style="font-size:10px;font-weight:700;color:#9ca3af;width:42px;text-align:right;flex-shrink:0;opacity:0.25">-</span>`;
+            ? `<span style="font-size:13px;font-weight:700;color:${diffColor};width:42px;text-align:right;flex-shrink:0">${delta.sign}${Math.abs(delta.d).toFixed(1)}</span>`
+            : `<span style="font-size:13px;font-weight:700;color:#9ca3af;width:42px;text-align:right;flex-shrink:0;opacity:0.25">-</span>`;
 
           const sparklineHTML = renderMeasurementSparkline(pts, m.color, startMs, endMs, unit);
 
           return `
-          <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;padding:8px;border:1px solid #f3f4f6;background:#ffffff;border-radius:8px;gap:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px;padding:8px;border:1px solid #243040;background:#111722;border-radius:8px;gap:12px">
             <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
               <div style="display:flex;align-items:center;gap:6px">
                 <span style="width:7px;height:7px;border-radius:50%;background:${m.color};display:inline-block;flex-shrink:0"></span>
-                <span style="color:#111827;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.label}</span>
+                <span style="color:#F3F4F6;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.label}</span>
               </div>
               <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-                <span style="font-size:10px;color:#6b7280">${v != null ? v.toFixed(1) : '—'} ${unit}</span>
-                <span style="font-size:8px;color:#9ca3af;font-family:monospace">${range} range</span>
+                <span style="font-size:13px;color:#6b7280">${v != null ? v.toFixed(1) : '—'} ${unit}</span>
+                <span style="font-size:13px;color:#9ca3af;font-family:monospace">${range} range</span>
               </div>
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
@@ -240,24 +240,24 @@ function renderMeasurementsCard() {
           const rightValStr = rightLatest != null ? rightLatest.toFixed(1) : '—';
 
           const diffText = `
-          <div style="display:flex;flex-direction:column;align-items:flex-end;width:42px;flex-shrink:0;line-height:1.2;font-size:9px;font-family:monospace">
-            <div><span style="color:#6b7280;font-size:8px">L:</span>${leftDelta ? `<span style="font-weight:700;color:${leftDelta.color}">${leftDelta.sign}${Math.abs(leftDelta.d).toFixed(1)}</span>` : '<span style="color:#9ca3af;opacity:0.25">-</span>'}</div>
-            <div><span style="color:#6b7280;font-size:8px">R:</span>${rightDelta ? `<span style="font-weight:700;color:${rightDelta.color}">${rightDelta.sign}${Math.abs(rightDelta.d).toFixed(1)}</span>` : '<span style="color:#9ca3af;opacity:0.25">-</span>'}</div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;width:42px;flex-shrink:0;line-height:1.2;font-size:13px;font-family:monospace">
+            <div><span style="color:#6b7280;font-size:13px">L:</span>${leftDelta ? `<span style="font-weight:700;color:${leftDelta.color}">${leftDelta.sign}${Math.abs(leftDelta.d).toFixed(1)}</span>` : '<span style="color:#9ca3af;opacity:0.25">-</span>'}</div>
+            <div><span style="color:#6b7280;font-size:13px">R:</span>${rightDelta ? `<span style="font-weight:700;color:${rightDelta.color}">${rightDelta.sign}${Math.abs(rightDelta.d).toFixed(1)}</span>` : '<span style="color:#9ca3af;opacity:0.25">-</span>'}</div>
           </div>
         `;
 
           const sparklineHTML = renderPairedMeasurementSparkline(leftPts, rightPts, m.color, startMs, endMs, unit);
 
           return `
-          <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;padding:8px;border:1px solid #f3f4f6;background:#ffffff;border-radius:8px;gap:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px;padding:8px;border:1px solid #243040;background:#111722;border-radius:8px;gap:12px">
             <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
               <div style="display:flex;align-items:center;gap:6px">
                 <span style="width:7px;height:7px;border-radius:50%;background:${m.color};display:inline-block;flex-shrink:0"></span>
-                <span style="color:#111827;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.label}</span>
+                <span style="color:#F3F4F6;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.label}</span>
               </div>
               <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-                <span style="font-size:10px;color:#374151">
-                  L: <strong>${leftValStr}</strong> · R: <strong>${rightValStr}</strong> <span style="font-size:9px;color:#6b7280">${unit}</span>
+                <span style="font-size:13px;color:#E5E7EB">
+                  L: <strong>${leftValStr}</strong> · R: <strong>${rightValStr}</strong> <span style="font-size:13px;color:#6b7280">${unit}</span>
                 </span>
               </div>
             </div>
@@ -275,22 +275,22 @@ function renderMeasurementsCard() {
         const isRepsOnly = isRepsOnlyExercise(ex.name);
         const unit = isRepsOnly ? 'reps' : 'lb';
         const sign = ex.diffLb > 0 ? '+' : '';
-        const diffColor = ex.diffLb > 0 ? '#10b981' : ex.diffLb < 0 ? '#ef4444' : '#9ca3af';
+        const diffColor = ex.diffLb > 0 ? '#34D399' : ex.diffLb < 0 ? '#F87171' : '#9ca3af';
         const diffText = ex.diffLb !== null
-          ? `<span style="font-size:10px;font-weight:700;color:${diffColor};width:42px;text-align:right;flex-shrink:0">${sign}${ex.diffLb}</span>`
-          : `<span style="font-size:10px;font-weight:700;color:#9ca3af;width:42px;text-align:right;flex-shrink:0;opacity:0.25">-</span>`;
+          ? `<span style="font-size:13px;font-weight:700;color:${diffColor};width:42px;text-align:right;flex-shrink:0">${sign}${ex.diffLb}</span>`
+          : `<span style="font-size:13px;font-weight:700;color:#9ca3af;width:42px;text-align:right;flex-shrink:0;opacity:0.25">-</span>`;
         const goal = ex.name === 'Barbell Bench Press' ? { value: 180, label: 'Goal: 180 lb' } : null;
         const sparklineHTML = renderMeasurementSparkline(ex.pts, color, startMs, endMs, unit, goal);
 
         return `
-        <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;padding:8px;border:1px solid #f3f4f6;background:#ffffff;border-radius:8px;gap:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px;padding:8px;border:1px solid #243040;background:#111722;border-radius:8px;gap:12px">
           <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
             <div style="display:flex;align-items:center;gap:6px">
               <span style="width:7px;height:7px;border-radius:50%;background:${color};display:inline-block;flex-shrink:0"></span>
-              <span style="color:#111827;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ex.name}</span>
+              <span style="color:#F3F4F6;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ex.name}</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-              <span style="font-size:10px;color:${ex.latestIsDeload ? '#b45309' : '#6b7280'}">${Math.round(ex.latestOrm)} ${unit}${isRepsOnly ? '' : ' est 1RM'}${ex.latestIsDeload ? ' · DELOAD' : ''}</span>
+              <span style="font-size:13px;color:${ex.latestIsDeload ? '#FBBF24' : '#6b7280'}">${Math.round(ex.latestOrm)} ${unit}${isRepsOnly ? '' : ' est 1RM'}${ex.latestIsDeload ? ' · DELOAD' : ''}</span>
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
@@ -305,14 +305,14 @@ function renderMeasurementsCard() {
       if (renderedExercises && renderedMetrics) {
         groupContent = `
         <div style="display:flex; flex-wrap:wrap; gap:16px;">
-          <div style="flex:1; min-width:280px;">
-            <div style="font-size:9px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Lifts · est 1RM</div>
+          <div style="flex:1; min-width:min(280px,100%);">
+            <div style="font-size:13px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Lifts · est 1RM</div>
             <div style="display:flex; flex-direction:column; gap:8px;">
               ${renderedExercises}
             </div>
           </div>
-          <div style="flex:1; min-width:280px;">
-            <div style="font-size:9px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Measurements</div>
+          <div style="flex:1; min-width:min(280px,100%);">
+            <div style="font-size:13px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Measurements</div>
             <div style="display:flex; flex-direction:column; gap:8px;">
               ${renderedMetrics}
             </div>
@@ -322,8 +322,8 @@ function renderMeasurementsCard() {
       } else if (renderedExercises) {
         groupContent = `
         <div>
-          <div style="font-size:9px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Lifts · est 1RM</div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:8px">
+          <div style="font-size:13px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Lifts · est 1RM</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:8px">
             ${renderedExercises}
           </div>
         </div>
@@ -331,8 +331,8 @@ function renderMeasurementsCard() {
       } else if (renderedMetrics) {
         groupContent = `
         <div>
-          <div style="font-size:9px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Measurements</div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:8px">
+          <div style="font-size:13px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Measurements</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:8px">
             ${renderedMetrics}
           </div>
         </div>
@@ -343,9 +343,9 @@ function renderMeasurementsCard() {
 
       return `
       <div style="margin-bottom:16px">
-        <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+        <div style="font-size:13px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;display:flex;align-items:center;gap:6px">
           <span>${g.label}</span>
-          <span style="flex:1;height:1px;background:rgba(0,0,0,0.05)"></span>
+          <span style="flex:1;height:1px;background:rgba(255,255,255,0.07)"></span>
         </div>
         <div style="padding-left:4px">
           ${groupContent}
@@ -359,35 +359,35 @@ function renderMeasurementsCard() {
   const histOpen = !!state.showMeasHistory;
 
   const historyRows = measurements.map(e => `
-  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border-bottom:1px solid #f3f4f6">
-    <span style="font-size:11px;color:#6b7280;font-family:monospace;min-width:60px">${_formatMeasurementDate(e.taken_at)}</span>
-    <span style="font-size:11px;font-family:monospace;color:#374151;flex:1;text-align:center">
-      ${e.chest_cm != null ? `<span style="color:#ef4444">${e.chest_cm.toFixed(1)}c</span>` : '—'} ·
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border-bottom:1px solid #243040">
+    <span style="font-size:13px;color:#6b7280;font-family:monospace;min-width:60px">${_formatMeasurementDate(e.taken_at)}</span>
+    <span style="font-size:13px;font-family:monospace;color:#E5E7EB;flex:1;text-align:center">
+      ${e.chest_cm != null ? `<span style="color:#F87171">${e.chest_cm.toFixed(1)}c</span>` : '—'} ·
       ${e.waist_cm != null ? `<span style="color:#3b82f6">${e.waist_cm.toFixed(1)}w</span>` : '—'} ·
-      ${e.l_arm_cm != null ? `<span style="color:#dc2626">${e.l_arm_cm.toFixed(1)}a</span>` : '—'}
+      ${e.l_arm_cm != null ? `<span style="color:#F87171">${e.l_arm_cm.toFixed(1)}a</span>` : '—'}
     </span>
-    <button onclick="deleteMeasurement('${e.id}')" style="font-size:9px;color:#9ca3af;background:none;border:1px solid #e5e7eb;border-radius:4px;padding:2px 6px;cursor:pointer">×</button>
+    <button onclick="deleteMeasurement('${e.id}')" style="font-size:13px;color:#9ca3af;background:none;border:1px solid #293445;border-radius:4px;padding:2px 6px;cursor:pointer">×</button>
   </div>`).join('');
 
   const actionSectionHTML = `
-  <div style="border-top:1px solid rgba(0,0,0,0.05);padding-top:12px;margin-top:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-    <button onclick="state.showMeasHistory=!state.showMeasHistory;render()" style="font-size:11px;font-weight:700;color:#6b7280;background:none;border:1px solid #e5e7eb;border-radius:7px;padding:4px 10px;cursor:pointer">
+  <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:12px;margin-top:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+    <button onclick="state.showMeasHistory=!state.showMeasHistory;render()" style="font-size:13px;font-weight:700;color:#6b7280;background:none;border:1px solid #293445;border-radius:7px;padding:4px 10px;cursor:pointer">
       ${histOpen ? '✕ Close History' : `History · ${measurements.length} entries`}
     </button>
-    <button onclick="state.showMeasForm=!state.showMeasForm;render()" style="font-size:11px;font-weight:700;color:${formOpen ? '#6b7280' : '#2563eb'};background:none;border:1px solid ${formOpen ? '#e5e7eb' : '#bfdbfe'};border-radius:7px;padding:4px 10px;cursor:pointer">
+    <button onclick="state.showMeasForm=!state.showMeasForm;render()" style="font-size:13px;font-weight:700;color:${formOpen ? '#6b7280' : '#60A5FA'};background:none;border:1px solid ${formOpen ? '#293445' : '#274972'};border-radius:7px;padding:4px 10px;cursor:pointer">
       ${formOpen ? '✕ Close Form' : '＋ Add Measurement'}
     </button>
   </div>
-  ${histOpen ? `<div style="margin-top:10px;max-height:200px;overflow-y:auto;border:1px solid #f3f4f6;border-radius:8px;background:white">${historyRows}</div>` : ''}
+  ${histOpen ? `<div style="margin-top:10px;max-height:200px;overflow-y:auto;border:1px solid #243040;border-radius:8px;background:#111722">${historyRows}</div>` : ''}
   ${formOpen ? `<div style="margin-top:12px">${_renderMeasurementForm()}</div>` : ''}
 `;
 
   return `
   <div class="card" style="padding:16px;margin-bottom:16px">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px">
-      <h3 style="font-size:14px;font-weight:600;color:#111827;margin:0">Strength & Body Progress (All Time)</h3>
+      <h3 style="font-size:14px;font-weight:600;color:#F3F4F6;margin:0">Strength & Body Progress (All Time)</h3>
     </div>
-    <div style="border-top:1px solid rgba(0,0,0,0.05);padding-top:8px">
+    <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:8px">
       ${rowsHTML}
     </div>
     ${actionSectionHTML}

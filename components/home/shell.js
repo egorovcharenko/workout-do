@@ -32,8 +32,14 @@ function startWorkout(w) {
 // Render
 function render() {
   const app = document.getElementById("app");
+  if (!app) return;
+  const draft = state.planEditorOpen ? document.getElementById('planEditorText')?.value : undefined;
   if (state.screen === "home") app.innerHTML = renderHome();
   else if (state.screen === "measurements") app.innerHTML = renderMeasurements();
+  if (draft !== undefined) {
+    const textarea = document.getElementById('planEditorText');
+    if (textarea) textarea.value = draft;
+  }
   requestAnimationFrame(scrollToSelected);
 }
 

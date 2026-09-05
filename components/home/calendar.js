@@ -22,16 +22,16 @@ function renderCalendar() {
   const WORKOUT_BADGES = {
     "Squat Focus": { label: "Squat", color: "#3b82f6" },
     "Dips Focus": { label: "Dips", color: "#3b82f6", micro: true },
-    "RDL Focus": { label: "RDL", color: "#10b981" },
-    "Shrugs Focus": { label: "Shrugs", color: "#10b981", micro: true },
+    "RDL Focus": { label: "RDL", color: "#34D399" },
+    "Shrugs Focus": { label: "Shrugs", color: "#34D399", micro: true },
     // Pre-rename session names (history rows are normalized at load; kept as a fallback).
     "Main A": { label: "Squat", color: "#3b82f6" },
-    "Main B": { label: "Deadlift", color: "#10b981" },
-    "Main: RDL": { label: "Deadlift", color: "#10b981" },
+    "Main B": { label: "Deadlift", color: "#34D399" },
+    "Main: RDL": { label: "Deadlift", color: "#34D399" },
     "Main: Squat": { label: "Squat", color: "#3b82f6" },
-    "Main: Deadlift": { label: "RDL", color: "#10b981" },
+    "Main: Deadlift": { label: "RDL", color: "#34D399" },
     "Micro: Arms": { label: "Dips", color: "#3b82f6", micro: true },
-    "Micro: Delts & Traps": { label: "Shrugs", color: "#10b981", micro: true },
+    "Micro: Delts & Traps": { label: "Shrugs", color: "#34D399", micro: true },
     "Micro: Arms & Core": { label: "arms", color: "#3b82f6", micro: true },
     "Squat Day": { label: "SQ", color: "#60a5fa" },
     "Deadlift Day": { label: "DL", color: "#34d399" },
@@ -43,7 +43,7 @@ function renderCalendar() {
     const box = b && b.micro
       ? `color:${b.color};background:transparent;border:1.5px solid ${b.color};padding:1px 2px;`
       : `color:#fff;background:${b ? b.color : "#6b7280"};padding:2px 3px;`;
-    return `<span style="font-size:7px;font-weight:700;line-height:1.1;${box}${opacity}border-radius:3px;display:block;text-align:center;word-break:break-word">${label}</span>`;
+    return `<span style="font-size:13px;font-weight:700;line-height:1.1;${box}${opacity}border-radius:3px;display:block;text-align:center;word-break:break-word">${label}</span>`;
   };
   const dateMap = {};
   (state.history || []).forEach(s => {
@@ -52,7 +52,7 @@ function renderCalendar() {
   });
 
   const dayHeaders = ["Mo","Tu","We","Th","Fr","Sa","Su"].map(d =>
-    `<div style="font-size:10px;color:#9ca3af;text-align:center;font-weight:600">${d}</div>`
+    `<div style="font-size:13px;color:#9ca3af;text-align:center;font-weight:600">${d}</div>`
   ).join("");
 
   let cells = "";
@@ -69,10 +69,10 @@ function renderCalendar() {
       const label = (b ? b.label : w.name) + (w.deload ? '·D' : '');
       return badgeHTML(b, label, w.deload);
     }).join("");
-    const bg = isToday ? "background:#eff6ff;border-radius:8px;" : "";
-    const fw = isToday ? "font-weight:700;color:#2563eb;" : "color:#374151;";
+    const bg = isToday ? "background:#12223A;border-radius:8px;" : "";
+    const fw = isToday ? "font-weight:700;color:#60A5FA;" : "color:#E5E7EB;";
     cells += `<div style="text-align:center;padding:4px 2px;${bg};min-height:48px;display:flex;flex-direction:column;justify-content:flex-start">
-    <div style="font-size:11px;${fw};margin-bottom:2px">${d}</div>
+    <div style="font-size:13px;${fw};margin-bottom:2px">${d}</div>
     <div style="display:flex;flex-direction:column;gap:2px;align-items:stretch">${badges}</div>
   </div>`;
   }
@@ -80,12 +80,12 @@ function renderCalendar() {
   return `
   <div class="card" style="padding:16px;margin-bottom:16px">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px">
-      <h3 style="font-size:14px;font-weight:600;color:#111827;margin:0">${monthName}</h3>
+      <h3 style="font-size:14px;font-weight:600;color:#F3F4F6;margin:0">${monthName}</h3>
       <div style="display:flex;gap:8px">
-        <button onclick="changeCalendarMonth(-1)" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#111827;cursor:pointer;width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;touch-action:manipulation;transition:all 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+        <button onclick="changeCalendarMonth(-1)" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#F3F4F6;cursor:pointer;width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;touch-action:manipulation;transition:all 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
         </button>
-        <button onclick="changeCalendarMonth(1)" ${offset === 0 ? 'disabled style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);color:rgba(255,255,255,0.2);cursor:default;width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center"' : 'style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#111827;cursor:pointer;width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;touch-action:manipulation;transition:all 0.15s" onmouseover="this.style.background=\'rgba(255,255,255,0.12)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.05)\'"'}>
+        <button onclick="changeCalendarMonth(1)" ${offset === 0 ? 'disabled style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);color:rgba(255,255,255,0.2);cursor:default;width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center"' : 'style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#F3F4F6;cursor:pointer;width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;touch-action:manipulation;transition:all 0.15s" onmouseover="this.style.background=\'rgba(255,255,255,0.12)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.05)\'"'}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </button>
       </div>
@@ -94,15 +94,15 @@ function renderCalendar() {
       ${dayHeaders}
       ${cells}
     </div>
-    <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px;margin-top:10px;font-size:9px;color:#9ca3af">
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px;margin-top:10px;font-size:13px;color:#9ca3af">
       <span style="margin-right:1px">cycle</span>
-      <span style="font-size:8px;font-weight:700;line-height:1.1;color:#fff;background:#3b82f6;padding:2px 5px;border-radius:3px">Squat</span>
+      <span style="font-size:13px;font-weight:700;line-height:1.1;color:#fff;background:#3b82f6;padding:2px 5px;border-radius:3px">Squat</span>
       <span>→</span>
-      <span style="font-size:8px;font-weight:700;line-height:1.1;color:#3b82f6;border:1.5px solid #3b82f6;padding:1px 4px;border-radius:3px">arms</span>
+      <span style="font-size:13px;font-weight:700;line-height:1.1;color:#3b82f6;border:1.5px solid #3b82f6;padding:1px 4px;border-radius:3px">arms</span>
       <span>→</span>
-      <span style="font-size:8px;font-weight:700;line-height:1.1;color:#fff;background:#10b981;padding:2px 5px;border-radius:3px">Deadlift</span>
+      <span style="font-size:13px;font-weight:700;line-height:1.1;color:#fff;background:#34D399;padding:2px 5px;border-radius:3px">Deadlift</span>
       <span>→</span>
-      <span style="font-size:8px;font-weight:700;line-height:1.1;color:#10b981;border:1.5px solid #10b981;padding:1px 4px;border-radius:3px">delts</span>
+      <span style="font-size:13px;font-weight:700;line-height:1.1;color:#34D399;border:1.5px solid #34D399;padding:1px 4px;border-radius:3px">delts</span>
     </div>
   </div>
 `;

@@ -8,19 +8,19 @@ import { renderMeasurementsCard } from "./measurementsCard";
 import { render } from "./shell";
 
 const MEASUREMENT_METRICS = [
-  { id: 'chest_cm',    label: 'Chest',     group: 'core',     direction: 'up',    color: '#ef4444' },
+  { id: 'chest_cm',    label: 'Chest',     group: 'core',     direction: 'up',    color: '#F87171' },
   { id: 'shoulder_cm', label: 'Shoulder',  group: 'core',     direction: 'up',    color: '#f59e0b' },
   { id: 'waist_cm',    label: 'Waist',     group: 'core',     direction: 'down',  color: '#3b82f6' },
   { id: 'hip_cm',      label: 'Hip',       group: 'core',     direction: 'flat',  color: '#8b5cf6' },
   { id: 'neck_cm',     label: 'Neck',      group: 'core',     direction: 'up',    color: '#0891b2' },
-  { id: 'l_arm_cm',    label: 'L Arm',     group: 'limbs',    direction: 'up',    color: '#dc2626' },
-  { id: 'r_arm_cm',    label: 'R Arm',     group: 'limbs',    direction: 'up',    color: '#dc2626' },
+  { id: 'l_arm_cm',    label: 'L Arm',     group: 'limbs',    direction: 'up',    color: '#F87171' },
+  { id: 'r_arm_cm',    label: 'R Arm',     group: 'limbs',    direction: 'up',    color: '#F87171' },
   { id: 'l_thigh_cm',  label: 'L Thigh',   group: 'limbs',    direction: 'up',    color: '#7c3aed' },
   { id: 'r_thigh_cm',  label: 'R Thigh',   group: 'limbs',    direction: 'up',    color: '#7c3aed' },
   { id: 'l_calf_cm',   label: 'L Calf',    group: 'limbs',    direction: 'up',    color: '#15803d' },
   { id: 'r_calf_cm',   label: 'R Calf',    group: 'limbs',    direction: 'up',    color: '#15803d' },
   { id: 'head_cm',     label: 'Head',      group: 'misc',     direction: 'flat',  color: '#9ca3af' },
-  { id: 'weight_kg',   label: 'Weight',    group: 'misc',     direction: 'flat',  color: '#1f2937', unit: 'kg' },
+  { id: 'weight_kg',   label: 'Weight',    group: 'misc',     direction: 'flat',  color: '#E5E7EB', unit: 'kg' },
 ];
 
 function _measurementPairedSparkline(leftVals, rightVals, color, direction) {
@@ -52,7 +52,7 @@ function _measurementPairedSparkline(leftVals, rightVals, color, direction) {
 function _measurementSparkline(values, color, direction) {
   if (!values.length) return '';
   if (values.length < 2) {
-    return `<div style="display:flex;align-items:center;justify-content:center;height:32px;font-size:10px;color:#9ca3af">single reading</div>`;
+    return `<div style="display:flex;align-items:center;justify-content:center;height:32px;font-size:13px;color:#9ca3af">single reading</div>`;
   }
   const w = 110, h = 36, pad = 3;
   const max = Math.max(...values), min = Math.min(...values), range = max - min || 1;
@@ -61,8 +61,8 @@ function _measurementSparkline(values, color, direction) {
   ).join(' ');
   const first = values[0], last = values[values.length - 1];
   let trendColor = color;
-  if (direction === 'up' && last < first) trendColor = '#dc2626';
-  else if (direction === 'down' && last > first) trendColor = '#dc2626';
+  if (direction === 'up' && last < first) trendColor = '#F87171';
+  else if (direction === 'down' && last > first) trendColor = '#F87171';
   else if (direction === 'flat') trendColor = '#6b7280';
   else if ((direction === 'up' && last > first) || (direction === 'down' && last < first)) trendColor = '#16a34a';
   const lastX = pad + ((values.length - 1) / (values.length - 1)) * (w - pad * 2);
@@ -87,8 +87,8 @@ function _measurementDelta(latest, prev, direction) {
   const d = +(latest - prev).toFixed(1);
   if (Math.abs(d) < 0.05) return { d: 0, color: '#9ca3af', sign: '·' };
   let color = '#9ca3af';
-  if (direction === 'up')   color = d > 0 ? '#16a34a' : '#dc2626';
-  if (direction === 'down') color = d > 0 ? '#dc2626' : '#16a34a';
+  if (direction === 'up')   color = d > 0 ? '#16a34a' : '#F87171';
+  if (direction === 'down') color = d > 0 ? '#F87171' : '#16a34a';
   if (direction === 'flat') color = '#6b7280';
   return { d, color, sign: d > 0 ? '+' : '' };
 }
@@ -106,12 +106,12 @@ function renderMeasurementsSection() {
 // section with a back-to-home header.
 function renderMeasurements() {
   const back = `
-  <div style="position:sticky;top:0;background:white;border-bottom:1px solid #f3f4f6;padding:12px 16px;z-index:10;display:flex;align-items:center;gap:12px">
-    <button onclick="state.screen='home';history.replaceState(null,'','#');render()" style="color:#2563eb;font-size:14px;font-weight:500;background:none;border:none;cursor:pointer">← Back</button>
+  <div style="position:sticky;top:0;background:#111722;border-bottom:1px solid #243040;padding:12px 16px;z-index:10;display:flex;align-items:center;gap:12px">
+    <button onclick="state.screen='home';history.replaceState(null,'','#');render()" style="color:#60A5FA;font-size:14px;font-weight:500;background:none;border:none;cursor:pointer">← Back</button>
     <h2 style="font-size:18px;font-weight:700;margin:0">Measurements</h2>
   </div>`;
   return `
-  <div style="max-width: 448px; margin: 0 auto; min-height: 100vh; background: #f9fafb; position: relative;">
+  <div style="max-width: 448px; margin: 0 auto; min-height: 100vh; background: #0B0F14; position: relative;">
     ${back}
     <div style="padding:16px">${renderMeasurementsSection()}</div>
   </div>
@@ -121,19 +121,19 @@ function renderMeasurements() {
 function _renderMeasurementForm() {
   const inputs = MEASUREMENT_METRICS.map(m => `
   <label style="display:flex;flex-direction:column;gap:2px">
-    <span style="font-size:10px;color:#6b7280;font-weight:600">${m.label} (${m.unit || 'cm'})</span>
-    <input type="number" step="0.1" id="meas-${m.id}" placeholder="—" style="font-size:13px;padding:6px 8px;border:1px solid #e5e7eb;border-radius:6px;font-family:monospace;width:100%">
+    <span style="font-size:13px;color:#6b7280;font-weight:600">${m.label} (${m.unit || 'cm'})</span>
+    <input type="number" step="0.1" id="meas-${m.id}" placeholder="—" style="font-size:13px;padding:6px 8px;border:1px solid #293445;border-radius:6px;font-family:monospace;width:100%">
   </label>`).join('');
   const today = localDate();
   return `
   <div class="card" style="padding:14px 16px">
-    <h3 style="font-size:13px;font-weight:600;color:#111827;margin:0 0 8px">Add measurement</h3>
+    <h3 style="font-size:13px;font-weight:600;color:#F3F4F6;margin:0 0 8px">Add measurement</h3>
     <label style="display:flex;flex-direction:column;gap:2px;margin-bottom:8px">
-      <span style="font-size:10px;color:#6b7280;font-weight:600">Date</span>
-      <input type="date" id="meas-date" value="${today}" style="font-size:13px;padding:6px 8px;border:1px solid #e5e7eb;border-radius:6px;font-family:monospace">
+      <span style="font-size:13px;color:#6b7280;font-weight:600">Date</span>
+      <input type="date" id="meas-date" value="${today}" style="font-size:13px;padding:6px 8px;border:1px solid #293445;border-radius:6px;font-family:monospace">
     </label>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">${inputs}</div>
-    <button onclick="submitMeasurement()" style="width:100%;background:#2563eb;color:white;border:none;padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">Save measurement</button>
+    <button onclick="submitMeasurement()" style="width:100%;background:#60A5FA;color:white;border:none;padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">Save measurement</button>
   </div>`;
 }
 

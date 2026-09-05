@@ -4,6 +4,7 @@
 import { api } from "@/lib/db/api";
 import {
   WORKOUTS,
+  T,
   LEGACY_WORKOUT_NAMES,
   localDate,
   isDeloadActive,
@@ -20,6 +21,7 @@ import { renderCalendar } from "./calendar";
 import { renderWorkoutSummaryCard } from "./summary";
 import { renderMeasurementsCard } from "./measurementsCard";
 import { render } from "./shell";
+import { recentActivity, latestLift, latestBody } from "./overview";
 
 function renderWorkoutMuscleMap(w) {
   const muscles = {};
@@ -42,86 +44,47 @@ function renderWorkoutMuscleMap(w) {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3);
 
-  const badgeHTML = sorted.map(([id, sets]) => {
-    const label = (window.MUSCLE_GROUPS && window.MUSCLE_GROUPS[id]) ? window.MUSCLE_GROUPS[id].label : id;
-    let color = "#60a5fa", bg = "rgba(96,165,250,0.06)", border = "rgba(96,165,250,0.15)";
-    if (["chest", "triceps"].includes(id)) {
-      color = "#60a5fa"; bg = "rgba(96,165,250,0.06)"; border = "rgba(96,165,250,0.15)";
-    } else if (["quads", "calves"].includes(id)) {
-      color = "#34d399"; bg = "rgba(52,211,153,0.06)"; border = "rgba(52,211,153,0.15)";
-    } else if (["shoulders", "rear_delts"].includes(id)) {
-      color = "#f472b6"; bg = "rgba(244,114,182,0.06)"; border = "rgba(244,114,182,0.15)";
-    } else if (["biceps", "forearms"].includes(id)) {
-      color = "#a78bfa"; bg = "rgba(167,139,250,0.06)"; border = "rgba(167,139,250,0.15)";
-    } else if (["upper_back", "lats", "lower_back", "glutes", "hamstrings"].includes(id)) {
-      color = "#fbbf24"; bg = "rgba(251,191,36,0.06)"; border = "rgba(251,191,36,0.15)";
-    } else if (id === "core") {
-      color = "#22d3ee"; bg = "rgba(34,211,238,0.06)"; border = "rgba(34,211,238,0.15)";
-    }
-    return `<div style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:${color};background:${bg};border:1px solid ${border};padding:2.5px 6px;border-radius:5px;text-align:center;white-space:nowrap;font-family:ui-monospace,Menlo,monospace">${label}</div>`;
+  const badgeHTML = sorted.map(([id], index) => {
+    const label = window.MUSCLE_GROUPS?.[id]?.label || id;
+    return `<span class="home-muscle home-muscle-${index}">${escapeHtml(label)}</span>`;
   }).join("");
+  return `<div class="home-muscles">${badgeHTML}</div>`;
+}
 
-  return `<div data-noinvert style="display:flex;flex-direction:column;gap:3px;flex-shrink:0;width:72px">${badgeHTML}</div>`;
+function displayPrescription(w) {
+  const deload = isDeloadActive(window.USER_SETTINGS || {});
+  return deload ? { ...w, exercises: w.exercises.map(ex => ({ ...ex, sets: 1 })) } : w;
 }
 
 function renderWorkoutCard(w, isSuggested, isOngoing, logged, expected, pct) {
-  const kindLabel = w => w.kind === 'optional' ? 'Optional' : 'Workout';
+  const prescription = displayPrescription(w);
+  const minutes = Math.round(estimateTemplateWorkoutDuration(prescription) / 60);
+  if (!isSuggested) {
+    const lead = w.exercises.flatMap(ex => ex.supersetExercises || [ex]).slice(0, 2).map(ex => ex.name).join(' · ');
+    return `<a class="home-then-row" href="/session?w=${encodeURIComponent(w.id)}">
+      <span class="home-row-copy"><strong>${escapeHtml(w.name)}</strong><span class="home-lead">${escapeHtml(lead)}</span></span>
+      <span class="home-duration">~${minutes} min</span></a>`;
+  }
   const rowHTML = ex => {
-    const s = state.lastSession[`${ex.name}|working|1`] || state.lastSession[`${ex.name}|working|2`] || state.lastSession[`${ex.name}|working|3`];
-    const weightVal = s ? (s.weight_lb || '—') : '—', repsVal = s ? (s.reps || '—') : '—';
-    const stackLabel = cableStackMultiplier(ex.name) === 2 ? `${weightVal}×2lb` : `${weightVal}lb`;
-    const valLabel = !s ? '—' : ex.repsOnly ? `${repsVal} reps` : `${stackLabel} × ${repsVal}`;
-    return `
-    <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;gap:6px">
-      <span style="color:${isSuggested ? '#4b5563' : '#374151'};font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ex.name}</span>
-      <span style="color:${isSuggested ? '#4b5563' : '#6b7280'};font-family:ui-monospace,Menlo,monospace;flex-shrink:0">${valLabel}</span>
-    </div>
-  `;
+    const last = state.lastSession[`${ex.name}|working|1`] || state.lastSession[`${ex.name}|working|2`] || state.lastSession[`${ex.name}|working|3`];
+    const weight = last?.weight_lb ?? '—', reps = last?.reps ?? '—';
+    const value = !last ? '—' : ex.repsOnly ? `${reps} reps` : `${weight}${cableStackMultiplier(ex.name) === 2 ? '×2' : ''} × ${reps}`;
+    return `<div class="home-exercise"><span title="${escapeHtml(ex.name)}">${escapeHtml(ex.name)}</span><span class="home-value">${escapeHtml(value)}</span></div>`;
   };
-
-  // Superset sub-exercises stay grouped behind a purple bracket (same accent
-  // as the session view) instead of flattening into the plain list.
-  const rowsHTML = w.exercises.map(ex => {
-    if (ex.supersetExercises) {
-      return `
-    <div style="display:flex;flex-direction:column;gap:4px;border-left:2px solid #c084fc;padding-left:7px">
-      ${ex.supersetExercises.map(rowHTML).join("")}
-    </div>
-  `;
-    }
-    return rowHTML(ex);
-  }).join("");
-
-  const bgStyle = isSuggested
-    ? `background:linear-gradient(135deg, #eff6ff, #dbeafe); border:1px solid #bfdbfe; box-shadow:0 4px 12px rgba(59,130,246,0.08)`
-    : `background:white; border:1px solid #e5e7eb`;
-
-  const infoLabel = isSuggested && isOngoing
-    ? `${logged} of ${expected} sets logged (${pct}%)`
-    : `${kindLabel(w)} · ~${Math.round(estimateTemplateWorkoutDuration(w) / 60)} min${isSuggested ? ' · up next' : ''}`;
-
-  return `
-  <a href="/session?w=${w.id}" style="text-decoration:none;display:block;">
-    <div class="card clickable" style="padding:14px;display:flex;gap:12px;align-items:center;justify-content:space-between;${bgStyle}">
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px;gap:6px">
-          <span style="font-size:14px;font-weight:800;color:${isSuggested ? '#1d4ed8' : '#111827'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-            ${isSuggested && isOngoing ? '⚡ ' : ''}${w.name}
-          </span>
-          <span style="font-size:10px;color:${isSuggested ? '#1d4ed8' : '#9ca3af'};font-weight:700;flex-shrink:0;opacity:0.85">
-            ${infoLabel}
-          </span>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:4px">${rowsHTML}</div>
-        ${isSuggested ? `<div style="margin-top:10px;font-size:12px;color:#2563eb;font-weight:800">${isOngoing ? 'Resume workout' : 'Start workout'} →</div>` : ''}
-      </div>
-      <div style="flex-shrink:0;display:flex;align-items:center;gap:10px">
-        ${renderWorkoutMuscleMap(w)}
-        ${!isSuggested ? `<span style="font-size:11px;color:#2563eb;font-weight:800;white-space:nowrap;margin-left:4px">Start →</span>` : ''}
-      </div>
-    </div>
-  </a>
-`;
+  const rows = w.exercises.map(ex => ex.supersetExercises
+    ? `<div class="home-superset">${ex.supersetExercises.map(rowHTML).join('')}</div>` : rowHTML(ex)).join('');
+  const deload = isDeloadActive(window.USER_SETTINGS || {});
+  const sets = planExpectedWorkingSets(w, deload);
+  const fromPlan = !isOngoing && parseWorkoutPlan(window.USER_SETTINGS || {}).length > 0;
+  return `<section class="home-hero" aria-label="Up next workout">
+    <div class="home-hero-top"><div class="home-row-copy">
+      <div class="home-kickers"><span class="home-label home-accent">${isOngoing ? 'IN PROGRESS' : fromPlan ? 'UP NEXT · FROM PLAN' : 'UP NEXT'}</span>${deload ? '<span class="home-deload-badge">DELOAD</span>' : ''}</div>
+      <h2>${escapeHtml(w.name)}</h2><span class="home-meta">${sets} sets · ~${minutes} min</span>
+      ${isOngoing ? `<div class="home-progress" role="progressbar" aria-label="Workout sets" aria-valuemin="0" aria-valuemax="${expected}" aria-valuenow="${logged}"><span style="width:${pct}%"></span></div><span class="home-meta">${logged}/${expected} sets</span>` : ''}
+    </div>${renderWorkoutMuscleMap(w)}</div>
+    <div class="home-exercises">${rows}</div>
+    <a class="home-start" href="/session?w=${encodeURIComponent(w.id)}">${isOngoing ? 'Resume' : 'Start'} ${escapeHtml(w.name)}</a>
+  </section>`;
 }
 
 // Skeleton mirroring the home layout (deload strip, workout cards, calendar,
@@ -289,62 +252,50 @@ async function reconcileWorkoutPlan() {
 
 function renderPlanCard() {
   const entries = parseWorkoutPlan(window.USER_SETTINGS || {});
-  if (!entries.length) {
-    return `<button onclick="openPlanEditor()" style="border:0;background:transparent;color:#9ca3af;cursor:pointer;font-size:11px;font-weight:650;padding:5px 7px">Plan</button>`;
-  }
-  const rows = entries.map((e, i) => {
-    const first = i === 0;
-    return `
-      <div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;${i > 0 ? 'border-top:1px solid #f3f4f6' : ''}">
-        <span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;font-family:ui-monospace,Menlo,monospace;${first ? 'background:#dbeafe;color:#1d4ed8' : 'background:#f3f4f6;color:#9ca3af'}">${i + 1}</span>
-        <div style="flex:1;min-width:0">
-          <div style="display:flex;align-items:baseline;gap:6px">
-            <span style="font-size:13px;font-weight:700;color:${first ? '#1d4ed8' : '#111827'}">${escapeHtml(LEGACY_WORKOUT_NAMES[e.workout] || e.workout)}</span>
-            ${first ? '<span style="font-size:9px;font-weight:800;color:#1d4ed8;opacity:0.7;letter-spacing:0.5px;font-family:ui-monospace,Menlo,monospace">UP NEXT</span>' : ''}
-          </div>
-          ${e.note ? `<div style="font-size:11.5px;color:#6b7280;line-height:1.45;margin-top:1px">${escapeHtml(e.note)}</div>` : ''}
-          ${(e.items && e.items.length) ? `<div style="font-size:10.5px;color:#9ca3af;font-family:ui-monospace,Menlo,monospace;line-height:1.5;margin-top:2px">${e.items.map(it => escapeHtml(`${it.add ? '+ ' : ''}${it.name} ${compressPlanSets(it.sets)}`)).join('<br>')}</div>` : ''}
-        </div>
-      </div>`;
-  }).join("");
-  return `
-    <div class="card" style="padding:12px 14px;margin-bottom:10px;background:white;border:1px solid #e5e7eb">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <span style="font-size:13px;font-weight:800;color:#374151">📋 Plan</span>
-        <button onclick="openPlanEditor()" style="border:0;cursor:pointer;font-weight:800;font-size:11px;letter-spacing:0.5px;padding:5px 12px;border-radius:9999px;font-family:ui-monospace,Menlo,monospace;background:#f3f4f6;color:#6b7280">EDIT</button>
-      </div>
-      ${rows}
-    </div>`;
+  if (!entries.length) return '';
+  const rows = entries.map((e, i) => `<div class="home-plan-row">
+    <span class="home-plan-index">${i + 1}</span><div class="home-row-copy">
+      <div class="home-kickers"><strong>${escapeHtml(LEGACY_WORKOUT_NAMES[e.workout] || e.workout)}</strong>${i === 0 ? '<span class="home-label home-accent">UP NEXT</span>' : ''}</div>
+      ${e.note ? `<p class="home-note">${escapeHtml(e.note)}</p>` : ''}
+      ${e.items?.length ? `<div class="home-prescriptions">${e.items.map(it => escapeHtml(`${it.add ? '+ ' : ''}${it.name}: ${compressPlanSets(it.sets)}`)).join('<br>')}</div>` : ''}
+    </div></div>`).join('');
+  return `<section><div class="home-section-heading"><h2 class="home-label">Plan</h2><button class="home-link" onclick="openPlanEditor()">Edit</button></div>${rows}</section>`;
 }
 
 function renderDeloadControl(deloadOn) {
-  const label = deloadOn
-    ? `Deload · ${deloadDaysLeft(window.USER_SETTINGS)}d left`
-    : 'Deload';
-  return `<button onclick="toggleDeload()" style="border:0;cursor:pointer;font-size:11px;font-weight:650;padding:5px 7px;border-radius:7px;${deloadOn ? 'background:#fffbeb;color:#b45309' : 'background:transparent;color:#9ca3af'}">${label}</button>`;
+  const label = deloadOn ? `Deload · ${deloadDaysLeft(window.USER_SETTINGS)}d` : 'Deload';
+  return `<button class="home-chip ${deloadOn ? 'home-deload-active' : ''}" aria-pressed="${deloadOn}" onclick="toggleDeload()">${label}</button>`;
 }
 
 function renderPlanEditor() {
-  const entries = parseWorkoutPlan(window.USER_SETTINGS || {});
-  const text = entries.map(planEntryToText).join("\n");
+  const text = parseWorkoutPlan(window.USER_SETTINGS || {}).map(planEntryToText).join("\n");
   const names = WORKOUTS.filter(w => w.program).map(w => w.name).join(" · ");
-  return `
-    <div onclick="if(event.target===this)closePlanEditor()" style="position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px">
-      <div style="background:white;border-radius:16px;padding:16px;width:100%;max-width:560px;max-height:85vh;display:flex;flex-direction:column;gap:10px">
-        <span style="font-size:15px;font-weight:800;color:#111827">Edit plan</span>
-        <span style="font-size:11px;color:#6b7280;line-height:1.5">One workout per line, in order: <b>Workout name -- note</b>. Indented lines prescribe exact sets the session pre-fills: <b>&nbsp;&nbsp;Bench: 155x4, 140x8x3</b> (weight x reps x sets). <b>+ Name</b> adds an exercise not in the template. Workouts: ${names}</span>
-        <textarea id="planEditorText" spellcheck="false" style="width:100%;min-height:220px;resize:vertical;border:1px solid #e5e7eb;border-radius:10px;padding:10px;font-size:12.5px;line-height:1.5;font-family:ui-monospace,Menlo,monospace;color:#111827;outline:none;box-sizing:border-box">${escapeHtml(text)}</textarea>
-        <div id="planEditorError" style="font-size:11px;color:#dc2626;display:none"></div>
-        <div style="display:flex;gap:8px;justify-content:flex-end">
-          <button onclick="closePlanEditor()" style="border:0;cursor:pointer;font-weight:700;font-size:12px;padding:8px 16px;border-radius:10px;background:#f3f4f6;color:#374151">Cancel</button>
-          <button onclick="savePlanEditor()" style="border:0;cursor:pointer;font-weight:800;font-size:12px;padding:8px 16px;border-radius:10px;background:#2563eb;color:white">Save plan</button>
-        </div>
-      </div>
-    </div>`;
+  return `<div class="home-scrim" onclick="if(event.target===this)closePlanEditor()" onkeydown="if(event.key==='Escape')closePlanEditor()">
+    <section class="home-modal" role="dialog" aria-modal="true" aria-labelledby="planEditorTitle">
+      <h2 id="planEditorTitle">Edit plan</h2>
+      <p id="planEditorHelp">One workout per line, in order. Add a note after <code>--</code>. Indent a line to prescribe sets: <code>Bench: 155x4, 140x8x3</code>. Prefix <code>+</code> to add an exercise outside the template.<br>Workouts: ${escapeHtml(names)}</p>
+      <label class="home-sr-only" for="planEditorText">Workout plan</label>
+      <textarea id="planEditorText" aria-describedby="planEditorHelp planEditorError" spellcheck="false">${escapeHtml(text)}</textarea>
+      <div id="planEditorError" role="alert" style="display:none"></div>
+      <div class="home-modal-actions"><button class="home-chip" onclick="closePlanEditor()">Cancel</button><button class="home-start" onclick="savePlanEditor()">Save plan</button></div>
+    </section></div>`;
 }
 
-function openPlanEditor() { state.planEditorOpen = true; render(); }
-function closePlanEditor() { state.planEditorOpen = false; render(); }
+let planTrigger = null;
+function openPlanEditor() {
+  planTrigger = document.activeElement;
+  state.planEditorOpen = true;
+  render();
+  document.getElementById('planEditorText')?.focus();
+}
+
+function closePlanEditor() {
+  state.planEditorOpen = false;
+  render();
+  // Rendering replaces the trigger node, so restore focus to its new peer.
+  const label = planTrigger?.textContent?.trim() || 'Plan';
+  [...document.querySelectorAll('.home-page button')].find(b => b.textContent.trim() === label)?.focus();
+}
 async function savePlanEditor() {
   const ta = document.getElementById("planEditorText");
   if (!ta) return;
@@ -389,36 +340,43 @@ async function savePlanEditor() {
   } catch (e) { console.error("[PLAN] failed to save plan:", e); }
 }
 
+function homeTokens() {
+  return Object.entries(T).filter(([key]) => key !== 'mono').map(([key, value]) => `--home-${key}:${value}`).join(';');
+}
+
 function renderHomeSkeleton() {
-  const dateStr = new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-  const card = (h, inner) => `
-  <div class="card" style="padding:14px;margin-bottom:10px">
-    ${inner || `<div class="shimmer" style="height:${h}px"></div>`}
-  </div>`;
-  const workoutCard = (tall) => card(null, `
-  <div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:12px">
-    <div style="flex:1"><div class="shimmer" style="height:18px;width:55%;margin-bottom:8px"></div><div class="shimmer" style="height:11px;width:35%"></div></div>
-    <div class="shimmer" style="height:20px;width:72px"></div>
-  </div>
-  ${Array.from({ length: tall ? 4 : 2 }, () => `<div class="shimmer" style="height:12px;margin-bottom:8px"></div>`).join("")}
-  ${tall ? `<div class="shimmer" style="height:40px;margin-top:10px"></div>` : ""}`);
-  return `
-  <div style="max-width: 600px; margin: 0 auto; padding: 16px 16px 40px; background:#f9fafb; min-height:100vh">
-    <div style="display:flex;align-items:center;margin-bottom:16px">
-      <div>
-        <span style="font-size:11px;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:0.05em">${dateStr}</span>
-        <h2 style="font-size:22px;font-weight:800;color:#111827;margin:0">Workout Tracker</h2>
-      </div>
-    </div>
-    ${card(40)}
-    ${workoutCard(true)}
-    ${workoutCard(false)}
-    ${workoutCard(false)}
-    ${workoutCard(false)}
-    ${card(320)}
-    ${card(220)}
-  </div>
-`;
+  return `<main class="home-page" style="${homeTokens()}" aria-busy="true" aria-label="Loading workouts">
+    <header class="home-header"><div><div class="home-date">${new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</div><h1>Workouts</h1></div></header>
+    <section class="home-hero">${[28, 20, 130, 56].map(height => `<div class="shimmer" style="height:${height}px"></div>`).join('')}</section>
+    <div class="shimmer" style="height:190px"></div><div class="shimmer" style="height:70px"></div><div class="shimmer" style="height:120px"></div>
+  </main>`;
+}
+
+function renderActivity() {
+  const { days, count } = recentActivity(state.history || []);
+  return `<section><div class="home-section-heading"><h2 class="home-label">Last 14 days</h2><span class="home-meta">${count} ${count === 1 ? 'session' : 'sessions'}</span></div>
+    <div class="home-activity">${days.map(d => `<div class="home-day ${d.count ? 'trained' : ''} ${d.today ? 'today' : ''}" role="img" aria-label="${d.date}: ${d.count} sessions${d.today ? ', today' : ''}" title="${d.date}: ${d.count} sessions"></div>`).join('')}</div>
+    <details class="home-details" ${state.calendarOpen ? 'open' : ''} ontoggle="state.calendarOpen=this.open"><summary>View calendar</summary>${renderCalendar()}</details>
+  </section>`;
+}
+
+function metricHTML(name, metric, unit, neutral = false) {
+  const delta = metric?.delta;
+  const text = delta == null ? '' : delta === 0 ? '=' : `${delta > 0 ? '+' : '−'}${neutral ? Math.abs(delta).toFixed(1) : Math.abs(delta)}`;
+  const color = neutral || !delta ? T.faint : delta > 0 ? T.green : T.red;
+  return `<div class="home-stat"><span class="home-stat-name">${name}</span><div class="home-stat-value"><strong>${metric ? (neutral ? metric.value.toFixed(1) : metric.value) : '—'}</strong><span style="color:${color}">${text}</span></div><span class="home-stat-unit">${unit}${metric?.deload ? ' · deload' : ''}</span></div>`;
+}
+
+function renderOverview() {
+  const lifts = [['Squat', 'Barbell Back Squat'], ['Bench', 'Barbell Bench Press'], ['RDL', 'Barbell RDL'], ['OHP', 'Standing Overhead Press']];
+  const measurements = state.measurements || [];
+  const metrics = [['Weight', 'weight_kg', 'kg'], ['Waist', 'waist_cm', 'cm'], ['Chest', 'chest_cm', 'cm']].map(([label, key, unit]) => ({ label, unit, metric: latestBody(measurements, key) })).filter(x => x.metric);
+  const date = metrics.map(x => x.metric.date || '').sort().at(-1);
+  return `<section class="home-quiet"><h2 class="home-label">Estimated 1RM</h2>
+    <div class="home-stats">${lifts.map(([label, key]) => metricHTML(label, latestLift(state.ormHistory?.orm, key), 'lb')).join('')}</div>
+    ${state.ormError ? '<p class="home-note">Strength history could not be loaded. Reload to try again.</p>' : ''}
+  </section>
+  ${metrics.length ? `<section class="home-quiet"><div class="home-section-heading"><h2 class="home-label">Body</h2><span class="home-meta">${escapeHtml(date?.slice(0, 10) || '')}</span></div><div class="home-stats">${metrics.map(x => metricHTML(x.label, x.metric, x.unit, true)).join('')}</div></section>` : ''}`;
 }
 
 function renderHome() {
@@ -444,12 +402,9 @@ function renderHome() {
   };
 
   const getLoggedCount = (w) => {
-    const today = localDate();
-    let count = 0;
-    (state.todaySets || []).forEach(row => {
-      if (row.workout === w.name && row.date === today && row.reps) count++;
-    });
-    return count;
+    const active = (state._activeSessions || []).find(s => (LEGACY_WORKOUT_NAMES[s.workout_name] || s.workout_name) === w.name && s.date === localDate());
+    const saved = (state.history || []).find(s => s.id === active?.id);
+    return (saved?.sets || []).filter(row => Number(row.reps) > 0).length;
   };
 
   const getSessionDateStr = () => {
@@ -492,7 +447,7 @@ function renderHome() {
   let pct = 0;
 
   if (activeSess) {
-    const w = WORKOUTS.find(x => x.name === activeSess.workout_name);
+    const w = WORKOUTS.find(x => x.name === (LEGACY_WORKOUT_NAMES[activeSess.workout_name] || activeSess.workout_name));
     if (w) {
       expected = getExpectedSets(w);
       logged = getLoggedCount(w);
@@ -514,56 +469,19 @@ function renderHome() {
     orderedProgram.push(...program);
   }
 
-  const workoutsHTML = orderedProgram.map(w => {
-    const isSuggested = w.id === activeWorkout.id;
-    return renderWorkoutCard(w, isSuggested, isOngoing, logged, expected, pct);
-  }).join('<div style="height:10px"></div>');
-
-  const workoutListHTML = `
-  ${planEntries.length ? renderPlanCard() : ''}
-  <div style="display:flex;flex-direction:column;margin-bottom:8px;">
-    ${workoutsHTML}
-  </div>
-  <div style="display:flex;justify-content:flex-end;align-items:center;gap:4px;margin:-2px 0 8px">
-    ${!planEntries.length ? renderPlanCard() : ''}
-    ${renderDeloadControl(deloadOn)}
-  </div>
-  <div style="text-align:right;margin-bottom:16px;">
-    <span style="font-size:11px; color:#9ca3af;">🧪 Test (nothing saved):
-      ${program.filter(w => w.kind !== 'optional').map(w => `<a href="/session?w=${w.id}&test=1" style="color:#6b7280; text-decoration:underline;">${w.name.replace('Micro: ', '')}</a>`).join(' · ')}
-    </span>
-  </div>
-`;
-
-  return `
-  <div style="max-width: 600px; margin: 0 auto; padding: 16px 16px 40px; background:#f9fafb; min-height:100vh">
-    <div style="display:flex;align-items:center;margin-bottom:16px">
-      <div>
-        <span style="font-size:11px;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:0.05em">${getSessionDateStr()}</span>
-        <h2 style="font-size:22px;font-weight:800;color:#111827;margin:0">Workout Tracker</h2>
-      </div>
-    </div>
-
-    ${workoutListHTML}
-
-    <div style="margin-bottom:16px;">
-      ${renderCalendar()}
-    </div>
-
-    <div style="display:flex; flex-direction:column; gap:16px; width:100%;">
-      ${renderWorkoutSummaryCard()}
-      ${renderMeasurementsCard()}
-    </div>
-
-    <div style="margin-top:16px">
-      <button onclick="window.openSLHistorySync()"
-        style="width:100%;background:#fff;border:1px solid #e5e7eb;color:#374151;font-family:inherit;font-size:13px;font-weight:600;padding:10px 0;border-radius:11px;cursor:pointer">
-        ⬆ Upload missing workouts to Strength Level
-      </button>
-    </div>
+  const hero = renderWorkoutCard(activeWorkout, true, isOngoing, logged, expected, pct);
+  const remaining = orderedProgram.filter(w => w.id !== activeWorkout.id).map(w => renderWorkoutCard(w, false)).join('');
+  return `<main class="home-page" style="${homeTokens()}">
+    <header class="home-header"><div><div class="home-date">${getSessionDateStr()}</div><h1>Workouts</h1></div><div class="home-header-actions"><button class="home-chip" onclick="openPlanEditor()">Plan</button>${renderDeloadControl(deloadOn)}</div></header>
+    ${state.loadError ? '<p role="alert" class="home-note">Your workout data could not be loaded. Reload to try again.</p>' : ''}
+    ${renderPlanCard()}${hero}
+    <section><h2 class="home-label">Then</h2><div class="home-rotation">${remaining}</div></section>
+    ${renderActivity()}${renderOverview()}
+    <details class="home-details" ${state.progressOpen ? 'open' : ''} ontoggle="state.progressOpen=this.open"><summary>History & measurements</summary>${renderWorkoutSummaryCard()}${renderMeasurementsCard()}</details>
+    <section class="home-tests"><h2 class="home-label">Test mode · nothing saved</h2><div>${program.filter(w => w.kind !== 'optional').map(w => `<a class="home-chip" href="/session?w=${w.id}&test=1">${escapeHtml(w.name)}</a>`).join('')}</div></section>
+    <button class="home-chip home-sync" onclick="window.openSLHistorySync()">Upload missing workouts to Strength Level</button>
     ${state.planEditorOpen ? renderPlanEditor() : ''}
-  </div>
-`;
+  </main>`;
 }
 
 async function toggleDeload() {

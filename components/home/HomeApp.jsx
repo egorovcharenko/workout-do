@@ -137,6 +137,18 @@ export default function HomeApp() {
 
   useEffect(() => {
     initHomeApp();
+    const trapPlanFocus = (event) => {
+      if (!state.planEditorOpen || event.key !== 'Tab') return;
+      const controls = [...document.querySelectorAll('.home-modal button, .home-modal textarea')];
+      const first = controls[0], last = controls.at(-1);
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault(); last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault(); first?.focus();
+      }
+    };
+    document.addEventListener('keydown', trapPlanFocus);
+    return () => document.removeEventListener('keydown', trapPlanFocus);
   }, []);
 
   return <div id="app" ref={rootRef} />;

@@ -32,7 +32,7 @@ function renderSessionList() {
     "Back": "#f59e0b",
     "Full Body A": "#3b82f6",
     "Full Body": "#3b82f6",
-    "Full Body B": "#10b981",
+    "Full Body B": "#34D399",
   };
 
   const assistExerciseNames = new Set();
@@ -82,7 +82,7 @@ function renderSessionList() {
     const latest = vals[vals.length - 1];
     const normalVals = vals.filter(p => !p.isDeload);
     const priorNormal = normalVals.length > 1 ? normalVals[normalVals.length - 2] : null;
-    const trend2 = latest.isDeload ? '#d97706' : !priorNormal ? '#6b7280' : latest.value >= priorNormal.value ? '#16a34a' : '#ef4444';
+    const trend2 = latest.isDeload ? '#d97706' : !priorNormal ? '#6b7280' : latest.value >= priorNormal.value ? '#16a34a' : '#F87171';
     return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="display:block">
     ${coords.filter(p => !p.isDeload).length > 1 ? `<polyline points="${points}" fill="none" stroke="${trend2}" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>` : ''}
     ${coords.map((p, i) => p.isDeload
@@ -152,7 +152,7 @@ function renderSessionList() {
           const allSets = subNames.flatMap(n => (byEx[n] || []).filter(st => st.set_type === "working"));
           if (allSets.length > 0) {
             const totalSupersetDur = subNames.reduce((acc, n) => acc + (durs[n] || 0), 0);
-            const supersetDurTag = totalSupersetDur > 0 ? `<span style="font-size:9px;background:#f3e8ff;color:#7c3aed;padding:1px 5px;border-radius:9999px;font-weight:500;margin-left:auto">actual ${Math.round(totalSupersetDur/60)}m</span>` : '';
+            const supersetDurTag = totalSupersetDur > 0 ? `<span style="font-size:13px;background:#f3e8ff;color:#7c3aed;padding:1px 5px;border-radius:9999px;font-weight:500;margin-left:auto">actual ${Math.round(totalSupersetDur/60)}m</span>` : '';
             const subSummaries = subNames.map(n => {
               const ws = (byEx[n] || []).filter(st => st.set_type === "working");
               const reps = ws.map(st => parseInt(st.reps) || 0).filter(r => r > 0).join('·');
@@ -160,12 +160,12 @@ function renderSessionList() {
                 ? Math.max(0, ...ws.map(storedBeltLoad))
                 : Math.max(0, ...ws.map(st => effectiveStoredExerciseWeight(st.exercise, st.weight_lb || 0, s)));
               const subDur = durs[n] ? ` (actual ${Math.round(durs[n]/60)}m)` : '';
-              return `<span style="font-size:10px;color:#6b7280;font-family:monospace">${n.split(' ').pop()}${subDur}: ${reps}${maxW > 0 ? ` @ ${maxW}lb` : ''}</span>`;
+              return `<span style="font-size:13px;color:#6b7280;font-family:monospace">${n.split(' ').pop()}${subDur}: ${reps}${maxW > 0 ? ` @ ${maxW}lb` : ''}</span>`;
             }).join('<br>');
             exEntries.push(`<div style="padding:3px 0">
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
-              <span style="font-size:12px;color:#7c3aed;font-weight:500">${groupName}</span>
-              <span style="font-size:9px;background:#f3e8ff;color:#7c3aed;padding:1px 5px;border-radius:9999px;font-weight:500">Superset</span>
+              <span style="font-size:13px;color:#7c3aed;font-weight:500">${groupName}</span>
+              <span style="font-size:13px;background:#f3e8ff;color:#7c3aed;padding:1px 5px;border-radius:9999px;font-weight:500">Superset</span>
               ${supersetDurTag}
             </div>
             <div style="padding-left:8px">${subSummaries}</div>
@@ -196,10 +196,10 @@ function renderSessionList() {
               assistTag = ` <span style="color:#0891b2">· ${range}lb assist</span>`;
             }
           }
-          const durTag = durs[ex] ? ` <span style="color:#9ca3af;font-size:10px;font-family:monospace">(actual ${Math.round(durs[ex]/60)}m)</span>` : '';
+          const durTag = durs[ex] ? ` <span style="color:#9ca3af;font-size:13px;font-family:monospace">(actual ${Math.round(durs[ex]/60)}m)</span>` : '';
           exEntries.push(`<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0">
-          <span style="font-size:12px;color:#374151">${ex}${durTag}</span>
-          <span style="font-size:11px;color:#6b7280;font-family:monospace">${repsDisplay} ${weightStr}${assistTag}</span>
+          <span style="font-size:13px;color:#E5E7EB">${ex}${durTag}</span>
+          <span style="font-size:13px;color:#6b7280;font-family:monospace">${repsDisplay} ${weightStr}${assistTag}</span>
         </div>`);
         }
       });
@@ -220,15 +220,15 @@ function renderSessionList() {
       const topMuscles = Object.entries(volByMuscle).sort((a, b) => b[1] - a[1]).slice(0, 5);
       const maxMuscleVol = topMuscles.length ? topMuscles[0][1] : 0;
       const muscleHTML = topMuscles.length ? `
-      <div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e5e7eb">
-        <div style="font-size:9px;font-weight:600;color:#9ca3af;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:4px">Muscle load</div>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px dashed #293445">
+        <div style="font-size:13px;font-weight:600;color:#9ca3af;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:4px">Muscle load</div>
         <div style="display:flex;gap:4px;flex-wrap:wrap">
           ${topMuscles.map(([m, v]) => {
             const info = MUSCLE_GROUPS[m];
             const pct = v / maxMuscleVol;
-            const c = (typeof window._volColor === 'function') ? window._volColor(pct) : { bg: '#f3f4f6', fg: '#6b7280' };
+            const c = (typeof window._volColor === 'function') ? window._volColor(pct) : { bg: '#243040', fg: '#6b7280' };
             const volLabel = v >= 1000 ? `${(v / 1000).toFixed(1)}k` : Math.round(v);
-            return `<span style="display:inline-flex;align-items:center;gap:4px;background:${c.bg};color:${c.fg};border:1px solid ${c.fg};font-size:10px;font-weight:500;padding:1px 6px;border-radius:9999px">${info?.label || m}<span style="opacity:0.6;font-family:monospace;font-size:9px">${volLabel}</span></span>`;
+            return `<span style="display:inline-flex;align-items:center;gap:4px;background:${c.bg};color:${c.fg};border:1px solid ${c.fg};font-size:13px;font-weight:500;padding:1px 6px;border-radius:9999px">${info?.label || m}<span style="opacity:0.6;font-family:monospace;font-size:13px">${volLabel}</span></span>`;
           }).join('')}
         </div>
       </div>` : '';
@@ -290,25 +290,25 @@ function renderSessionList() {
         if (prs.length > 0) {
           highlightHTML = `<div style="margin-top:6px;padding-top:6px;border-top:1px dashed #d9f99d">
           <div style="display:flex;flex-wrap:wrap;gap:4px 10px">
-            ${prs.map(p => `<span style="font-size:10px;color:#65a30d;font-weight:500">${p}</span>`).join('')}
+            ${prs.map(p => `<span style="font-size:13px;color:#65a30d;font-weight:500">${p}</span>`).join('')}
           </div>
         </div>`;
         }
       }
 
-      return `<div style="background:white;border:1px solid #e5e7eb;border-left:4px solid ${color};border-radius:8px;padding:12px 14px;margin-bottom:8px">
+      return `<div style="background:#111722;border:1px solid #293445;border-left:4px solid ${color};border-radius:8px;padding:12px 14px;margin-bottom:8px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:14px;font-weight:600;color:#111827">${s.workout_name}</span>
-          ${s.is_deload ? '<span style="font-size:9px;background:#fef3c7;color:#b45309;border:1px solid #fcd34d;padding:1px 5px;border-radius:9999px;font-weight:700;font-family:ui-monospace,Menlo,monospace">DELOAD</span>' : ''}
+          <span style="font-size:14px;font-weight:600;color:#F3F4F6">${s.workout_name}</span>
+          ${s.is_deload ? '<span style="font-size:13px;background:#fef3c7;color:#FBBF24;border:1px solid #fcd34d;padding:1px 5px;border-radius:9999px;font-weight:700;font-family:ui-monospace,Menlo,monospace">DELOAD</span>' : ''}
           ${volSparkHTML}
         </div>
-        <span style="font-size:11px;color:#9ca3af;font-family:monospace">${dur}</span>
+        <span style="font-size:13px;color:#9ca3af;font-family:monospace">${dur}</span>
       </div>
       <div style="display:flex;gap:12px;margin-bottom:8px">
-        <span style="font-size:11px;color:#6b7280"><strong style="color:#374151">${workingSetCount}</strong> sets</span>
-        <span style="font-size:11px;color:#6b7280"><strong style="color:#374151">${totalReps}</strong> reps</span>
-        ${totalVol > 0 ? `<span style="font-size:11px;color:#6b7280"><strong style="color:#374151">${volStr}</strong>lb vol</span>` : ''}
+        <span style="font-size:13px;color:#6b7280"><strong style="color:#E5E7EB">${workingSetCount}</strong> sets</span>
+        <span style="font-size:13px;color:#6b7280"><strong style="color:#E5E7EB">${totalReps}</strong> reps</span>
+        ${totalVol > 0 ? `<span style="font-size:13px;color:#6b7280"><strong style="color:#E5E7EB">${volStr}</strong>lb vol</span>` : ''}
       </div>
       ${exSummary}
       ${muscleHTML}
@@ -317,7 +317,7 @@ function renderSessionList() {
     }).join("");
 
     return `<div style="margin-bottom:16px">
-    <p style="font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px">${dateLabel}</p>
+    <p style="font-size:13px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px">${dateLabel}</p>
     ${sessionCards}
   </div>`;
   }).join("");
