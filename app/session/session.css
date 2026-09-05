@@ -233,7 +233,6 @@ button { font-family: inherit; }
 .history-best-date { color: #9CA3AF; font: 9px var(--suite-font-mono); text-align: right; }
 .history-full-log > summary { cursor: pointer; color: #9CA3AF; padding: 10px 0; font: 10px var(--suite-font-mono); }
 
-.nav-chips { display: flex; flex-direction: column; gap: 7px; margin-top: 9px; }
-.nav-set-label { color: #9CA3AF; font: 600 9px var(--suite-font-mono); margin-bottom: 4px; }
-.nav-set-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+.nav-chips { margin-top: 6px; }
+.nav-set-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(58px, 1fr)); gap: 4px; }
 .nav-set-grid button:focus-visible { outline: 2px solid #93C5FD; outline-offset: 2px; }

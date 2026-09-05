@@ -50,38 +50,20 @@ function ExerciseNavRow({ i, exercises, durationMeta, shownIdx, currentIdx, onSe
     }}>{tag}</span>
   );
 
-  const chipRow = (exercise) => {
-    const groups = [
-      { kind: "warmup", label: "Warm-up" },
-      { kind: "work", label: "Work" },
-    ];
-    return (
-      <div className="nav-chips">
-        {groups.map(({ kind, label }) => {
-          const sets = exercise.sets.map((set, index) => ({ set, index }))
-            .filter(({ set }) => kind === "warmup" ? set.kind === "warmup" : set.kind !== "warmup");
-          if (!sets.length) return null;
-          return (
-            <div key={kind} className="nav-set-group">
-              <div className="nav-set-label">{label}</div>
-              <div className="nav-set-grid">
-                {sets.map(({ set, index }) => (
-                  <SetChip key={index} k={index} d={navSetDisplay(set, exercise)}
-                    onClick={(ev) => {
-                      ev.stopPropagation();
-                      if (onSelectSet) onSelectSet(i, index);
-                    }} />
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
+  const chipRow = (exercise) => (
+    <div className="nav-chips nav-set-grid">
+      {exercise.sets.map((set, index) => (
+        <SetChip key={index} k={index} d={navSetDisplay(set, exercise)}
+          onClick={(ev) => {
+            ev.stopPropagation();
+            if (onSelectSet) onSelectSet(i, index);
+          }} />
+      ))}
+    </div>
+  );
 
   return (
-    <div className="nav-row" style={{ padding: "11px 12px", position: "relative" }}>
+    <div className="nav-row" style={{ padding: "8px 10px", position: "relative" }}>
       <div onClick={() => onSelect(i)} role="button" style={{
         display: "flex", alignItems: "center", gap: 9, cursor: "pointer",
       }}>

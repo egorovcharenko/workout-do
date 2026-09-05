@@ -67,8 +67,8 @@ function SetChip({ d, k, onClick }) {
   }
   return (
     <button type="button" key={k} onClick={onClick} aria-label={`Select ${d.kind === "warmup" ? "warm-up" : "working"} set ${k + 1}`} style={{
-      display: "flex", alignItems: "center", justifyContent: "center", gap: 2, minWidth: 0, width: "100%", minHeight: 32,
-      padding: "5px 3px", borderRadius: 6,
+      display: "flex", alignItems: "center", justifyContent: "center", gap: 2, minWidth: 0, width: "100%", minHeight: 28,
+      padding: "3px 2px", borderRadius: 6,
       border: box.border, background: box.background, color: box.color,
       fontFamily: T.mono, fontSize: 12.5, fontWeight: 700,
       fontStyle: "normal", whiteSpace: "nowrap",
