@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { T } from "@/lib/legacy/shared";
 
 // ─── file: workout-session-repstrip.js ───
@@ -50,21 +50,33 @@ function RepStrip({ min = 1, max = 20, range, last, logged, onLog, compact = fal
   const [lo, hi] = range || [];
   const ref = useRef(null);
   const [edges, setEdges] = useState({ left: false, right: true });
-  const updateEdges = () => {
+  const updateEdges = useCallback(() => {
     const el = ref.current; if (!el) return;
     const left = el.scrollLeft > 4;
     const right = el.scrollLeft + el.clientWidth < el.scrollWidth - 4;
     setEdges(p => (p.left === left && p.right === right ? p : { left, right }));
-  };
+  }, []);
+  const focusRep = Math.min(max, Math.max(min, Number(logged ?? last ?? lo ?? min)));
   useEffect(() => {
     const el = ref.current; if (!el) return;
-    const target = el.querySelector(`[data-n="${logged ?? last ?? lo ?? min}"]`);
-    if (target) {
-      const left = target.offsetLeft - el.clientWidth / 2 + target.clientWidth / 2;
-      el.scrollTo({ left, behavior: "instant" });
-    }
-    updateEdges();
-  }, []);
+    const centerRep = () => {
+      if (!el.clientWidth) return;
+      const target = el.querySelector(`[data-n="${focusRep}"]`);
+      if (target) {
+        const stripRect = el.getBoundingClientRect();
+        const targetRect = target.getBoundingClientRect();
+        const left = el.scrollLeft + targetRect.left - stripRect.left
+          - el.clientLeft - el.clientWidth / 2 + targetRect.width / 2;
+        el.scrollTo({ left: Math.max(0, left), behavior: "instant" });
+      }
+      updateEdges();
+    };
+    centerRep();
+    // Re-center when a hidden pane becomes visible or its layout settles.
+    const observer = new ResizeObserver(centerRep);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [focusRep, compact, updateEdges]);
   const fadePx = 28;
   const maskParts = [
     edges.left ? `transparent 0, black ${fadePx}px` : `black 0`,
