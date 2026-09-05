@@ -51,14 +51,26 @@ function ExerciseNavRow({ i, exercises, durationMeta, shownIdx, currentIdx, onSe
   );
 
   const chipRow = (exercise) => (
-    <div className="nav-chips nav-set-grid">
-      {exercise.sets.map((set, index) => (
-        <SetChip key={index} k={index} d={navSetDisplay(set, exercise)}
-          onClick={(ev) => {
-            ev.stopPropagation();
-            if (onSelectSet) onSelectSet(i, index);
-          }} />
-      ))}
+    <div className="nav-chips">
+      {[{ warmup: true, label: "Warm-up" }, { warmup: false, label: "Working sets" }].map(group => {
+        const sets = exercise.sets.map((set, index) => ({ set, index }))
+          .filter(({ set }) => (set.kind === "warmup") === group.warmup);
+        if (!sets.length) return null;
+        return (
+          <div className="nav-set-group" key={group.label}>
+            <div className="nav-set-label">{group.label}</div>
+            <div className="nav-set-grid">
+              {sets.map(({ set, index }) => (
+                <SetChip key={index} k={index} d={navSetDisplay(set, exercise)}
+                  onClick={(ev) => {
+                    ev.stopPropagation();
+                    if (onSelectSet) onSelectSet(i, index);
+                  }} />
+              ))}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 
