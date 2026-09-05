@@ -2,6 +2,7 @@
   --rest-accent: #22d3ee;
   --rest-glow: 34,211,238;
   position: relative;
+  isolation: isolate;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -71,8 +72,9 @@
 .controls button:active { transform: scale(.97); }
 .secondary { border: 1px solid #3b4756; background: #1a2532; color: #e5e7eb; }
 .primary { border: 1px solid var(--rest-accent); background: var(--rest-accent); color: #071019; }
-.progressTrack { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: #25303c; }
-.progressFill { height: 100%; background: var(--rest-accent); transition: width 1s linear; }
+.beacon, .controls { position: relative; z-index: 1; }
+.progressTrack { position: absolute; inset: 0; z-index: 0; background: transparent; pointer-events: none; }
+.progressFill { height: 100%; background: rgba(var(--rest-glow), .28); transition: width 1s linear, background .2s ease; }
 .urgent .countdown, .done .countdown { color: var(--rest-accent); }
 .paused .countdown { color: #9ca3af; }
 @media (prefers-reduced-motion: reduce) {
