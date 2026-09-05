@@ -25,7 +25,6 @@ function RestTimer({ rest, onAdd, onSkip, onToggle }) {
       <div className={styles.beacon}>
         <span className={styles.status}><i />{status}</span>
         <strong className={styles.countdown}>{minutes}:{seconds}</strong>
-        <small>{done ? "Ready for the next set" : paused ? "Countdown stopped" : "until your next set"}</small>
       </div>
 
       <div className={styles.progressTrack} role="progressbar" aria-label="Rest progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}>

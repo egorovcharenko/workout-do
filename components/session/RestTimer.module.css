@@ -2,270 +2,79 @@
   --rest-accent: #22d3ee;
   --rest-glow: 34,211,238;
   position: relative;
-  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  min-width: 0;
+  margin-top: 8px;
+  padding: 8px 10px 11px;
   overflow: hidden;
-  border: 3px solid var(--rest-accent);
-  border-radius: 18px;
-  background: #060a10;
-  box-shadow:
-    0 0 0 2px rgba(var(--rest-glow), .16),
-    0 18px 48px -14px rgba(var(--rest-glow), .92),
-    inset 0 1px 0 rgba(255,255,255,.06);
+  border: 1px solid rgba(var(--rest-glow), .5);
+  border-radius: 10px;
+  background: #111923;
 }
 
 .beacon {
-  position: relative;
-  isolation: isolate;
-  min-height: 154px;
-  padding: 16px 16px 18px;
-  display: grid;
-  justify-items: center;
+  display: flex;
+  flex: 1 1 130px;
   align-items: center;
-  align-content: center;
-  background:
-    linear-gradient(135deg, rgba(255,255,255,.28), transparent 42%),
-    var(--rest-accent);
-  color: #041017;
-}
-
-.beacon::after {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  background: radial-gradient(circle at 50% 42%, rgba(255,255,255,.26), transparent 52%);
-  pointer-events: none;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
 }
 
 .status {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 5px 10px;
-  border-radius: 999px;
-  background: rgba(3, 10, 16, .14);
-  color: #041017;
-  font: 950 11px ui-monospace, Menlo, monospace;
-  letter-spacing: 1.6px;
+  gap: 5px;
+  color: var(--rest-accent);
+  font: 700 9px ui-monospace, Menlo, monospace;
+  letter-spacing: .4px;
 }
 
 .status i {
-  width: 8px;
-  height: 8px;
+  flex-shrink: 0;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: currentColor;
-  box-shadow: 0 0 0 4px rgba(3, 10, 16, .1);
 }
 
 .countdown {
-  margin-top: 4px;
-  color: #020b10;
-  font: 950 clamp(64px, 17vw, 82px)/.9 ui-monospace, Menlo, monospace;
-  letter-spacing: -5px;
-  text-shadow: 0 2px 0 rgba(255,255,255,.18);
+  flex-shrink: 0;
+  color: #f3f4f6;
+  font: 800 28px/1.15 ui-monospace, Menlo, monospace;
+  letter-spacing: -1px;
   font-variant-numeric: tabular-nums;
 }
 
-.beacon small {
-  margin-top: 8px;
-  color: rgba(3, 10, 16, .76);
-  font-size: 11px;
-  font-weight: 850;
-  letter-spacing: .2px;
-}
-
 .controls {
-  display: flex;
-  align-items: stretch;
-  justify-content: center;
-  gap: 8px;
-  padding: 11px;
-  background: #060a10;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.2fr;
+  flex: 1 1 200px;
+  min-width: 0;
+  gap: 6px;
 }
 
 .controls button {
-  flex: 1 1 0;
-  min-height: 42px;
-  padding: 9px 10px;
-  border-radius: 10px;
+  min-width: 0;
+  min-height: 34px;
+  padding: 6px 4px;
+  border-radius: 7px;
   cursor: pointer;
-  font: 850 10px ui-monospace, Menlo, monospace;
-  transition: transform .12s ease, background .12s ease, box-shadow .12s ease;
+  font: 700 10px/1.2 ui-monospace, Menlo, monospace;
+  touch-action: manipulation;
 }
 
-.controls button:active { transform: scale(.96); }
-
-.secondary {
-  border: 1px solid rgba(var(--rest-glow), .48);
-  background: rgba(var(--rest-glow), .09);
-  color: #e5e7eb;
-}
-
-.primary {
-  border: 1px solid var(--rest-accent);
-  background: var(--rest-accent);
-  color: #071019;
-  box-shadow: 0 6px 18px -8px rgba(var(--rest-glow), .95);
-}
-
-.progressTrack {
-  height: 9px;
-  background: #020509;
-}
-
-.progressFill {
-  height: 100%;
-  background: var(--rest-accent);
-  box-shadow: 0 0 18px rgba(var(--rest-glow), 1);
-  transition: width 1s linear, background .2s ease;
-}
-
-.urgent .beacon { animation: restUrgent 1s ease-in-out infinite; }
-.urgent .status i { animation: restDot .65s ease-in-out infinite; }
-.paused .beacon { filter: saturate(.3) brightness(.78); }
-.done { box-shadow: 0 0 0 2px rgba(var(--rest-glow), .2), 0 18px 52px -12px rgba(var(--rest-glow), 1); }
-
-@keyframes restUrgent {
-  0%, 100% { filter: brightness(1); }
-  50% { filter: brightness(1.28); }
-}
-
-@keyframes restDot {
-  50% { opacity: .38; transform: scale(.72); }
-}
-
-@media (max-width: 520px) {
-  .beacon { min-height: 142px; padding: 14px 12px 16px; }
-  .countdown { font-size: clamp(62px, 20vw, 76px); }
-  .controls { gap: 6px; padding: 9px; }
-  .controls button { min-height: 40px; padding: 8px 7px; font-size: 9px; }
-}
-
-/* Desktop: put the controls in a column on the RIGHT of the beacon instead of
-   a row underneath it — the card sheds ~60px of height, which keeps the whole
-   session view on one laptop screen. Mobile keeps the full-width row. */
-@media (min-width: 900px) {
-  .timer {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-rows: 1fr auto;
-  }
-  .beacon {
-    grid-column: 1;
-    grid-row: 1;
-    min-height: 0;
-    padding: 10px 16px 12px;
-  }
-  .countdown { font-size: 64px; letter-spacing: -4px; }
-  .beacon small { margin-top: 5px; }
-  .controls {
-    grid-column: 2;
-    grid-row: 1;
-    flex-direction: column;
-    justify-content: center;
-    width: 148px;
-    padding: 10px;
-    border-left: 1px solid rgba(255,255,255,.05);
-  }
-  .controls button {
-    flex: 0 0 auto;
-    width: 100%;
-    min-height: 38px;
-  }
-  .progressTrack {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
-}
-
-/* Short laptop viewports: collapse the whole card into one slim bar —
-   status + countdown left, the three controls right — so an active rest
-   doesn't push the set entry below the fold. */
-@media (min-width: 900px) and (max-height: 900px) {
-  .timer {
-    margin-top: 8px;
-    margin-bottom: -2px;
-    border-width: 2px;
-    border-radius: 14px;
-    /* Let the oversized digits escape the bar and float over the neighbors
-       instead of being cropped at the bar edges. */
-    overflow: visible;
-    z-index: 6;
-  }
-  /* The whole bar IS the progress meter: it starts as a dim accent tint and
-     the solid accent fill sweeps across the full height as rest elapses. The
-     beacon keeps only a translucent wash so the sweep shows through; content
-     (pill, digits) and the controls sit above it. */
-  .beacon {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    gap: 16px;
-    padding: 4px 14px;
-    grid-row: 1 / -1;
-    border-radius: 12px 0 0 12px;
-    position: relative;
-    z-index: 2;
-    background:
-      linear-gradient(135deg, rgba(255,255,255,.10), transparent 42%),
-      rgba(var(--rest-glow), .14);
-  }
-  .status { background: rgba(var(--rest-glow), .22); color: #EAF6FF; }
-  .controls {
-    grid-row: 1 / -1;
-    border-radius: 0 12px 12px 0;
-    position: relative;
-    z-index: 2;
-  }
-  .progressTrack {
-    /* Abs-pos grid children resolve insets against their grid AREA — pin it
-       to the whole grid or it collapses into the empty second row. */
-    grid-row: 1 / -1;
-    grid-column: 1 / -1;
-    position: absolute;
-    inset: 2px;
-    height: auto;
-    background: transparent;
-    border-radius: 11px;
-    overflow: hidden;
-    z-index: 1;
-    pointer-events: none;
-  }
-  .progressFill {
-    box-shadow: 0 0 28px rgba(var(--rest-glow), .9);
-  }
-  /* The caption ("until your next set") is what made the bar grow to contain
-     the digits — the RESTING pill already carries that meaning. Without it the
-     bar stays button-height and the digits genuinely overhang it. */
-  .beacon small { display: none; }
-  .countdown {
-    position: relative;
-    z-index: 7;
-    margin-top: 0;
-    font-size: 96px;
-    line-height: .44;
-    letter-spacing: -5px;
-    text-shadow:
-      0 0 16px rgba(var(--rest-glow), .95),
-      0 0 34px rgba(var(--rest-glow), .6),
-      0 2px 0 rgba(255,255,255,.18);
-  }
-  .status { padding: 3px 8px; font-size: 10px; }
-  .controls {
-    flex-direction: row;
-    width: auto;
-    padding: 8px 10px;
-  }
-  .controls button {
-    flex: 0 0 auto;
-    width: auto;
-    min-height: 34px;
-    padding: 6px 12px;
-  }
-}
-
+.controls button:focus-visible { outline: 2px solid #f3f4f6; outline-offset: 2px; }
+.controls button:active { transform: scale(.97); }
+.secondary { border: 1px solid #3b4756; background: #1a2532; color: #e5e7eb; }
+.primary { border: 1px solid var(--rest-accent); background: var(--rest-accent); color: #071019; }
+.progressTrack { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: #25303c; }
+.progressFill { height: 100%; background: var(--rest-accent); transition: width 1s linear; }
+.urgent .countdown, .done .countdown { color: var(--rest-accent); }
+.paused .countdown { color: #9ca3af; }
 @media (prefers-reduced-motion: reduce) {
-  .urgent .beacon, .urgent .status i { animation: none; }
-  .progressFill, .controls button { transition: none; }
+  .progressFill { transition: none; }
 }
