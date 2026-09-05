@@ -1,9 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { GeistMono, GeistSans } from "@personal-suite/design-system/fonts";
 import "./globals.css";
-import "@personal-suite/app-shell/styles.css";
+import "@personal-suite/design-system/styles.css";
 import { AuthProvider } from "@/lib/firebase/auth";
-import { SuiteShell } from "@personal-suite/app-shell";
 import { PwaRegistrar } from "@personal-suite/pwa";
 
 export const metadata: Metadata = {
@@ -29,10 +28,8 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body className="antialiased" style={{ background: "#18191c" }}>
-        <SuiteShell currentApp="workouts">
-          <PwaRegistrar />
-          <AuthProvider>{children}</AuthProvider>
-        </SuiteShell>
+        <PwaRegistrar />
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
