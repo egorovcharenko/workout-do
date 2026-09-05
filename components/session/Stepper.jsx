@@ -42,12 +42,12 @@ function WeightStepper({ value, last, pr, onPick, label, compact = false, showLa
           {label}
         </div>
       )}
-      <div style={{ display: "flex", alignItems: "center", gap: compact ? 6 : 8 }}>
+      <div className="weight-stepper-controls" style={{ display: "flex", alignItems: "center", gap: compact ? 6 : 8 }}>
         <StepperBtn onClick={() => step(-5)} big compact={compact}>−</StepperBtn>
         <StepperBtn onClick={() => step(-fineStep)} dim compact={compact}>−{fineStep}</StepperBtn>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-            <span style={{ color: T.strong, fontFamily: T.mono, fontSize: compact ? 28 : 34, fontWeight: 800, letterSpacing: -1, lineHeight: 1 }}>{v}</span>
+            <span className="weight-stepper-value" style={{ color: T.strong, fontFamily: T.mono, fontSize: compact ? 28 : 34, fontWeight: 800, letterSpacing: -1, lineHeight: 1 }}>{v}</span>
             <span style={{ color: T.faint, fontFamily: T.mono, fontSize: compact ? 12 : 14, fontWeight: 600 }}>lb</span>
           </div>
           {(showLastHint || (!atLast && diff !== 0) || pr != null) && (

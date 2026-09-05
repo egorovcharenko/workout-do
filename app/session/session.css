@@ -239,3 +239,12 @@ button { font-family: inherit; }
 
 .nav-set-group + .nav-set-group { margin-top: 6px; }
 .nav-set-label { margin-bottom: 3px; color: #9CA3AF; font: 600 9px var(--suite-font-mono); }
+
+.barbell-inline-scroll { width: 100%; overflow-x: auto; padding: 3px 0; }
+.barbell-inline-editor { display: grid; grid-template-columns: minmax(185px, .85fr) minmax(245px, 1.15fr); align-items: end; gap: 12px; min-width: 442px; }
+.barbell-inline-weight { min-width: 0; }
+.barbell-inline-weight .weight-stepper-controls { gap: 4px !important; }
+.barbell-inline-weight .weight-stepper-controls > button { width: 28px !important; height: 38px !important; font-size: 12px !important; border-radius: 7px !important; }
+.barbell-inline-weight .weight-stepper-value { font-size: 23px !important; }
+.barbell-inline-editor .barbell-weight-heading { min-height: 28px; gap: 6px; }
+.barbell-inline-editor .barbell-plate-picker { gap: 3px; }

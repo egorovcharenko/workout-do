@@ -3,7 +3,6 @@ import { T } from "@/lib/legacy/shared";
 import { BARBELL_PLATES } from "@/lib/legacy/plate-load";
 import { currentBarStack, setBarStack } from "@/lib/legacy/bar-stack";
 import { WeightStepper } from "./Stepper";
-import { WeightSelectionFrame } from "./WeightSelection";
 
 // ─── file: workout-session-barbell-visualizer.js ───
 
@@ -89,15 +88,13 @@ function BarbellVisualizer({ exercise = null, weight, onWeightChange, compact = 
   );
 
   return (
-    <WeightSelectionFrame
-      compact={compact}
-      stacked
-      controls={(
-        <div style={{ display: "flex", flexDirection: "column", gap: compact ? 8 : 10, minWidth: 0 }}>
+    <div className="barbell-inline-scroll">
+      <div className="barbell-inline-editor">
+        <div className="barbell-inline-weight">
           <WeightStepper
             label={(
               <div className="barbell-weight-heading">
-                <span>TOTAL WEIGHT · LB</span>
+                <span>WEIGHT</span>
                 {loadedPlateControls}
               </div>
             )}
@@ -110,12 +107,10 @@ function BarbellVisualizer({ exercise = null, weight, onWeightChange, compact = 
             showLastHint={false}
             embedded
           />
-
         </div>
-      )}
-    >
-      {plateLoader}
-    </WeightSelectionFrame>
+        {plateLoader}
+      </div>
+    </div>
   );
 }
 
