@@ -3,7 +3,7 @@
 import { T } from "@/lib/legacy/shared";
 import { WeightStepper } from "./Stepper";
 
-function WeightSelectionFrame({ visual, controls, children, compact = false, visualExpanded = false }) {
+function WeightSelectionFrame({ visual, controls, children, compact = false, visualExpanded = false, stacked = false }) {
   return (
     <div style={{
       width: "100%",
@@ -13,9 +13,9 @@ function WeightSelectionFrame({ visual, controls, children, compact = false, vis
       gap: compact ? 8 : 12,
       margin: `${compact ? 9 : 12}px auto 0`,
     }}>
-      <div style={{
+      <div className={stacked ? "barbell-weight-layout" : undefined} style={{
         display: "grid",
-        gridTemplateColumns: compact ? "minmax(92px, .8fr) minmax(0, 1.2fr)" : "minmax(180px, 1fr) minmax(220px, 1fr)",
+        gridTemplateColumns: stacked ? "minmax(0, 1fr)" : compact ? "minmax(92px, .8fr) minmax(0, 1.2fr)" : "minmax(180px, 1fr) minmax(220px, 1fr)",
         gap: compact ? 10 : 14,
         alignItems: "center",
         minHeight: compact ? 62 : 84,
@@ -25,9 +25,10 @@ function WeightSelectionFrame({ visual, controls, children, compact = false, vis
         border: "1px solid rgba(255,255,255,0.06)",
       }}>
         <div style={{
+          order: stacked ? 1 : undefined,
           position: "relative",
           height: visualExpanded ? undefined : (compact ? 52 : 64),
-          minHeight: visualExpanded ? (compact ? 88 : 104) : undefined,
+          minHeight: visualExpanded ? (stacked ? 76 : compact ? 88 : 104) : undefined,
           alignSelf: visualExpanded ? "stretch" : undefined,
           display: "flex",
           alignItems: "center",

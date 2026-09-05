@@ -21,11 +21,6 @@ function BarbellVisualizer({ exercise = null, weight, onWeightChange, compact = 
   };
 
   const PLATE_SIZES = BARBELL_PLATES;
-  const B_WIDTHS = { 45: 28, 35: 24, 25: 20, 15: 16, 10: 14, 5: 14, 2.5: 13, 1: 12, 0.5: 11 };
-  const B_HEIGHTS = { 45: 66, 35: 66, 25: 66, 15: 66, 10: 66, 5: 36, 2.5: 33, 1: 30, 0.5: 27 };
-  const pickerScale = compact ? 0.68 : 1;
-  const scaledPicker = (value) => Math.round(value * pickerScale);
-
   // Plates on one side, collar outward, carried over from the previous set.
   const loadedPlates = currentBarStack(exercise, weight);
 
@@ -66,72 +61,20 @@ function BarbellVisualizer({ exercise = null, weight, onWeightChange, compact = 
           </button>
         )}
       </div>
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(28px, 1fr))",
-        gap: compact ? 3 : 4,
-      }}>
-        {PLATE_SIZES.map(p => {
-          const label = p === 0.5 ? '.5' : p;
-          return (
-            <button
-              key={p}
-              onClick={() => handleAddPlate(p)}
-              aria-label={`Add ${p} pound plate per side`}
-              style={{
-                minWidth: 0,
-                height: compact ? 42 : 72,
-                background: "rgba(255,255,255,0.02)",
-                border: "1px solid rgba(255,255,255,0.04)",
-                borderRadius: compact ? 7 : 8,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transition: "all 120ms ease",
-                padding: 0,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(255,255,255,0.05)";
-                e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
-                const inner = e.currentTarget.querySelector('.inner-plate');
-                if (inner) inner.style.transform = "scale(1.08)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(255,255,255,0.02)";
-                e.currentTarget.style.borderColor = "rgba(255,255,255,0.04)";
-                const inner = e.currentTarget.querySelector('.inner-plate');
-                if (inner) inner.style.transform = "scale(1)";
-              }}
-            >
-              <div
-                className="inner-plate"
-                style={{
-                  width: B_WIDTHS[p],
-                  height: scaledPicker(B_HEIGHTS[p]),
-                  background: PLATE_COLORS[p].bg,
-                  color: PLATE_COLORS[p].text,
-                  fontSize: compact ? (p >= 25 ? 11 : p >= 10 ? 10 : 9) : (p >= 25 ? 14 : p >= 10 ? 12.5 : 11),
-                  fontWeight: 900,
-                  fontFamily: T.mono,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: 2,
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
-                  transition: "transform 100ms",
-                  whiteSpace: "nowrap",
-                  overflow: "visible",
-                  textShadow: PLATE_COLORS[p].text === "#1E293B"
-                    ? "0 0 2px #fff, 0 0 2px #fff, 0 0 2px #fff"
-                    : "0 0 2.5px #000, 0 0 2.5px #000, 0 0 2.5px #000",
-                }}
-              >
-                {label}
-              </div>
-            </button>
-          );
-        })}
+      <div className="barbell-plate-picker">
+        {PLATE_SIZES.map(p => (
+          <button
+            type="button"
+            key={p}
+            onClick={() => handleAddPlate(p)}
+            aria-label={`Add ${p} pound plate per side`}
+            className="barbell-plate-option"
+            style={{ "--plate-color": PLATE_COLORS[p].bg }}
+          >
+            <span aria-hidden="true" className="barbell-plate-swatch" />
+            <span>{p}</span>
+          </button>
+        ))}
       </div>
     </div>
   );
@@ -200,6 +143,7 @@ function BarbellVisualizer({ exercise = null, weight, onWeightChange, compact = 
   return (
     <WeightSelectionFrame
       compact={compact}
+      stacked
       visualExpanded
       visual={(
         <>
@@ -246,16 +190,20 @@ function BarbellVisualizer({ exercise = null, weight, onWeightChange, compact = 
       controls={(
         <div style={{ display: "flex", flexDirection: "column", gap: compact ? 8 : 10, minWidth: 0 }}>
           <WeightStepper
+            label="TOTAL WEIGHT · LB"
             value={weight}
             onPick={onWeightChange}
             compact={compact}
             showLastHint={false}
             embedded
           />
-          {plateLoader}
+
         </div>
       )}
-    />
+    >
+      <div className="barbell-sleeve-hint">{loadedPlates.length ? "One side shown · tap a loaded plate to remove" : "Empty bar · 45 lb total"}</div>
+      {plateLoader}
+    </WeightSelectionFrame>
   );
 }
 

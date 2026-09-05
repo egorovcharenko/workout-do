@@ -106,6 +106,10 @@ function ActiveSetBlock({ exercise, set, totalWork, onPickWeight, onPickBodyweig
       )}
 
       <div className="rep-entry-dock">
+        <div className="set-rep-heading">
+          <span>Tap reps to log set</span>
+          {set.lastReps != null && <span>Last: {set.lastReps}</span>}
+        </div>
         <RepStrip
           min={1} max={20}
           range={range}
