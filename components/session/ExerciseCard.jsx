@@ -244,7 +244,7 @@ function ExerciseCardContent({ exercise, sessionTimes, durationMeta, supersetTag
           totalWork={totalWork}
           totalWarmup={totalWarmup}
           warmupPos={activeWarmupPos}
-          onPickWeight={(w, plates) => onPickWeight(activeIdx, w, plates)}
+          onPickWeight={(w) => onPickWeight(activeIdx, w)}
           onPickBodyweight={(w) => onPickBodyweight(activeIdx, w)}
           onPickGrip={(g) => onPickGrip(activeIdx, g)}
           onToggleBand={(b) => onToggleBand(activeIdx, b)}
