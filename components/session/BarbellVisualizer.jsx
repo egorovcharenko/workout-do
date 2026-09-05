@@ -201,7 +201,6 @@ function BarbellVisualizer({ exercise = null, weight, onWeightChange, compact = 
         </div>
       )}
     >
-      <div className="barbell-sleeve-hint">{loadedPlates.length ? "One side shown · tap a loaded plate to remove" : "Empty bar · 45 lb total"}</div>
       {plateLoader}
     </WeightSelectionFrame>
   );
