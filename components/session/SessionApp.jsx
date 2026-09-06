@@ -27,6 +27,7 @@ import { mergeTemplateAndSavedSet, shouldKeepRemovedWarmup } from "@/lib/legacy/
 import { isBeltLoadExercise } from "@/lib/legacy/belt-load";
 import { createTrainingBlock, regularToBlockWorkoutId, trainingBlockHints, trainingBlockStatus } from "@/lib/training-block";
 import { parseSessionState } from "@/lib/legacy/session-status";
+import { withRepGuidance } from "@/lib/legacy/rep-guidance";
 import {
   firstPendingSetIndex,
   isResolvedSet,
@@ -39,7 +40,7 @@ import {
 function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUrl = new URLSearchParams(window.location.search).get("w");
     return (fromUrl && ALL_WORKOUTS.some(w => w.id === fromUrl)) ? fromUrl : (WORKOUTS.find(w => w.main) || WORKOUTS[0]).id; });
   const workout = useMemo(() => ALL_WORKOUTS.find(w => w.id === workoutId) || WORKOUTS[0], [workoutId]);
-  const [exercises, setExercises] = useState([]);
+  const [rawExercises, setExercises] = useState([]);
   const [sessionDate, setSessionDate] = useState(() => localDate());
   const [loaded, setLoaded] = useState(false);
   const [loadError, setLoadError] = useState(null);
@@ -47,8 +48,11 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
   const [programWorkouts, setProgramWorkouts] = useState(WORKOUTS);
   const [sessionId, setSessionId] = useState(null);
   const [focused, setFocused] = useState(null);
-  const { elapsed, startedAt, rest, setElapsed, setStartedAt, setRest, startTimer, restAdd, restSkip, restToggle, resetTimers } = useWorkoutTimers(workoutId, exercises);
+  const { elapsed, startedAt, rest, setElapsed, setStartedAt, setRest, startTimer, restAdd, restSkip, restToggle, resetTimers } = useWorkoutTimers(workoutId, rawExercises);
   const [history, setHistory] = useState([]);
+  const exercises = useMemo(() => withRepGuidance(rawExercises, history, {
+    workout, block: sessionBlock, sessionId, date: sessionDate, startedAt,
+  }), [rawExercises, history, workout, sessionBlock, sessionId, sessionDate, startedAt]);
   const [statHistory, setStatHistory] = useState({});
   const [swaps, setSwaps] = useState({});
   const dataRef = useRef({ last: {}, hints: {} });

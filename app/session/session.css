@@ -68,6 +68,12 @@ button { font-family: inherit; }
    below the fold. The compact treatment is desktop-only; mobile keeps its
    larger touch-first layout. */
 .rep-entry-dock { margin-top: 10px; }
+.rep-guidance { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 12px; padding: 3px 4px 0; color: #9ca3af; font-family: var(--suite-font-mono); font-size: 11px; line-height: 1.4; }
+.rep-guidance > span { white-space: nowrap; }
+.rep-guidance strong { color: #e5e7eb; font-weight: 700; }
+.rep-guidance .rep-suggested-label, .rep-guidance .rep-suggested-label strong { color: #93c5fd; }
+.rep-suggested-label { margin-left: auto; }
+.rep-last-dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: #22c55e; margin: 0 5px 1px 0; }
 .rep-entry-dock-label { display: none; }
 
 @media (min-width: 900px) {

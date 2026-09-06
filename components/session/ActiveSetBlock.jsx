@@ -22,7 +22,10 @@ function ActiveSetBlock({ exercise, set, totalWork, onPickWeight, onPickBodyweig
   const lastBaseW = isBW ? (set.lastBodyweight || 0) : (set.lastWeight || 0);
 
   const stages = exercise.stages || null;
-  const range = set.targetRepRange || parseRepTargetRange(exercise.repRange);
+  const guidance = set.repGuidance;
+  const previous = guidance?.previous;
+  const range = guidance ? guidance.range : set.targetRepRange || parseRepTargetRange(exercise.repRange);
+  const lastReps = guidance ? previous?.reps : set.lastReps;
   const weightVisualKind = isBW
     ? "bodyweight"
     : /dumbbell|\bdb\b|goblet|lunge|bulgarian/i.test(exercise.name)
@@ -107,10 +110,18 @@ function ActiveSetBlock({ exercise, set, totalWork, onPickWeight, onPickBodyweig
       )}
 
       <div className="rep-entry-dock">
+        {guidance && <div className="rep-guidance">
+          <span title={previous ? `${previous.date} · ${previous.workout} · ${previous.label}` : 'No previous logged set'}>
+            <i className="rep-last-dot" />Last <strong>{previous ? previous.comparable ? previous.reps : previous.label : '—'}</strong>
+          </span>
+          {guidance.rangeLabel && <span>Target <strong>{guidance.rangeLabel}</strong></span>}
+          {guidance.suggested != null && <span className="rep-suggested-label">Suggested <strong>{guidance.suggested}</strong></span>}
+        </div>}
         <RepStrip
-          min={1} max={20}
+          min={1} max={Math.max(20, lastReps || 0, guidance?.suggested || 0)}
           range={range}
-          last={set.lastReps}
+          last={lastReps}
+          suggested={guidance?.suggested}
           logged={set.reps}
           onLog={onLogReps}
         />

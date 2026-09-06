@@ -22,6 +22,9 @@ function setStripLabel(s, allSets) {
 }
 
 function SetCard({ s, idx, exercise, onReopenSet, dur }) {
+  const guidance = s.repGuidance;
+  const previous = guidance?.previous;
+  const lastReps = guidance ? previous?.reps : s.lastReps;
   const isBW = exercise.mode === "bodyweight";
   const isAssist = exercise.assist;
   const isBandsOnly = exercise.isBandsOnly;
@@ -37,12 +40,13 @@ function SetCard({ s, idx, exercise, onReopenSet, dur }) {
   // stage rank first, then reps.
   const curRank = stages ? stageRank(stages, s.grip || s.lastGrip) : 0;
   const lastRank = stages ? stageRank(stages, s.lastGrip) : 0;
-  const wDelta = exercise.repsOnly && !exercise.beltLoad ? 0 : stages ? (lastRank > 0 ? curRank - lastRank : 0) : totalLb - prev;
-  const rDelta = s.lastReps != null && s.reps != null ? s.reps - s.lastReps : 0;
+  const wDelta = guidance ? previous?.loadDelta || 0
+    : exercise.repsOnly && !exercise.beltLoad ? 0 : stages ? (lastRank > 0 ? curRank - lastRank : 0) : totalLb - prev;
+  const rDelta = lastReps != null && s.reps != null ? s.reps - lastReps : 0;
   const isFlat = wDelta === 0 && rDelta === 0;
   const isDown = wDelta < 0 || (wDelta === 0 && rDelta < 0);
   const deltaColor = isFlat ? T.faint : isDown ? T.red : T.green;
-  const deltaText = !s.completed ? "" : isFlat ? "=" :
+  const deltaText = !s.completed || (guidance && (!previous || (!previous.sameVariation && !stages))) ? "" : isFlat ? "=" :
     wDelta !== 0 ? (stages ? `${wDelta > 0 ? "↑" : "↓"}S${curRank}` : `${wDelta > 0 ? "+" : ""}${wDelta}`) :
     `${rDelta > 0 ? "+" : ""}${rDelta}r`;
   const isWarm = s.kind === "warmup";
@@ -75,14 +79,15 @@ function SetCard({ s, idx, exercise, onReopenSet, dur }) {
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 6 }}>
       <span style={{ color: isWarm ? T.amber : isCurrent ? T.accentLight : T.faint, fontFamily: T.mono, fontSize: 9, fontWeight: 800, letterSpacing: 0.7 }}>
         {setStripLabel(s, exercise.sets)}
+        {!s.completed && guidance?.rangeLabel && <span style={{ color: T.muted, marginLeft: 4, fontSize: 8 }}>TARGET</span>}
       </span>
       {(() => {
         const targetRange = s.targetRepRange;
-        const targetReps = targetRange
+        const targetReps = guidance ? guidance.rangeLabel : targetRange
           ? (targetRange[0] === targetRange[1] ? String(targetRange[0]) : targetRange.join("–"))
           : null;
-        const isPreview = s.reps == null && (targetReps != null || s.lastReps != null);
-        const repText = s.reps ?? targetReps ?? s.lastReps ?? "—";
+        const isPreview = s.reps == null && (targetReps != null || lastReps != null);
+        const repText = s.reps ?? targetReps ?? guidance?.suggested ?? lastReps ?? "—";
         const repColor = isPreview ? T.muted : (s.completed || isCurrent) ? T.strong : T.text;
         if (exercise.repsOnly && !exercise.beltLoad) {
           return (
@@ -103,7 +108,8 @@ function SetCard({ s, idx, exercise, onReopenSet, dur }) {
       {isCurrent && <span style={{ color: isWarm ? T.amber : T.accentLight, fontSize: 9 }}>●</span>}
       </div>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8, fontFamily: T.mono, fontSize: 10 }}>
-        <span style={{ color: T.muted }}>Last <strong style={{ color: T.text, fontWeight: 700 }}>{s.lastReps ?? "—"}</strong>{s.lastReps != null ? " reps" : ""}</span>
+        <span title={previous ? `${previous.date} · ${previous.workout}` : undefined} style={{ color: T.muted }}>Last <strong style={{ color: T.text, fontWeight: 700 }}>{previous && !previous.comparable ? previous.label : lastReps ?? "—"}</strong>{lastReps != null && (!previous || previous.comparable) ? " reps" : ""}</span>
+        {!s.completed && guidance?.suggested != null && <span style={{ color: T.accentLight }}>Suggested <strong>{guidance.suggested}</strong></span>}
         {s.completed && <span style={{ color: deltaColor, fontWeight: 700 }}>
           {deltaText}
           {dur != null && <span style={{ color: T.muted, fontWeight: 500, fontSize: 9 }}> · {fmtSetDuration(dur)}</span>}

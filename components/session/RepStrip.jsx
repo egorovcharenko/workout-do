@@ -4,7 +4,7 @@ import { T } from "@/lib/legacy/shared";
 
 // ─── file: workout-session-repstrip.js ───
 
-function RepCell({ n, inRange, isLast, isLogged, onClick, compact = false }) {
+function RepCell({ n, inRange, isLast, isSuggested, isLogged, onClick, compact = false }) {
   let bg = "transparent";
   let color = inRange ? "#D1D5DB" : T.faint;
   let border = "1px solid transparent";
@@ -16,6 +16,11 @@ function RepCell({ n, inRange, isLast, isLogged, onClick, compact = false }) {
     border = "1.5px solid rgba(34,197,94,0.55)";
     color = "#86EFAC";
   }
+  if (isSuggested) {
+    bg = "rgba(59,130,246,0.22)";
+    border = "2px solid #60A5FA";
+    color = "#DBEAFE";
+  }
   if (isLogged) {
     bg = "#22C55E";
     border = "1px solid #22C55E";
@@ -24,12 +29,14 @@ function RepCell({ n, inRange, isLast, isLogged, onClick, compact = false }) {
   return (
     <button
       type="button"
-      aria-label={`Log ${n} reps`}
+      aria-label={`Log ${n} reps${isSuggested ? ' (suggested)' : ''}${isLast ? ' (last workout)' : ''}`}
+      data-suggested={isSuggested || undefined}
+      data-last={isLast || undefined}
       onClick={onClick}
       style={{
         position: "relative", width: compact ? 34 : 38, height: compact ? 38 : 44, borderRadius: compact ? 8 : 9,
         background: bg, border, color,
-        fontFamily: T.mono, fontWeight: isLogged || isLast ? 800 : 600, fontSize: compact ? 13 : 14,
+        fontFamily: T.mono, fontWeight: isLogged || isLast || isSuggested ? 800 : 600, fontSize: compact ? 13 : 14,
         cursor: "pointer", flexShrink: 0, touchAction: "manipulation",
         transition: "transform 80ms ease, background 120ms ease",
         animation: isLogged ? "set-pulse 320ms ease-out" : "none",
@@ -46,7 +53,7 @@ function RepCell({ n, inRange, isLast, isLogged, onClick, compact = false }) {
   );
 }
 
-function RepStrip({ min = 1, max = 20, range, last, logged, onLog, compact = false }) {
+function RepStrip({ min = 1, max = 20, range, last, suggested, logged, onLog, compact = false }) {
   const [lo, hi] = range || [];
   const ref = useRef(null);
   const [edges, setEdges] = useState({ left: false, right: true });
@@ -56,7 +63,7 @@ function RepStrip({ min = 1, max = 20, range, last, logged, onLog, compact = fal
     const right = el.scrollLeft + el.clientWidth < el.scrollWidth - 4;
     setEdges(p => (p.left === left && p.right === right ? p : { left, right }));
   }, []);
-  const focusRep = Math.min(max, Math.max(min, Number(logged ?? last ?? lo ?? min)));
+  const focusRep = Math.min(max, Math.max(min, Number(logged ?? suggested ?? last ?? lo ?? min)));
   useEffect(() => {
     const el = ref.current; if (!el) return;
     const centerRep = () => {
@@ -100,7 +107,7 @@ function RepStrip({ min = 1, max = 20, range, last, logged, onLog, compact = fal
           const inRange = lo != null && n >= lo && n <= hi;
           return (
             <div key={n} data-n={n}>
-              <RepCell n={n} inRange={inRange} isLast={last === n && logged !== n} isLogged={logged === n} onClick={() => onLog(n)} compact={compact} />
+              <RepCell n={n} inRange={inRange} isLast={last === n && logged !== n} isSuggested={suggested === n} isLogged={logged === n} onClick={() => onLog(n)} compact={compact} />
             </div>
           );
         })}
