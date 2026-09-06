@@ -444,6 +444,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
                 onRestSkip={restSkip}
                 onRestToggle={restToggle}
                 onPickWeight={(sIdx, w) => actions.onPickWeight(i, sIdx, w)}
+                onApplyLoadProgression={(sIdx) => actions.onApplyLoadProgression(i, sIdx)}
                 onPickBodyweight={(sIdx, w) => actions.onPickBodyweight(i, sIdx, w)}
                 onPickGrip={(sIdx, g) => actions.onPickGrip(i, sIdx, g)}
                 onToggleBand={(sIdx, b) => actions.onToggleBand(i, sIdx, b)}

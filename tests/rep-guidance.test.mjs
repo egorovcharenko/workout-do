@@ -11,6 +11,7 @@ import { createTrainingBlock } from '../lib/training-block.js';
 import { withRepGuidance, repSuggestion } from '../lib/legacy/rep-guidance.js';
 import { navSetDisplay } from '../lib/legacy/nav-set-display.js';
 import { cableStackMultiplier } from '../lib/legacy/cable-stack.js';
+import { applySuggestedLoad } from '../lib/legacy/load-guidance.js';
 
 const block = createTrainingBlock('2026-09-06', 'rep-run', '2026-09-05');
 const workout = shared.BLOCK_WORKOUTS.find(w => w.id === 'strength-a');
@@ -129,7 +130,9 @@ const { SetCard } = loadComponent('../components/session/SetCard.jsx', {
   '@/lib/legacy/cable-stack': { cableStackMultiplier }, '@/lib/legacy/session-utils': { fmtSetDuration: () => '' },
 });
 const empty = () => null;
+const loadProgression = loadComponent('../components/session/LoadProgression.jsx');
 const { ActiveSetBlock } = loadComponent('../components/session/ActiveSetBlock.jsx', {
+  './LoadProgression': loadProgression,
   './Stepper': { GripSelector: empty, BandsGrid: empty }, './StageSelector': { StageSelector: empty }, './RepStrip': reps,
   './BarbellVisualizer': { BarbellVisualizer: empty }, './CableStackVisualizer': { CableStackVisualizer: empty },
   './WeightSelection': { EquipmentWeightSelector: empty }, './BeltPlateVisualizer': { BeltPlateVisualizer: empty },
@@ -174,4 +177,147 @@ test('completed set cards keep real weight changes and never invent a delta from
   assert.match(card, />\+5</);
   assert.match(card, /135 lb × 8/);
   assert.equal(navSetDisplay(guided.sets[0], guided).reps, 5);
+});
+
+const bench = 'Barbell Bench Press';
+function blockExercise(name = squat, id = 'strength-a') {
+  const config = shared.BLOCK_WORKOUTS.find(w => w.id === id).exercises.find(e => e.name === name);
+  return ex(name, config.defaultWork.map((weight, i) => set(i + 1, weight, { targetRepRange: config.workRepRanges[i] })), { isBarbell: true });
+}
+const appearance = (id, date, sets, extra = {}) => session(id, 'Strength A', date, sets, { state_json: JSON.stringify({ trainingBlock: block }), ...extra });
+const cappedSquat = () => [row(squat, 1, 135, 8), row(squat, 2, 115, 10), row(squat, 3, 115, 10)];
+const twoAppearances = () => [appearance('a2', '2026-09-12', cappedSquat()), appearance('a1', '2026-09-06', cappedSquat())];
+const nextOptions = { ...options, date: '2026-09-18' };
+
+test('load progression offers 140 × 5 after two qualifying main sets, independently of back-offs', () => {
+  const history = twoAppearances();
+  history[0].sets[2].reps = '9';
+  const raw = [blockExercise()];
+  const before = JSON.stringify({ raw, history });
+  const guided = withRepGuidance(raw, history, nextOptions)[0];
+  const main = guided.sets[0].repGuidance;
+  assert.equal(main.loadProgression.ready, true);
+  assert.equal(main.loadProgression.weight, 140);
+  assert.equal(main.loadProgression.reps, 5);
+  assert.equal(main.suggested, 8, 'The current load still targets eight until the increase is accepted');
+  assert.equal(guided.sets[1].repGuidance.loadProgression.ready, false);
+  assert.equal(guided.sets[2].repGuidance.loadProgression.qualifying, 0);
+  assert.equal(JSON.stringify({ raw, history }), before);
+});
+
+test('a consecutive two-workout streak requires every matching set, load and variation', () => {
+  const raw = [blockExercise()];
+  assert.equal(withRepGuidance(raw, twoAppearances().slice(0, 1), nextOptions)[0].sets[0].repGuidance.loadProgression.qualifying, 1);
+  const mutations = [
+    s => { s.sets[0].reps = '7'; }, s => { s.sets.shift(); },
+    s => { s.sets[0].weight_lb = 125; }, s => { s.sets[0].grip = 'other'; },
+    s => { s.sets.push({ ...s.sets[0] }); }, s => { s.is_deload = true; },
+    s => { s.state_json = JSON.stringify({ trainingBlock: block, setsMap: { [squat]: [{ kind: 'work', setNumber: 1, userSkipped: true }] } }); },
+  ];
+  for (const mutate of mutations) {
+    const history = twoAppearances();
+    mutate(history[0]);
+    history.push(appearance('even-older', '2026-09-05', cappedSquat()));
+    assert.equal(withRepGuidance(raw, history, nextOptions)[0].sets[0].repGuidance.loadProgression.qualifying, 0, 'Never search past a missed target for an older success');
+  }
+});
+
+test('weight offers compare the same block and A/B workout, never old-program, future, current or unfinished logs', () => {
+  const excluded = [
+    appearance('regular', '2026-09-05', cappedSquat(), { workout_name: 'Squat Focus', state_json: '{}' }),
+    appearance('b', '2026-09-09', cappedSquat(), { workout_name: 'Strength B' }),
+    appearance('old-block', '2026-09-10', cappedSquat(), { state_json: JSON.stringify({ trainingBlock: { ...block, instanceId: 'old' } }) }),
+    appearance('future', '2026-09-19', cappedSquat()), appearance('today', '2026-09-18', cappedSquat()),
+    appearance('unfinished', '2026-09-17', cappedSquat(), { finished_at: null }),
+  ];
+  const guided = withRepGuidance([blockExercise()], [...excluded, twoAppearances()[0]], nextOptions)[0];
+  assert.equal(guided.sets[0].repGuidance.loadProgression.qualifying, 1);
+  assert.equal(guided.sets[0].repGuidance.loadProgression.ready, false);
+});
+
+test('accepting a load updates the entire pending group without logging, changing other groups or repeating the increase', () => {
+  const raw = [blockExercise()];
+  raw[0].sets.unshift(set(0, 45, { kind: 'warmup', reps: 8, completed: true }));
+  const guided = withRepGuidance(raw, twoAppearances(), nextOptions);
+  guided[0].sets[1].reps = 8;
+  guided[0].sets[1].completed = true;
+  guided[0].sets[2].barPlates = [35];
+  const before = JSON.stringify(guided);
+  const next = applySuggestedLoad(guided, 0, 3);
+  assert.deepEqual(next[0].sets.map(s => s.weight), [45, 135, 120, 120]);
+  assert.deepEqual(next[0].sets.map(s => s.reps), [8, 8, null, null]);
+  assert.strictEqual(next[0].sets[0], guided[0].sets[0]);
+  assert.strictEqual(next[0].sets[1], guided[0].sets[1]);
+  assert.equal(next[0].sets[2].barPlates, undefined);
+  assert.equal(JSON.stringify(guided), before);
+  assert.strictEqual(applySuggestedLoad(next, 0, 3), next, 'A stale second click cannot add weight again');
+  const refreshed = withRepGuidance(JSON.parse(JSON.stringify(next)), twoAppearances(), nextOptions);
+  assert.equal(refreshed[0].sets[2].repGuidance.suggested, 8, 'Heavier back-offs restart at the lower end');
+  assert.equal(refreshed[0].sets[2].repGuidance.loadProgression.qualifying, 0);
+  const heavierMain = applySuggestedLoad(withRepGuidance(raw, twoAppearances(), nextOptions), 0, 1);
+  assert.equal(withRepGuidance(heavierMain, twoAppearances(), nextOptions)[0].sets[1].repGuidance.suggested, 5);
+});
+
+test('load acceptance refuses a partially logged, reopened, skipped, removed or changed group', () => {
+  for (const patch of [ { completed: true }, { reps: 8 }, { logged_at: '2026-09-18T12:01:00Z' },
+    { userSkipped: true }, { weight: 120 }, { grip: 'changed' }, { planTargetReps: 6 }, { bands: [5] } ]) {
+    const guided = withRepGuidance([blockExercise()], twoAppearances(), nextOptions);
+    Object.assign(guided[0].sets[1], patch);
+    assert.strictEqual(applySuggestedLoad(guided, 0, 2), guided);
+  }
+  const guided = withRepGuidance([blockExercise()], twoAppearances(), nextOptions);
+  guided[0].sets.pop();
+  assert.strictEqual(applySuggestedLoad(guided, 0, 1), guided);
+});
+
+test('bench adds two pounds only when every set in its program group qualifies', () => {
+  const rows = [1, 2, 3].map(n => row(bench, n, 135, 8));
+  const history = [appearance('a2', '2026-09-12', rows), appearance('a1', '2026-09-06', rows)];
+  const guided = withRepGuidance([blockExercise(bench)], history, nextOptions);
+  assert.deepEqual(applySuggestedLoad(guided, 0, 0)[0].sets.map(s => s.weight), [137, 137, 137]);
+  rows[2].reps = '7';
+  assert.ok(withRepGuidance([blockExercise(bench)], history, nextOptions)[0].sets.every(s => !s.repGuidance.loadProgression.ready));
+  const b = shared.BLOCK_WORKOUTS.find(w => w.id === 'strength-b');
+  const bRows = [row(bench, 1, 150, 5), row(bench, 2, 135, 8), row(bench, 3, 135, 7)];
+  const bHistory = history.map(s => ({ ...s, workout_name: b.name, sets: bRows }));
+  const bGuided = withRepGuidance([blockExercise(bench, b.id)], bHistory, { ...nextOptions, workout: b });
+  assert.deepEqual(applySuggestedLoad(bGuided, 0, 0)[0].sets.map(s => s.weight), [152, 135, 135]);
+});
+
+test('easy B squats have their own two-appearance effort condition; fixed accessories, plans and deloads do not receive offers', () => {
+  const b = shared.BLOCK_WORKOUTS.find(w => w.id === 'strength-b');
+  const bHistory = twoAppearances().map(s => ({ ...s, workout_name: b.name, sets: [row(squat, 1, 115, 6), row(squat, 2, 115, 6)] }));
+  const guided = withRepGuidance([blockExercise(squat, b.id)], bHistory, { ...nextOptions, workout: b });
+  assert.equal(guided[0].sets[0].repGuidance.loadProgression.practice, true);
+  assert.deepEqual(applySuggestedLoad(guided, 0, 1)[0].sets.map(s => s.weight), [120, 120]);
+  const rdl = withRepGuidance([blockExercise('Barbell RDL', b.id)], bHistory, { ...nextOptions, workout: b });
+  assert.equal(rdl[0].sets[0].repGuidance.loadProgression, undefined);
+  for (const overrides of [{ deload: true }, { skipped: true }]) {
+    const raw = [Object.assign(blockExercise(), overrides)];
+    assert.equal(withRepGuidance(raw, twoAppearances(), nextOptions)[0].sets[0].repGuidance.loadProgression, undefined);
+  }
+  const plan = blockExercise(); plan.sets[0].planTargetReps = 5;
+  assert.equal(withRepGuidance([plan], twoAppearances(), nextOptions)[0].sets[0].repGuidance.loadProgression, null);
+  const regular = withRepGuidance([blockExercise()], twoAppearances(), { ...nextOptions, block: null });
+  assert.equal(regular[0].sets[0].repGuidance.loadProgression, undefined);
+});
+
+test('the weight offer makes the reserve confirmation explicit and changes weight only after the click', () => {
+  const guided = withRepGuidance([blockExercise()], twoAppearances(), nextOptions);
+  let next = guided;
+  const offer = guided[0].sets[0].repGuidance.loadProgression;
+  const onApply = () => { next = applySuggestedLoad(guided, 0, 0); };
+  const html = renderToStaticMarkup(React.createElement(ActiveSetBlock, { exercise: guided[0], set: guided[0].sets[0], onApplyLoadProgression: onApply }));
+  assert.match(html, /Next <strong>140 lb × 5<\/strong>/);
+  assert.match(html, /1–2 reps left both times\?/);
+  assert.match(html, /Confirm 1–2 reps in reserve in both workouts; use 140 lb for S1/);
+  assert.match(html, /Suggested <strong>8<\/strong>/);
+  assert.strictEqual(next, guided, 'Rendering must not apply the weight or assume effort');
+  const tree = loadProgression.LoadProgression({ offer, onApply });
+  tree.props.children[1].props.children[1].props.onClick();
+  assert.equal(next[0].sets[0].weight, 140);
+  assert.equal(next[0].sets[0].reps, null);
+  const building = renderToStaticMarkup(React.createElement(loadProgression.LoadProgression, { offer: { ...offer, qualifying: 1, ready: false, canApply: false }, onApply }));
+  assert.match(building, /1\/2 A workouts at 8 reps/);
+  assert.doesNotMatch(building, /<button/);
 });

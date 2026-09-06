@@ -9,7 +9,7 @@ import { ProgressionBanner } from "./ProgressionBanner";
 
 // ─── file: workout-session-exercise-card.js ───
 
-function ExerciseCardContent({ exercise, sessionTimes, durationMeta, supersetTag, embedded, rest, onRestAdd, onRestSkip, onRestToggle, onPickWeight, onPickBodyweight, onPickGrip, onToggleBand, onClearBands, onLogReps, onSkipExercise, onSwapExercise, onReopenSet, onAddSet, onRemoveSet, onRemoveWarmup }) {
+function ExerciseCardContent({ exercise, sessionTimes, durationMeta, supersetTag, embedded, rest, onRestAdd, onRestSkip, onRestToggle, onPickWeight, onApplyLoadProgression, onPickBodyweight, onPickGrip, onToggleBand, onClearBands, onLogReps, onSkipExercise, onSwapExercise, onReopenSet, onAddSet, onRemoveSet, onRemoveWarmup }) {
   const [showAllFamilies, setShowAllFamilies] = useState(false);
   const [showVariants, setShowVariants] = useState(false);
   const currentFamilyName = getSwapGroupName(exercise.name) || "Other";
@@ -245,6 +245,7 @@ function ExerciseCardContent({ exercise, sessionTimes, durationMeta, supersetTag
           totalWarmup={totalWarmup}
           warmupPos={activeWarmupPos}
           onPickWeight={(w) => onPickWeight(activeIdx, w)}
+          onApplyLoadProgression={onApplyLoadProgression ? () => onApplyLoadProgression(activeIdx) : undefined}
           onPickBodyweight={(w) => onPickBodyweight(activeIdx, w)}
           onPickGrip={(g) => onPickGrip(activeIdx, g)}
           onToggleBand={(b) => onToggleBand(activeIdx, b)}

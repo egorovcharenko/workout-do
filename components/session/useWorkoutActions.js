@@ -9,6 +9,7 @@ import { optimizeMigratedSquatBackoffs } from "@/lib/legacy/squat-progression";
 import { loggedAtForSetUpdate } from "@/lib/legacy/duration-estimates";
 import { finishAndExit } from "@/lib/legacy/finish-workout";
 import { abandonAndExit } from "@/lib/legacy/abandon-workout";
+import { applySuggestedLoad } from "@/lib/legacy/load-guidance";
 import {
   buildLibraryExerciseTemplate,
   exerciseNameExists,
@@ -60,6 +61,14 @@ function useWorkoutActions({
   const onPickWeight = (eIdx, sIdx, w, base) => {
     startTimer();
     updateAndSave(patchSet(eIdx, sIdx, { weight: w, barPlates: undefined }, base));
+  };
+
+  const onApplyLoadProgression = (eIdx, sIdx) => {
+    const current = exercisesRef.current;
+    const next = applySuggestedLoad(current, eIdx, sIdx);
+    if (next === current) return;
+    startTimer();
+    updateAndSave(next);
   };
 
   const onPickBodyweight = (eIdx, sIdx, w) => {
@@ -399,6 +408,7 @@ function useWorkoutActions({
 
   return {
     onPickWeight,
+    onApplyLoadProgression,
     onPickBodyweight,
     onPickGrip,
     onToggleBand,

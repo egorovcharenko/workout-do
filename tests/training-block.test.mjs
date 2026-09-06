@@ -12,6 +12,8 @@ import * as belt from '../lib/legacy/belt-load.js';
 import * as logging from '../lib/legacy/set-logging.js';
 import * as history from '../lib/legacy/exercise-history.js';
 import { exerciseHintsWithDeloadBootstrap } from '../lib/legacy/exercise-hints.js';
+import { withRepGuidance } from '../lib/legacy/rep-guidance.js';
+import { applySuggestedLoad } from '../lib/legacy/load-guidance.js';
 
 const run = block.createTrainingBlock('2026-09-06', 'run-one', '2026-09-05');
 const settings = { workout_plan: '[{"workout":"RDL Focus"}]', bodyweight: '165', training_block: JSON.stringify(run) };
@@ -102,6 +104,39 @@ test('block hints isolate A from B, unfinished sessions, previous runs and the r
   assert.equal(regular['Barbell Bench Press|working|1'].weight_lb, 160);
   assert.equal(rows.length, 5, 'History must remain intact');
   assert.deepEqual(block.trainingBlockHints(workout('strength-a'), rows, { ...run, instanceId: 'new-run' }), {});
+});
+
+test('accepted progression survives a save and becomes the next matching workout load at the lower rep target', () => {
+  const w = workout('strength-a');
+  const past = ['2026-09-06', '2026-09-12'].map(date => session(w.name, date, [1, 2, 3].map(n => benchRow(135, n, '8'))));
+  const options = { workout: w, block: run, date: '2026-09-18', sessionId: 'current' };
+  const raw = utils.flattenTemplate(w, {}, block.trainingBlockHints(w, past, run));
+  const guided = withRepGuidance(raw, past, options);
+  const eIdx = guided.findIndex(ex => ex.name === 'Barbell Bench Press');
+  const sIdx = guided[eIdx].sets.findIndex(set => set.kind === 'work');
+  const next = applySuggestedLoad(guided, eIdx, sIdx);
+  assert.deepEqual(plain(workSets(next, 'Barbell Bench Press').map(s => [s.weight, s.reps])), [[137, null], [137, null], [137, null]]);
+
+  const persistence = loadModule('../lib/legacy/session-persistence.js', {
+    '@/lib/db/api': { api: {} }, './shared': shared, './session-utils': utils, './belt-load': belt, './set-logging': logging,
+  }, { window: { SESSION_DELOAD: false } });
+  persistence.setSessionTrainingBlock(w.name, options.date, run);
+  const draft = persistence.serializeForSave(next, w.name, 'current', null, 120, options.date);
+  const savedSets = JSON.parse(draft.state_json).setsMap['Barbell Bench Press'].filter(s => s.kind === 'work');
+  assert.deepEqual(savedSets.map(s => s.weight), [137, 137, 137]);
+  assert.equal(draft.sets.length, 0, 'Accepting progression is not a logged workout');
+  for (const set of workSets(next, 'Barbell Bench Press')) {
+    set.reps = 6; set.completed = true; set.logged_at = '2026-09-18T12:20:00Z';
+  }
+  const finished = persistence.serializeForSave(next, w.name, 'current', null, 1200, options.date);
+  finished.finished_at = '2026-09-18T13:00:00Z';
+  // Firestore stores the save payload's `workout` field as `workout_name`.
+  const history = [{ ...finished, workout_name: finished.workout }, ...past];
+  const following = utils.flattenTemplate(w, {}, block.trainingBlockHints(w, history, run));
+  assert.deepEqual(plain(workSets(following, 'Barbell Bench Press').map(s => s.weight)), [137, 137, 137]);
+  const followingGuidance = withRepGuidance(following, history, { ...options, sessionId: 'next', date: '2026-09-24' });
+  assert.deepEqual(plain(workSets(followingGuidance, 'Barbell Bench Press').map(s => s.repGuidance.suggested)), [7, 7, 7]);
+  assert.ok(workSets(followingGuidance, 'Barbell Bench Press').every(s => !s.repGuidance.loadProgression.ready));
 });
 
 test('accessories retain the existing dragon stage and start dips with the agreed belt load', () => {
