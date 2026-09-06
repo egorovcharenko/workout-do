@@ -41,7 +41,7 @@ function ActiveSetBlock({ exercise, set, totalWork, onPickWeight, onApplyLoadPro
       padding: "12px 12px 14px",
       marginTop: 12, marginBottom: 6,
     }}>
-      {exercise.grips && (
+      {exercise.name !== "Pull-Ups" && exercise.grips && (
         <GripSelector
           grips={exercise.grips}
           selected={set.grip}
