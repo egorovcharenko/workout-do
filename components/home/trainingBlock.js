@@ -8,6 +8,7 @@ const escape = value => String(value).replace(/[&<>"']/g, c => ({ "&": "&amp;", 
 const dateLabel = date => new Date(`${date}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
 function exerciseTargets(exercise) {
+  if (exercise.targetRir) return `${exercise.sets} sets · ${exercise.targetRir.join("–")} RIR`;
   const groups = [];
   exercise.defaultWork.forEach((weight, index) => {
     const range = exercise.workRepRanges[index];

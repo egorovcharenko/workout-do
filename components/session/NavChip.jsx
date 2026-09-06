@@ -34,7 +34,9 @@ function SetChip({ d, k, onClick }) {
       fontStyle: "normal", whiteSpace: "nowrap",
       cursor: onClick ? "pointer" : "default",
     }}>
-      {d.repsOnly
+      {d.rirLabel
+        ? <span style={{ fontSize: 11 }}>{d.lb && d.lb !== "BW" ? `${d.lb} · ` : ''}{d.rirLabel} RIR</span>
+        : d.repsOnly
         ? (d.reps != null ? d.reps : "—")
         : <>{d.lb || "—"}{d.weightMultiplier === 2 && <span style={{ color: box.xColor, fontWeight: 600, fontSize: 10 }}>×2</span>}<span style={{ color: box.xColor, fontWeight: 400, fontSize: 11 }}>×</span>{d.reps != null ? d.reps : "—"}</>}
     </button>

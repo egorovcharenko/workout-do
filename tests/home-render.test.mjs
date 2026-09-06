@@ -84,6 +84,8 @@ test('home transitions from the saved program to the dated block and back after 
   assert.match(active, /Start Strength A/);
   assert.match(active, /Regular program returns Oct 4/);
   assert.match(active, /End block early/);
+  assert.match(active, /4 sets · 1–2 RIR/);
+  assert.doesNotMatch(active, /3\/3\/3\/3|Stop at two if a third/);
   const rest = homeHarness(blockSettings, '2026-09-08').html();
   assert.match(rest, /No lifting scheduled today/);
   assert.doesNotMatch(rest, /class="home-start"/);

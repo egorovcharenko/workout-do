@@ -117,6 +117,7 @@ function ActiveSetBlock({ exercise, set, totalWork, onPickWeight, onApplyLoadPro
             <i className="rep-last-dot" />Last <strong>{previous ? previous.comparable ? previous.reps : previous.label : '—'}</strong>
           </span>
           {guidance.rangeLabel && <span>Target <strong>{guidance.rangeLabel}</strong></span>}
+          {guidance.rirLabel && <span className="rep-suggested-label" title="Finish with one or two clean reps still available.">Target <strong>{guidance.rirLabel} RIR</strong></span>}
           {guidance.suggested != null && <span className="rep-suggested-label">Suggested <strong>{guidance.suggested}</strong></span>}
         </div>}
         <RepStrip

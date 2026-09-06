@@ -76,7 +76,10 @@ test('A and B use their agreed loads and set counts without importing regular pr
   assert.deepEqual(plain(workSets(b, 'Barbell Bench Press').map(s => s.weight)), [150, 135, 135]);
   assert.deepEqual(plain(workSets(b, 'Barbell Back Squat').map(s => [s.weight, s.lastReps])), [[115, 6], [115, 6]]);
   for (const exercises of [a, b]) {
-    assert.deepEqual(plain(workSets(exercises, 'Pull-Ups').map(s => [s.setNumber, s.weight, s.lastReps])), [[1, 0, 3], [2, 0, 3], [3, 0, 3], [4, 0, 3]]);
+    assert.deepEqual(plain(workSets(exercises, 'Pull-Ups').map(s => [s.setNumber, s.weight, s.lastReps])), [[1, 0, null], [2, 0, null], [3, 0, null], [4, 0, null]]);
+    const pullUps = exercises.find(ex => ex.name === 'Pull-Ups');
+    assert.equal(pullUps.repRange, '1–2 RIR');
+    assert.ok(pullUps.sets.every(s => s.targetRepRange == null));
     assert.ok(exercises.every(ex => !ex.progression));
   }
   const historyHints = { __counts: { 'Barbell Bench Press': 8 } };

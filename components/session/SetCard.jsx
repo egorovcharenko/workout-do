@@ -79,7 +79,7 @@ function SetCard({ s, idx, exercise, onReopenSet, dur }) {
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 6 }}>
       <span style={{ color: isWarm ? T.amber : isCurrent ? T.accentLight : T.faint, fontFamily: T.mono, fontSize: 9, fontWeight: 800, letterSpacing: 0.7 }}>
         {setStripLabel(s, exercise.sets)}
-        {!s.completed && guidance?.rangeLabel && <span style={{ color: T.muted, marginLeft: 4, fontSize: 8 }}>TARGET</span>}
+        {!s.completed && (guidance?.rangeLabel || guidance?.rirLabel) && <span style={{ color: T.muted, marginLeft: 4, fontSize: 8 }}>TARGET</span>}
       </span>
       {(() => {
         const targetRange = s.targetRepRange;
@@ -89,6 +89,13 @@ function SetCard({ s, idx, exercise, onReopenSet, dur }) {
         const isPreview = s.reps == null && (targetReps != null || lastReps != null);
         const repText = s.reps ?? targetReps ?? guidance?.suggested ?? lastReps ?? "—";
         const repColor = isPreview ? T.muted : (s.completed || isCurrent) ? T.strong : T.text;
+        const loadText = exercise.beltLoad ? (totalLb > 0 ? `+${totalLb}` : "BW") : stages ? (curRank > 0 ? `S${curRank}` : "—") : weightDisplay;
+        if (!s.completed && s.reps == null && guidance?.rirLabel) {
+          return <div style={{ display: "flex", alignItems: "baseline", gap: 5, fontFamily: T.mono, fontSize: 14, fontWeight: 700 }}>
+            {(!exercise.repsOnly || exercise.beltLoad) && <span style={{ color: T.text }}>{loadText} ·</span>}
+            <span style={{ color: T.accentLight }}>{guidance.rirLabel} RIR</span>
+          </div>;
+        }
         if (exercise.repsOnly && !exercise.beltLoad) {
           return (
             <div style={{ display: "flex", alignItems: "baseline", gap: 3, fontFamily: T.mono }}>
@@ -99,7 +106,7 @@ function SetCard({ s, idx, exercise, onReopenSet, dur }) {
         }
         return (
           <div style={{ display: "flex", alignItems: "baseline", gap: 2, fontFamily: T.mono }}>
-            <span style={{ color: (s.completed || isCurrent) ? T.strong : T.text, fontSize: 16, fontWeight: 700, letterSpacing: -0.3 }}>{exercise.beltLoad ? (totalLb > 0 ? `+${totalLb}` : "BW") : stages ? (curRank > 0 ? `S${curRank}` : "—") : weightDisplay}</span>
+            <span style={{ color: (s.completed || isCurrent) ? T.strong : T.text, fontSize: 16, fontWeight: 700, letterSpacing: -0.3 }}>{loadText}</span>
             <span style={{ color: T.disabled, fontSize: 11 }}>×</span>
             <span style={{ color: repColor, fontSize: 16, fontWeight: 700, letterSpacing: -0.3, fontStyle: "normal" }}>{repText}</span>
           </div>

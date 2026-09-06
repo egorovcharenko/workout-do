@@ -136,15 +136,32 @@ test('band assistance and different dragon-fly stages do not trigger last-plus-o
   }
 });
 
-test('the block adds one total pull-up rep, rather than one on every set or capping progress at three', () => {
+test('block pull-ups use an effort target on every set, including resumed sets with the old three-rep target', () => {
   const name = 'Pull-Ups';
-  const historyRows = [3, 3, 3, 3].map((reps, i) => row(name, i + 1, 0, reps, { grip: 'pullup', load_type: 'belt' }));
+  const historyRows = [7, 6, 5, 4].map((reps, i) => row(name, i + 1, 0, reps, { grip: 'pullup', load_type: 'belt' }));
   const past = session('previous-a', 'Strength A', '2026-09-06', historyRows, { state_json: JSON.stringify({ trainingBlock: block }) });
   const raw = [ex(name, [1, 2, 3, 4].map(i => set(i, 0, { grip: 'pullup', targetRepRange: [3, 3] })), { beltLoad: true, repsOnly: true })];
-  const suggestion = () => withRepGuidance(raw, [past], { ...options, date: '2026-09-12' })[0].sets.map(s => s.repGuidance.suggested);
-  assert.deepEqual(suggestion(), [4, 3, 3, 3]);
-  historyRows[0].reps = '4';
-  assert.deepEqual(suggestion(), [4, 4, 3, 3]);
+  const before = JSON.stringify({ raw, past });
+  for (const id of ['strength-a', 'strength-b']) {
+    for (const history of [[], [past]]) {
+      const currentWorkout = shared.BLOCK_WORKOUTS.find(w => w.id === id);
+      const guided = withRepGuidance(raw, history, { ...options, workout: currentWorkout, date: '2026-09-12' })[0];
+      assert.deepEqual(guided.sets.map(s => s.repGuidance.rirLabel), ['1–2', '1–2', '1–2', '1–2']);
+      assert.ok(guided.sets.every(s => s.repGuidance.range == null && s.repGuidance.rangeLabel == null && s.repGuidance.suggested == null));
+      assert.ok(guided.sets.every(s => s.reps == null));
+    }
+  }
+  const guided = withRepGuidance(raw, [past], { ...options, date: '2026-09-12' })[0];
+  assert.deepEqual(guided.sets.map(s => s.repGuidance.previous.reps), [7, 6, 5, 4]);
+  assert.equal(JSON.stringify({ raw, past }), before);
+  assert.equal(shared.parseRepTargetRange('1–2 RIR'), null, 'RIR is never a one-to-two rep range');
+  assert.equal(shared.parseRepTargetRange('RIR 1–2'), null);
+  assert.deepEqual(shared.parseRepTargetRange('6–8 reps @ 1–2 RIR'), [6, 8], 'A combined rep and effort prescription keeps its rep range');
+  assert.equal(withRepGuidance(raw, [past], { ...options, block: null })[0].sets[0].repGuidance.rirLabel, null, 'The original program is unchanged');
+  raw[0].sets[0].planTargetReps = 5;
+  const planned = withRepGuidance(raw, [past], options)[0].sets[0].repGuidance;
+  assert.equal(planned.rirLabel, null);
+  assert.equal(planned.suggested, 5, 'An explicit per-set prescription takes precedence');
 });
 
 function loadComponent(path, dependencies) {
@@ -163,6 +180,9 @@ function loadComponent(path, dependencies) {
 const reps = loadComponent('../components/session/RepStrip.jsx');
 const { SetCard } = loadComponent('../components/session/SetCard.jsx', {
   '@/lib/legacy/cable-stack': { cableStackMultiplier }, '@/lib/legacy/session-utils': { fmtSetDuration: () => '' },
+});
+const { SetChip } = loadComponent('../components/session/NavChip.jsx', {
+  '@/lib/legacy/nav-set-display': { navSetDisplay },
 });
 const empty = () => null;
 const loadProgression = loadComponent('../components/session/LoadProgression.jsx');
@@ -202,6 +222,38 @@ test('when last and suggested coincide, both markers remain and reps beyond twen
   const exercise = ex('Example', [set(1, 20, { repGuidance: { previous: { reps: 20, comparable: true }, suggested: 21 } })]);
   const expanded = renderToStaticMarkup(React.createElement(ActiveSetBlock, { exercise, set: exercise.sets[0] }));
   assert.match(expanded, /Log 21 reps \(suggested\)/);
+});
+
+test('pull-up cards, navigation and picker show target RIR without suggesting or logging a rep count', () => {
+  const name = 'Pull-Ups';
+  const past = session('past', 'Squat Focus', '2026-09-05', [row(name, 1, 0, 7, { load_type: 'belt', grip: 'pullup' })]);
+  const raw = [ex(name, [set(1, 0, { grip: 'pullup', active: true, targetRepRange: [3, 3] })], { beltLoad: true, repsOnly: true })];
+  const guided = withRepGuidance(raw, [past], options)[0];
+  const current = guided.sets[0];
+  const chosen = [];
+  const html = renderToStaticMarkup(React.createElement(ActiveSetBlock, { exercise: guided, set: current, onLogReps: n => chosen.push(n) }));
+  assert.match(html, /Target <strong>1–2 RIR<\/strong>/);
+  assert.match(html, /Last <strong>7<\/strong>/);
+  assert.match(html, /Log 7 reps \(last workout\)/);
+  assert.doesNotMatch(html, /Suggested|data-suggested/);
+  const card = renderToStaticMarkup(React.createElement(SetCard, { s: current, idx: 0, exercise: guided }));
+  assert.match(card, /1–2 RIR/);
+  assert.match(card, /TARGET/);
+  assert.doesNotMatch(card, /Suggested|>3</);
+  const chip = renderToStaticMarkup(React.createElement(SetChip, { d: navSetDisplay(current, guided), k: 0 }));
+  assert.match(chip, /1–2 RIR/);
+  assert.equal(navSetDisplay(current, guided).reps, null);
+  assert.deepEqual(chosen, [], 'Displaying an effort target does not record an effort or reps');
+  reps.RepCell({ n: 9, onClick: () => chosen.push(9) }).props.onClick();
+  assert.deepEqual(chosen, [9]);
+  current.completed = true; current.reps = 9;
+  const logged = navSetDisplay(current, guided);
+  assert.equal(logged.reps, 9);
+  assert.equal(logged.rirLabel, undefined);
+  assert.doesNotMatch(renderToStaticMarkup(React.createElement(SetCard, { s: current, idx: 0, exercise: guided })), /1–2 RIR/);
+  current.completed = false; current.reps = null; current.weight = 10;
+  const weighted = renderToStaticMarkup(React.createElement(SetChip, { d: navSetDisplay(current, guided), k: 0 }));
+  assert.match(weighted, /\+10 · .*1–2 RIR/);
 });
 
 test('completed set cards keep real weight changes and never invent a delta from defaults', () => {
