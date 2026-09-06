@@ -66,6 +66,41 @@ test('missing history never turns a template default or another set into a previ
   assert.equal(withRepGuidance(raw, [], options)[0].sets[0].repGuidance.previous, null);
 });
 
+test('lighter bench sets retain the previous reps within the range instead of resetting to six', () => {
+  const name = 'Barbell Bench Press';
+  const past = session('past', 'Squat Focus', '2026-09-05', [row(name, 2, 145, 8)]);
+  const raw = [ex(name, [set(2, 135, { targetRepRange: [6, 8] })], { repRange: '6-8' })];
+  const before = JSON.stringify({ raw, past });
+  const guided = withRepGuidance(raw, [past], options)[0];
+  const guidance = guided.sets[0].repGuidance;
+  assert.equal(guidance.previous.label, '145 lb × 8');
+  assert.equal(guidance.previous.comparable, false, 'The different load must remain visible');
+  assert.equal(guidance.previous.loadDelta, -10);
+  assert.equal(guidance.suggested, 8);
+  assert.equal(JSON.stringify({ raw, past }), before, 'Do not change the load, history or logged reps');
+  const html = renderToStaticMarkup(React.createElement(ActiveSetBlock, { exercise: guided, set: guided.sets[0] }));
+  assert.match(html, /Last <strong>145 lb × 8<\/strong>/);
+  assert.match(html, /Suggested <strong>8<\/strong>/);
+  assert.match(html, /Log 8 reps \(suggested\) \(last workout\)/);
+  assert.doesNotMatch(html, /Log 6 reps \(suggested\)/);
+});
+
+test('lighter-load guidance respects exact prescriptions, warm-ups, deloads, variation changes and heavier loads', () => {
+  const previous = { reps: 8, comparable: false, sameVariation: true, loadDelta: -10 };
+  assert.equal(repSuggestion({ previous, range: [6, 8] }), 8);
+  assert.equal(repSuggestion({ previous: { ...previous, reps: 7 }, range: [6, 8] }), 7, 'Do not extrapolate extra reps from a different weight');
+  assert.equal(repSuggestion({ previous: { ...previous, reps: 12 }, range: [6, 8] }), 8);
+  assert.equal(repSuggestion({ previous: { ...previous, reps: 3 }, range: [6, 8] }), 6);
+  assert.equal(repSuggestion({ previous, range: [6, 8], deload: true }), 6);
+  assert.equal(repSuggestion({ previous, range: [2, 2], target: 2, warmup: true }), 2);
+  assert.equal(repSuggestion({ previous: { ...previous, sameVariation: false }, range: [6, 8] }), 6);
+  assert.equal(repSuggestion({ previous: { ...previous, loadDelta: 5 }, range: [6, 8] }), 6);
+  const name = 'Barbell Bench Press';
+  const raw = [ex(name, [set(2, 135, { targetRepRange: [6, 8], planTargetReps: 6 })])];
+  const past = session('past', 'Squat Focus', '2026-09-05', [row(name, 2, 145, 8)]);
+  assert.equal(withRepGuidance(raw, [past], options)[0].sets[0].repGuidance.suggested, 6);
+});
+
 test('current, unfinished and future sessions are excluded; repeat A does not inherit B or an older block run', () => {
   const rows = [
     session('old', 'Squat Focus', '2026-09-05', [row(squat, 1, 135, 8)]),
