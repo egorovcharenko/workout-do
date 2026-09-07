@@ -2,6 +2,7 @@
 import dynamic from "next/dynamic";
 import AuthGate from "@/components/AuthGate";
 import "./home.css";
+import "./workout-recap.css";
 
 const HomeApp = dynamic(() => import("@/components/home/HomeApp"), { ssr: false });
 

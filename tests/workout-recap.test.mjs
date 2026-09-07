@@ -64,6 +64,58 @@ test('recap date stays on the workout calendar date and duration handles hours',
   assert.equal(recap.recapDuration(null), '0 sec');
 });
 
+test('home selects the latest completed workout, retaining older imports and excluding live or empty sessions', () => {
+  const row = { exercise: 'Barbell Bench Press', weight_lb: 135, reps: '8', set_type: 'working' };
+  const earlier = { id: 'earlier', date: '2026-09-06', finished_at: '2026-09-06T16:00:00Z', sets: [row] };
+  const latest = { id: 'latest', date: '2026-09-06', finished_at: '2026-09-06T18:00:00Z', sets: [row] };
+  const live = { id: 'live', date: '2026-09-06', started_at: '2026-09-06T20:00:00Z', sets: [row] };
+  const imported = { id: 'imported', date: '2026-09-05', sets: [row] };
+  const empty = { id: 'empty', date: '2026-09-06', finished_at: '2026-09-06T21:00:00Z', sets: [] };
+  const history = [live, earlier, empty, imported, latest];
+  const before = JSON.stringify(history);
+  assert.equal(recap.latestCompletedWorkout(history, [live], '2026-09-06'), latest);
+  assert.equal(recap.latestCompletedWorkout([live, imported], [live], '2026-09-06'), imported);
+  assert.equal(recap.latestCompletedWorkout([live, empty], [live], '2026-09-06'), null);
+  const allLogged = { ...live, state_json: JSON.stringify({ setsMap: { Bench: [{ completed: true }] } }) };
+  assert.equal(recap.latestCompletedWorkout([earlier, allLogged], [], '2026-09-06'), allLogged);
+  assert.equal(JSON.stringify(history), before);
+});
+
+test('persisted recap uses saved rows, not suggested values in the session map', () => {
+  const session = { date: '2026-09-06', cable_weight_mode: 'per_stack', state_json: JSON.stringify({
+    setsMap: { 'Barbell Bench Press': [{ weight: 145, reps: 12, completed: false }] },
+  }), sets: [
+    { exercise: 'Barbell Bench Press', set_type: 'warmup', weight_lb: 45, reps: '10' },
+    { exercise: 'Barbell Bench Press', set_type: 'working', weight_lb: 135, reps: '8' },
+    { exercise: 'Barbell Bench Press', set_type: 'working', weight_lb: 135, reps: '7' },
+    { exercise: 'Pull-Ups', set_type: 'working', weight_lb: 15, load_type: 'belt', reps: '6' },
+    { exercise: 'Low Row', set_type: 'working', weight_lb: 60, reps: '12' },
+  ] };
+  const before = JSON.stringify(session);
+  const result = recap.buildStoredWorkoutRecap(session);
+  assert.equal(result.workingSets, 4);
+  assert.equal(result.warmupSets, 1);
+  assert.equal(result.reps, 33);
+  assert.deepEqual(result.exercises.map(ex => ex.groups), [
+    [{ load: '135 lb', reps: [8, 7] }], [{ load: 'BW + 15 lb', reps: [6] }], [{ load: '60 lb / stack × 2', reps: [12] }],
+  ]);
+  assert.equal(JSON.stringify(session), before);
+});
+
+test('historical load conversion preserves old cable totals, bodyweight, assistance and band add-ons', () => {
+  const session = { date: '2026-07-01', sets: [
+    { exercise: 'Low Row', weight_lb: 120, reps: '10' },
+    { exercise: 'Pull-Ups', weight_lb: 165, reps: '7' },
+    { exercise: 'Pull-Ups', weight_lb: 135, bands_json: '[30]', reps: '8' },
+    { exercise: 'Goblet Squat', weight_lb: 65, bands_json: '[20]', reps: '10' },
+    { exercise: 'Band Row', weight_lb: 30, bands_json: '[20,10]', reps: '12' },
+    { exercise: 'Dead Hang + Scap Pulls', weight_lb: 165, bands_json: 'broken', reps: '8' },
+  ] };
+  assert.deepEqual(recap.buildStoredWorkoutRecap(session).exercises.map(ex => ex.groups.map(group => group.load)), [
+    ['60 lb / stack × 2'], ['BW', 'BW · 30 lb assistance'], ['45 lb + 20 lb band'], ['30 lb band'], ['BW'],
+  ]);
+});
+
 function loadComponent(path, react = React) {
   const exports = {};
   const source = fs.readFileSync(new URL(path, import.meta.url), 'utf8');

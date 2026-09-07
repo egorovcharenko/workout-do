@@ -8,12 +8,14 @@ import { EXERCISE_MUSCLES } from '../lib/legacy/standards.js';
 import { cableStackMultiplier } from '../lib/legacy/cable-stack.js';
 import * as trainingBlock from '../lib/training-block.js';
 import { storedSessionProgress } from '../lib/legacy/session-status.js';
+import { renderLatestWorkoutRecap } from '../components/home/recap.js';
 
 function homeHarness(settings = {}, today = shared.localDate()) {
   const state = { loaded: true, history: [], lastSession: {}, measurements: [] };
   const elements = { planEditorText: { value: '' }, planEditorError: { style: {} } };
   const saves = [];
   const context = vm.createContext({ ...shared, ...overview, ...trainingBlock, storedSessionProgress, EXERCISE_MUSCLES, cableStackMultiplier, state,
+    renderLatestWorkoutRecap: (history, active) => renderLatestWorkoutRecap(history, active, today),
     localDate: () => today,
     trainingBlockStatus: settings => trainingBlock.trainingBlockStatus(settings, today),
     upcomingBlockDays: block => trainingBlock.upcomingBlockDays(block, today),
@@ -38,6 +40,37 @@ test('home keeps one primary workout, renders the remaining rotation, and suppor
   assert.equal((html.match(/class="home-then-row"/g) || []).length, shared.WORKOUTS.filter(w => w.program).length - 1);
   assert.match(html, /0 sessions/);
   assert.doesNotMatch(html, /undefined|NaN/);
+});
+
+test('home shows the latest workout recap expanded above the program and next workout', () => {
+  const h = homeHarness({}, '2026-09-06');
+  h.state.history = [{ id: 'done', workout_name: 'Strength A', date: '2026-09-06', duration_sec: 3240,
+    finished_at: '2026-09-06T18:00:00Z', sets: [
+      { exercise: 'Barbell Bench Press', weight_lb: 135, reps: '10', set_type: 'working' },
+      { exercise: 'Barbell Bench Press', weight_lb: 135, reps: '8', set_type: 'working' },
+    ] }];
+  const html = h.html();
+  const card = html.match(/<article[^>]*aria-label="Latest workout recap"[\s\S]*?<\/article>/)?.[0];
+  assert.ok(card, 'The recap is directly on home');
+  assert.match(card, /54 min/);
+  assert.match(card, /135 lb/);
+  assert.match(card, /10 · 8/);
+  assert.doesNotMatch(card, /<details|<button|onclick=/, 'The screenshot card needs no click or expansion');
+  assert.ok(html.indexOf(card) < html.indexOf('class="home-hero"'));
+  assert.equal(h.html(), html, 'Rerendering home keeps the recap visible');
+});
+
+test('home recap escapes saved names and never renders empty or active-only history as a completed workout', () => {
+  const session = { id: 'done', date: '2026-09-06', finished_at: '2026-09-06T18:00:00Z',
+    workout_name: '<script>alert(1)</script>', sets: [{ exercise: '<img src=x onerror=alert(1)>', reps: '8', weight_lb: 45 }] };
+  const html = renderLatestWorkoutRecap([session], [], '2026-09-06');
+  assert.match(html, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
+  assert.match(html, /&lt;img src=x onerror=alert\(1\)&gt;/);
+  assert.doesNotMatch(html, /<script|<img/);
+  assert.match(html, /<dt>Time<\/dt><dd>—<\/dd>/, 'Missing duration is not shown as zero');
+  assert.equal(renderLatestWorkoutRecap([], [], '2026-09-06'), '');
+  const live = { ...session, finished_at: null };
+  assert.equal(renderLatestWorkoutRecap([live], [live], '2026-09-06'), '');
 });
 
 test('home resumes the persisted active session ahead of the plan without todaySets', () => {

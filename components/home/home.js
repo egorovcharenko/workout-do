@@ -27,6 +27,7 @@ import { recentActivity, latestLift, latestBody } from "./overview";
 import { blockWorkoutCompleted, trainingBlockStatus } from "@/lib/training-block";
 import { storedSessionProgress } from "@/lib/legacy/session-status";
 import { renderTrainingBlockCard, renderBlockRestDay, renderBlockUpcoming } from "./trainingBlock";
+import { renderLatestWorkoutRecap } from "./recap";
 
 function renderWorkoutMuscleMap(w) {
   const muscles = {};
@@ -490,6 +491,7 @@ function renderHome() {
   return `<main class="home-page" style="${homeTokens()}">
     <header class="home-header"><div><div class="home-date">${getSessionDateStr()}</div><h1>Workouts</h1></div><div class="home-header-actions"><button class="home-chip" onclick="openPlanEditor()">${blockActive ? 'Regular plan' : 'Plan'}</button>${blockActive ? '' : renderDeloadControl(deloadOn)}</div></header>
     ${state.loadError ? '<p role="alert" class="home-note">Your workout data could not be loaded. Reload to try again.</p>' : ''}
+    ${renderLatestWorkoutRecap(state.history || [], state._activeSessions || [])}
     ${renderTrainingBlockCard()}${blockActive ? '' : renderPlanCard()}${hero}
     ${blockActive ? renderBlockUpcoming(blockInfo.block) : `<section><h2 class="home-label">Then</h2><div class="home-rotation">${remaining}</div></section>`}
     ${renderActivity()}${renderOverview()}
