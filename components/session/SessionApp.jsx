@@ -16,6 +16,7 @@ import { flattenTemplate, applyDeloadPrescription, applyPlanPrescription, comput
 import "./icons";
 import { useWorkoutTimers } from "./useWorkoutTimers";
 import { useWorkoutActions } from "./useWorkoutActions";
+import { useWorkoutCompletion } from "./useWorkoutCompletion";
 import { Header } from "./Header";
 import { ExerciseNav } from "./ExerciseNav";
 import { WorkoutCompleteScreen } from "./WorkoutCompleteScreen";
@@ -326,6 +327,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
   const totalSets = exercises.reduce((n, e) => n + e.sets.length, 0);
   const doneSets = exercises.reduce((n, e) => e.skipped ? n + e.sets.length : n + e.sets.filter(s => s.completed || s.userSkipped).length, 0);
   const isFinished = totalSets > 0 && doneSets === totalSets;
+  const completion = useWorkoutCompletion({ isFinished, elapsedSec: elapsed, scope: `${workoutId}:${sessionDate}` });
   const durationHistory = useMemo(
     () => buildExerciseDurationHistory(history, { excludeSessionId: sessionId }),
     [history, sessionId],
@@ -352,7 +354,15 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
         </div>
       </div> ); }
   if (loadError) return <div style={{ padding: 24, color: T.text }}><p role="alert">{loadError}</p><Link href="/" style={{ color: T.accentLight }}>Back to workouts</Link></div>;
-  const shownIdx = (focusIdx != null && exercises[focusIdx]) ? focusIdx : (isFinished ? null : currentIdx);
+  if (completion.showRecap) return <WorkoutCompleteScreen
+    workoutName={workout.name}
+    elapsedSec={completion.elapsedSec}
+    exercises={exercises}
+    sessionDate={sessionDate}
+    testMode={TEST_MODE}
+    onReview={() => { setFocused({ idx: currentIdx, currentIdx }); completion.review(); }}
+    onFinish={() => actions.onFinishWorkout(completion.elapsedSec)} />;
+  const shownIdx = (focusIdx != null && exercises[focusIdx]) ? focusIdx : currentIdx;
   const shownExercise = shownIdx !== null ? exercises[shownIdx] : null;
   const currentTimeMs = startedAt ? startedAt + elapsed * 1000 : null;
   const sessionTimes = computeSessionTimes(exercises, startedAt, isFinished ? null : currentIdx, currentTimeMs);
@@ -408,9 +418,10 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
             onAbandon={isFinished ? undefined : actions.onAbandonWorkout}
             done={doneSets}
             total={totalSets}
-            elapsedSec={elapsed}
+            elapsedSec={completion.elapsedSec}
             durationMeta={workoutDurationMeta}
             deload={!!window.SESSION_DELOAD} />
+          {isFinished && <div className="workout-recap-return"><button type="button" onClick={completion.show}>View workout recap</button></div>}
           {sessionBlock && <div style={{ margin: "0 16px 8px", color: T.accentLight, fontSize: 12 }}>
             4-week strength block · Regular program returns {sessionBlock.returnDate}
           </div>}
@@ -422,14 +433,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
                 <span style={{ color: T.accentLight, fontFamily: T.mono, fontSize: 10, fontWeight: 800, letterSpacing: 1, display: "block", marginBottom: 2 }}>📋 PLAN NOTE</span>
                 {pe.note}
               </div> ) : null; })()}
-          {shownIdx === null && isFinished ? ( <WorkoutCompleteScreen
-              workoutName={workout.name}
-              elapsedSec={elapsed}
-              totalSets={totalSets}
-              exercises={exercises}
-              sessionDate={sessionDate}
-              onFinish={() => actions.onFinishWorkout(elapsed)} />
-          ) : shownExercise && (() => { const i = shownIdx;
+          {shownExercise && (() => { const i = shownIdx;
             const ex = shownExercise; const group = ex.superset ? exercises.map((e2, idx) => ({ e: e2, idx })).filter(g => !g.e.skipped && g.e.superset === ex.superset) : [];
             const combined = group.length > 1;
             const posInGroup = combined ? group.findIndex(g => g.idx === i) + 1 : null;

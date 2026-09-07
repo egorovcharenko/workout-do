@@ -1,123 +1,77 @@
 "use client";
-import { useState } from "react";
-import { T } from "@/lib/legacy/shared";
+import { useRef, useState } from "react";
+import { buildWorkoutRecap, recapDate, recapDuration } from "@/lib/legacy/workout-recap";
 import { StrengthLevelUpload } from "./StrengthLevelUpload";
 
-// ─── file: workout-session-complete-screen.js ───
-
-function WorkoutCompleteScreen({ workoutName, elapsedSec, totalSets, exercises, sessionDate, onFinish }) {
+function WorkoutCompleteScreen({ workoutName, elapsedSec, exercises, sessionDate, testMode = false, onReview, onFinish }) {
   const [finishing, setFinishing] = useState(false);
-  const m = Math.floor(elapsedSec / 60);
-  const s = String(elapsedSec % 60).padStart(2, "0");
+  const [finishError, setFinishError] = useState(false);
+  const finishPending = useRef(false);
+  const recap = buildWorkoutRecap(exercises);
   const handleFinish = () => {
-    if (finishing) return;
+    if (finishPending.current) return;
+    finishPending.current = true;
     setFinishing(true);
-    void Promise.resolve()
-      .then(onFinish)
-      .catch(error => {
-        console.error("[V2-SAVE] finish action failed:", error);
-        setFinishing(false);
-      });
+    setFinishError(false);
+    void Promise.resolve().then(onFinish).catch(error => {
+      console.error("[V2-SAVE] finish action failed:", error);
+      finishPending.current = false;
+      setFinishing(false);
+      setFinishError(true);
+    });
   };
 
   return (
-    <div style={{
-      margin: "0 16px 12px",
-      padding: "32px 24px",
-      background: T.cardBg,
-      border: `1px solid ${T.cardBorder}`,
-      borderRadius: 16,
-      textAlign: "center",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      gap: 20,
-      boxShadow: "0 10px 30px -8px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.02)"
-    }}>
-      <div style={{ fontSize: 48 }}>🎉</div>
-      <h2 style={{
-        margin: 0,
-        color: T.strong,
-        fontSize: 26,
-        fontWeight: 800,
-        letterSpacing: -0.5,
-      }}>
-        Workout Complete!
-      </h2>
-      <p style={{
-        margin: 0,
-        color: T.muted,
-        fontSize: 14,
-        lineHeight: 1.5,
-        maxWidth: 280,
-      }}>
-        Awesome effort today! Your workout has been saved to your history.
-      </p>
+    <main className="workout-recap-screen">
+      <div className="workout-recap-container">
+        <article className="workout-recap" aria-label="Workout recap">
+          <header className="workout-recap-header">
+            <div className="workout-recap-eyebrow">
+              <span>{testMode ? "Test workout · not saved" : "Workout complete"}</span>
+              <time dateTime={sessionDate}>{recapDate(sessionDate)}</time>
+            </div>
+            <h1>{workoutName}</h1>
+          </header>
+          <dl className="workout-recap-metrics">
+            <div><dt>Time</dt><dd>{recapDuration(elapsedSec)}</dd></div>
+            <div><dt>Working sets</dt><dd>{recap.workingSets}</dd></div>
+            <div><dt>Reps</dt><dd>{recap.reps}</dd></div>
+          </dl>
+          <ol className="workout-recap-exercises">
+            {recap.exercises.map((exercise, index) => (
+              <li className="workout-recap-exercise" key={index}>
+                <div className="workout-recap-exercise-heading">
+                  <h2>{exercise.name}</h2>
+                  {exercise.workingSets > 0 && <span>{exercise.workingSets} {exercise.workingSets === 1 ? "set" : "sets"}</span>}
+                </div>
+                {exercise.groups.length ? exercise.groups.map((group, groupIndex) => (
+                  <div className="workout-recap-set-group" key={groupIndex}>
+                    <span className="workout-recap-load">{group.load}</span>
+                    <span className="workout-recap-reps"><span className="workout-recap-times">× </span><strong>{group.reps.join(" · ")}</strong><small> reps</small></span>
+                  </div>
+                )) : <p className="workout-recap-warmup-only">{exercise.warmupSets} warm-up {exercise.warmupSets === 1 ? "set" : "sets"} only</p>}
+              </li>
+            ))}
+          </ol>
+          {recap.exercises.length === 0 && <p className="workout-recap-empty">No sets logged.</p>}
+          <footer className="workout-recap-footer">
+            <span>{recap.warmupSets > 0 ? `+ ${recap.warmupSets} warm-up ${recap.warmupSets === 1 ? "set" : "sets"}` : `${recap.exercises.length} ${recap.exercises.length === 1 ? "exercise" : "exercises"}`}</span>
+            <span className="workout-recap-brand">workouts</span>
+          </footer>
+        </article>
 
-      {/* Stats Box */}
-      <div style={{
-        width: "100%",
-        maxWidth: 320,
-        background: "rgba(255,255,255,0.015)",
-        border: `1px solid rgba(255,255,255,0.04)`,
-        borderRadius: 12,
-        padding: "16px 20px",
-        display: "flex",
-        justifyContent: "space-around",
-        alignItems: "center",
-        margin: "10px 0",
-      }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <span style={{ color: T.faint, fontSize: 10, fontWeight: 700, fontFamily: T.mono, letterSpacing: 0.6 }}>TIME</span>
-          <span style={{ color: T.strong, fontSize: 20, fontWeight: 800, fontFamily: T.mono }}>{m}:{s}</span>
+        <div className="workout-recap-actions">
+          <button type="button" onClick={onReview} disabled={finishing}>Review sets</button>
+          <button type="button" className="workout-recap-finish" onClick={handleFinish} disabled={finishing} aria-busy={finishing}>
+            {finishing ? "Saving & exiting…" : "Finish & exit"}
+          </button>
         </div>
-        <div style={{ width: 1, height: 28, background: "rgba(255,255,255,0.08)" }} />
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <span style={{ color: T.faint, fontSize: 10, fontWeight: 700, fontFamily: T.mono, letterSpacing: 0.6 }}>SETS</span>
-          <span style={{ color: T.strong, fontSize: 20, fontWeight: 800, fontFamily: T.mono }}>{totalSets}</span>
-        </div>
-        <div style={{ width: 1, height: 28, background: "rgba(255,255,255,0.08)" }} />
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <span style={{ color: T.faint, fontSize: 10, fontWeight: 700, fontFamily: T.mono, letterSpacing: 0.6 }}>WORKOUT</span>
-          <span style={{ color: T.strong, fontSize: 14, fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 100 }}>{workoutName}</span>
-        </div>
+        {finishError && <p role="alert" className="workout-recap-error">Couldn’t finish. Try again.</p>}
+        {typeof window !== "undefined" && window.StrengthLevelUpload && !window.SESSION_DELOAD && (
+          <StrengthLevelUpload exercises={exercises} workoutName={workoutName} sessionDate={sessionDate} />
+        )}
       </div>
-
-      <button
-        type="button"
-        onClick={handleFinish}
-        disabled={finishing}
-        aria-busy={finishing}
-        style={{
-          width: "100%",
-          maxWidth: 320,
-          background: `linear-gradient(180deg, ${T.accentLight}, ${T.accent})`,
-          border: "none",
-          color: T.inv,
-          fontFamily: "inherit",
-          fontSize: 15,
-          fontWeight: 700,
-          padding: "12px 0",
-          borderRadius: 11,
-          cursor: finishing ? "wait" : "pointer",
-          opacity: finishing ? 0.8 : 1,
-          boxShadow: `0 4px 16px -4px ${T.accent}`,
-          transition: "transform 150ms",
-        }}
-        onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.02)"}
-        onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
-      >
-        {finishing ? "Saving & exiting…" : "Finish & Exit"}
-      </button>
-
-      {/* A deload single (1×1 @ 80%) isn't meaningful Strength Level data. */}
-      {window.StrengthLevelUpload && !window.SESSION_DELOAD && (
-        <StrengthLevelUpload
-          exercises={exercises}
-          workoutName={workoutName}
-          sessionDate={sessionDate} />
-      )}
-    </div>
+    </main>
   );
 }
 

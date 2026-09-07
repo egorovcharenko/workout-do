@@ -260,3 +260,49 @@ button { font-family: inherit; }
 .barbell-inline-weight .weight-stepper-value { font-size: 23px !important; }
 .barbell-inline-editor .barbell-weight-heading { min-height: 28px; gap: 6px; }
 .barbell-inline-editor .barbell-plate-picker { gap: 3px; }
+
+/* A standalone, button-free workout card for screenshots. */
+.workout-recap-screen { height: 100%; overflow-y: auto; background: #0B1015; color: #F3F4F6; padding: 20px 12px; font-family: var(--suite-font-sans); }
+.workout-recap-container { width: 100%; max-width: 560px; margin: 0 auto; }
+.workout-recap { overflow: hidden; border: 1px solid #30445D; border-radius: 18px; background: linear-gradient(145deg, #17263A, #101923 65%); }
+.workout-recap-header { padding: 20px 20px 16px; border-top: 3px solid #60A5FA; }
+.workout-recap-eyebrow { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 5px 12px; color: #A9BCD2; font-size: 11px; font-weight: 600; }
+.workout-recap-eyebrow > span { color: #86EFAC; }
+.workout-recap h1 { margin: 8px 0 0; font-size: clamp(25px, 5.8vw, 34px); font-weight: 800; line-height: 1.1; letter-spacing: -.8px; overflow-wrap: anywhere; }
+.workout-recap-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0 20px 4px; padding: 12px 0; border-top: 1px solid #304052; border-bottom: 1px solid #304052; }
+.workout-recap-metrics > div + div { padding-left: 14px; border-left: 1px solid #304052; }
+.workout-recap-metrics dt { color: #A9BCD2; font-size: 10px; line-height: 1.3; }
+.workout-recap-metrics dd { margin: 4px 0 0; font: 750 clamp(18px, 4vw, 23px)/1.2 var(--suite-font-mono); white-space: nowrap; }
+.workout-recap-exercises { list-style: none; margin: 0; padding: 0 20px; }
+.workout-recap-exercise { padding: 13px 0; }
+.workout-recap-exercise + .workout-recap-exercise { border-top: 1px solid #273547; }
+.workout-recap-exercise-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+.workout-recap h2 { margin: 0; min-width: 0; overflow-wrap: anywhere; font-size: 15px; font-weight: 750; line-height: 1.3; }
+.workout-recap-exercise-heading > span { flex-shrink: 0; color: #A9BCD2; font-size: 10px; }
+.workout-recap-set-group { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 12px; font: 600 15px/1.55 var(--suite-font-mono); }
+.workout-recap-load { color: #93C5FD; overflow-wrap: anywhere; }
+.workout-recap-reps { min-width: 0; overflow-wrap: anywhere; }
+.workout-recap-reps strong { font-weight: 750; }
+.workout-recap-times { color: #8294AB; font-weight: 400; }
+.workout-recap-reps small { color: #A9BCD2; font-size: 10px; font-weight: 400; }
+.workout-recap-warmup-only, .workout-recap-empty { margin: 0; color: #A9BCD2; font-size: 12px; }
+.workout-recap-empty { padding: 18px 20px; }
+.workout-recap-footer { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin: 0 20px; padding: 12px 0 15px; border-top: 1px solid #304052; color: #A9BCD2; font-size: 11px; }
+.workout-recap-brand { color: #93C5FD; font-size: 13px; font-weight: 750; letter-spacing: -.3px; }
+.workout-recap-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.workout-recap-actions button, .workout-recap-return button { min-height: 44px; padding: 10px 14px; border: 1px solid #34445A; border-radius: 10px; background: #182333; color: #E5E7EB; font: 650 13px var(--suite-font-sans); cursor: pointer; touch-action: manipulation; }
+.workout-recap-actions .workout-recap-finish { background: #60A5FA; color: #0B1729; border-color: #60A5FA; }
+.workout-recap-actions button:hover, .workout-recap-return button:hover { filter: brightness(1.12); }
+.workout-recap-actions button:disabled { opacity: .65; cursor: wait; }
+.workout-recap-actions button:focus-visible, .workout-recap-return button:focus-visible { outline: 2px solid #93C5FD; outline-offset: 3px; }
+.workout-recap-return { margin: 0 16px 10px; }
+.workout-recap-return button { width: 100%; }
+.workout-recap-error { color: #FCA5A5; font-size: 13px; margin-top: 10px; }
+@media (max-width: 380px) {
+  .workout-recap-screen { padding: 12px 8px; }
+  .workout-recap-header { padding: 16px 14px 14px; }
+  .workout-recap-metrics, .workout-recap-footer { margin-left: 14px; margin-right: 14px; }
+  .workout-recap-exercises { padding-left: 14px; padding-right: 14px; }
+  .workout-recap-set-group { font-size: 14px; }
+  .workout-recap-metrics > div + div { padding-left: 9px; }
+}
