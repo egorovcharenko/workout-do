@@ -55,6 +55,10 @@ Port of the old flat-file app in the `egorovcharenko/workout-tracker` GitHub rep
   Block sessions save their instance in `state_json.trainingBlock`; their previous-set hints are
   scoped to that run and workout (A and B separately), and excluded from regular-program prefills.
   Resuming an existing session keeps its saved block context even after the block ends.
+  Prescription revision 2 restores the recent regular rotation and set counts; old sessions keep
+  their original prescription on resume. New sessions bootstrap recent regular loads, then follow
+  their own revision's history. An optional `resumeDate` allows the current regular workout to
+  remain available for the day without moving the block's original end date.
 
 ## Shared suite packages
 

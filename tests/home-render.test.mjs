@@ -147,3 +147,15 @@ test('failed scheduling and cancellation keep the current program and show a ret
   assert.equal(h.state.blockBusy, false);
   assert.match(h.html(), /role="alert">Save failed/);
 });
+
+
+test('pausing the block for today keeps Start Dips Focus on the actual home screen', () => {
+  const h = homeHarness({ training_block: JSON.stringify({ ...scheduledBlock, resumeDate: '2026-09-08' }),
+    workout_plan: JSON.stringify([{ workout: 'Dips Focus' }]) }, '2026-09-07');
+  const html = h.html();
+  assert.match(html, /Start Dips Focus/);
+  assert.match(html, /Resumes Sep 8/);
+  assert.doesNotMatch(html, /Start Strength Accessories 1/);
+  assert.match(html, /18 sets/);
+  assert.match(html, /3 × \+25 lb × 5–12 · 1–2 RIR/);
+});

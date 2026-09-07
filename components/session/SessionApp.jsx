@@ -26,7 +26,7 @@ import { DurationReadout } from "./DurationReadout";
 import { buildExerciseDurationHistory, estimateExerciseDurationMeta } from "@/lib/legacy/duration-estimates";
 import { mergeTemplateAndSavedSet, shouldKeepRemovedWarmup } from "@/lib/legacy/exercise-history";
 import { isBeltLoadExercise } from "@/lib/legacy/belt-load";
-import { createTrainingBlock, regularToBlockWorkoutId, trainingBlockHints, trainingBlockStatus } from "@/lib/training-block";
+import { createTrainingBlock, regularToBlockWorkoutId, trainingBlockHints, trainingBlockStatus, resolveTrainingBlockSession } from "@/lib/training-block";
 import { parseSessionState } from "@/lib/legacy/session-status";
 import { withRepGuidance } from "@/lib/legacy/rep-guidance";
 import {
@@ -40,7 +40,9 @@ import {
 
 function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUrl = new URLSearchParams(window.location.search).get("w");
     return (fromUrl && ALL_WORKOUTS.some(w => w.id === fromUrl)) ? fromUrl : (WORKOUTS.find(w => w.main) || WORKOUTS[0]).id; });
-  const workout = useMemo(() => ALL_WORKOUTS.find(w => w.id === workoutId) || WORKOUTS[0], [workoutId]);
+  const requestedWorkout = useMemo(() => ALL_WORKOUTS.find(w => w.id === workoutId) || WORKOUTS[0], [workoutId]);
+  const [sessionWorkout, setSessionWorkout] = useState(null);
+  const workout = sessionWorkout?.id === workoutId ? sessionWorkout : requestedWorkout;
   const [rawExercises, setExercises] = useState([]);
   const [sessionDate, setSessionDate] = useState(() => localDate());
   const [loaded, setLoaded] = useState(false);
@@ -61,7 +63,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
     // settings goes first: it's the cheapest query but gates deload/bodyweight,
     // and a single-threaded dev server processes requests in arrival order —
     // listed last it queues behind the heavy queries and can hit fetchT's timeout.
-    (async () => { try { const results = await Promise.allSettled([ api.settings(), api.todaySession(workout.name), api.hints(), api.allHistory(), api.history1RM() ]);
+    (async () => { try { let workout = requestedWorkout; const results = await Promise.allSettled([ api.settings(), api.todaySession(workout.name), api.hints(), api.allHistory(), api.history1RM() ]);
         if (cancelled) return;
         const today = results[1].status === "fulfilled" ? results[1].value : null;
         let hints = results[2].status === "fulfilled" ? results[2].value : {};
@@ -92,11 +94,15 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
           }
           blockContext = savedState?.trainingBlock || (blockStatus.status === "active" ? blockStatus.block : null);
           if (!blockContext && TEST_MODE) blockContext = createTrainingBlock(localDate(), "preview");
-          if (!blockContext) throw new Error(blockStatus.status === "scheduled"
+          if (!blockContext) throw new Error(blockStatus.status === "paused"
+            ? "Your regular workout is available on the home screen today. The block resumes on " + blockStatus.block.resumeDate + "."
+            : blockStatus.status === "scheduled"
             ? `This block starts ${blockStatus.block.startDate}. Your regular program is available until then.`
             : "This block has ended. Your regular program is available on the home screen.");
+          ({ workout, block: blockContext } = resolveTrainingBlockSession(workout, blockContext, today, WORKOUTS));
           hints = trainingBlockHints(workout, allHistory, blockContext, today?.id);
         }
+        setSessionWorkout(workout);
         setSessionBlock(blockContext);
         const menu = blockStatus.status === "active" || blockContext ? BLOCK_WORKOUTS : WORKOUTS;
         setProgramWorkouts(menu.some(w => w.id === workout.id) ? menu : [workout, ...menu]);
@@ -245,7 +251,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
       } catch (e) { console.error("[V2] mount failed:", e);
         setLoadError(e.message || "The workout could not be loaded. Reload to try again.");
         setLoaded(true); } })(); return () => { cancelled = true; };
-  }, [workout, setElapsed, setStartedAt]);
+  }, [requestedWorkout, setElapsed, setStartedAt]);
   const startedAtRef = useRef(startedAt);
   const elapsedRef = useRef(elapsed);
   const saveScopeRef = useRef(`${workout.name}:${sessionDate}`);

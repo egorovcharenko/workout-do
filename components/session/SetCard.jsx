@@ -90,7 +90,7 @@ function SetCard({ s, idx, exercise, onReopenSet, dur }) {
         const repText = s.reps ?? targetReps ?? guidance?.suggested ?? lastReps ?? "—";
         const repColor = isPreview ? T.muted : (s.completed || isCurrent) ? T.strong : T.text;
         const loadText = exercise.beltLoad ? (totalLb > 0 ? `+${totalLb}` : "BW") : stages ? (curRank > 0 ? `S${curRank}` : "—") : weightDisplay;
-        if (!s.completed && s.reps == null && guidance?.rirLabel) {
+        if (!s.completed && s.reps == null && guidance?.rirLabel && !guidance.rangeLabel) {
           return <div style={{ display: "flex", alignItems: "baseline", gap: 5, fontFamily: T.mono, fontSize: 14, fontWeight: 700 }}>
             {(!exercise.repsOnly || exercise.beltLoad) && <span style={{ color: T.text }}>{loadText} ·</span>}
             <span style={{ color: T.accentLight }}>{guidance.rirLabel} RIR</span>
@@ -116,6 +116,7 @@ function SetCard({ s, idx, exercise, onReopenSet, dur }) {
       </div>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8, fontFamily: T.mono, fontSize: 10 }}>
         <span title={previous ? `${previous.date} · ${previous.workout}` : undefined} style={{ color: T.muted }}>Last <strong style={{ color: T.text, fontWeight: 700 }}>{previous && !previous.comparable ? previous.label : lastReps ?? "—"}</strong>{lastReps != null && (!previous || previous.comparable) ? " reps" : ""}</span>
+        {!s.completed && guidance?.rirLabel && guidance.rangeLabel && <span style={{ color: T.accentLight }}>{guidance.rirLabel} RIR</span>}
         {!s.completed && guidance?.suggested != null && <span style={{ color: T.accentLight }}>Suggested <strong>{guidance.suggested}</strong></span>}
         {s.completed && <span style={{ color: deltaColor, fontWeight: 700 }}>
           {deltaText}

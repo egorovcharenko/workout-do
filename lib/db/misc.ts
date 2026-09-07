@@ -44,7 +44,7 @@ export async function startTrainingBlock(uid: string, startDate: string) {
     const ref = settingsRef(uid);
     const snapshot = await transaction.get(ref);
     const current = trainingBlockStatus(snapshot.data());
-    if (current.status === "active" || current.status === "scheduled") {
+    if (current.status === "active" || current.status === "scheduled" || current.status === "paused") {
       throw new Error("A block is already scheduled or running. Reload to see it.");
     }
     transaction.set(ref, { training_block: JSON.stringify(block) }, { merge: true });

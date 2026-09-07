@@ -8,7 +8,7 @@ const escape = value => String(value).replace(/[&<>"']/g, c => ({ "&": "&amp;", 
 const dateLabel = date => new Date(`${date}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
 function exerciseTargets(exercise) {
-  if (exercise.targetRir) return `${exercise.sets} sets · ${exercise.targetRir.join("–")} RIR`;
+  if (exercise.targetRir && !exercise.workRepRanges.some(Boolean)) return `${exercise.sets} sets · ${exercise.targetRir.join("–")} RIR`;
   const groups = [];
   exercise.defaultWork.forEach((weight, index) => {
     const range = exercise.workRepRanges[index];
@@ -19,14 +19,16 @@ function exerciseTargets(exercise) {
     if (previous?.label === label) previous.count += 1;
     else groups.push({ label, count: 1 });
   });
-  return groups.map(group => `${group.count} × ${group.label}`).join(" · ");
+  const targets = groups.map(group => `${group.count} × ${group.label}`).join(" · ");
+  return exercise.targetRir ? `${targets} · ${[...new Set(exercise.targetRir)].join("–")} RIR` : targets;
 }
 
 export function renderTrainingBlockCard() {
   const info = trainingBlockStatus(window.USER_SETTINGS);
   const block = info.block;
-  const running = info.status === "active" || info.status === "scheduled";
+  const running = info.status === "active" || info.status === "scheduled" || info.status === "paused";
   const label = info.status === "active" ? `Day ${info.day} of 28`
+    : info.status === "paused" ? `Resumes ${dateLabel(block.resumeDate)}`
     : info.status === "scheduled" ? `Starts ${dateLabel(block.startDate)}`
     : info.status === "ended" ? "Regular program restored" : "Squat · Bench · Pull-ups";
   const date = state.blockStartDate || localDate();
@@ -38,7 +40,7 @@ export function renderTrainingBlockCard() {
       <p class="home-note">A → Accessories 1 → Rest → B → Accessories 2 → Rest</p>
       ${BLOCK_WORKOUTS.map(workout => `<div class="home-block-workout"><h3>${escape(workout.blockLabel)} <span>${workout.exercises.reduce((n, ex) => n + ex.sets, 0)} sets</span></h3>
         ${workout.exercises.map(ex => `<div class="home-block-exercise"><strong>${escape(ex.name)}</strong><span>${escape(exerciseTargets(ex))}</span><small>Rest ${ex.rest / 60} min</small></div>`).join('')}</div>`).join('')}
-      <p class="home-note">Barbell weights include the bar; dumbbells are per hand. Use your usual cable settings. Working sets exclude warm-ups. Squat and bench rest can extend to 5 minutes.</p>
+      <p class="home-note">Barbell weights include the bar; dumbbells are per hand. Cable weights are per stack or per arm. Loads shown are starting references; your completed workouts carry forward. Working sets exclude warm-ups. Squat and bench rest can extend to 5 minutes.</p>
       <ul class="home-block-rules">${BLOCK_PROGRESSION_NOTES.map(note => `<li>${escape(note)}</li>`).join('')}</ul>
       ${running ? `<button class="home-chip" onclick="endCurrentTrainingBlock()" ${state.blockBusy ? 'disabled' : ''}>${info.status === 'scheduled' ? 'Cancel block' : 'End block early'}</button>`
         : `<div class="home-block-actions"><label for="blockStartDate">Start date<input id="blockStartDate" type="date" value="${escape(date)}" min="${localDate()}" onchange="state.blockStartDate=this.value"></label>
