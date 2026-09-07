@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
 import { T, SWAP_GROUPS, getSwapGroup, getSwapGroupName } from "@/lib/legacy/shared";
-import { SetCard } from "./SetCard";
+import { SetCard, setStripLabel } from "./SetCard";
+import { RirSelector } from "./RirSelector";
 import { RestTimer } from "./RestTimer";
 import { ActiveSetBlock } from "./ActiveSetBlock";
 import { DurationReadout } from "./DurationReadout";
@@ -9,7 +10,7 @@ import { ProgressionBanner } from "./ProgressionBanner";
 
 // ─── file: workout-session-exercise-card.js ───
 
-function ExerciseCardContent({ exercise, sessionTimes, durationMeta, supersetTag, embedded, rest, onRestAdd, onRestSkip, onRestToggle, onPickWeight, onApplyLoadProgression, onPickBodyweight, onPickGrip, onToggleBand, onClearBands, onLogReps, onSkipExercise, onSwapExercise, onReopenSet, onAddSet, onRemoveSet, onRemoveWarmup }) {
+function ExerciseCardContent({ exercise, sessionTimes, durationMeta, supersetTag, embedded, rest, onRestAdd, onRestSkip, onRestToggle, onPickWeight, onApplyLoadProgression, onPickBodyweight, onPickGrip, onToggleBand, onClearBands, onLogReps, onPickRir, lastLoggedSet, onPickLastRir, onSkipExercise, onSwapExercise, onReopenSet, onAddSet, onRemoveSet, onRemoveWarmup }) {
   const [showAllFamilies, setShowAllFamilies] = useState(false);
   const [showVariants, setShowVariants] = useState(false);
   const currentFamilyName = getSwapGroupName(exercise.name) || "Other";
@@ -237,6 +238,14 @@ function ExerciseCardContent({ exercise, sessionTimes, durationMeta, supersetTag
 
       {rest && <RestTimer rest={rest} onAdd={onRestAdd} onSkip={onRestSkip} onToggle={onRestToggle} />}
 
+      {lastLoggedSet && activeSet?.reps == null && (
+        <RirSelector
+          context={`${lastLoggedSet.exercise.name === exercise.name ? "" : `${lastLoggedSet.exercise.name} · `}${setStripLabel(lastLoggedSet.set, lastLoggedSet.exercise.sets)}`}
+          value={lastLoggedSet.set.rir}
+          onPick={onPickLastRir}
+        />
+      )}
+
       {activeSet && (
         <ActiveSetBlock
           exercise={exercise}
@@ -251,6 +260,7 @@ function ExerciseCardContent({ exercise, sessionTimes, durationMeta, supersetTag
           onToggleBand={(b) => onToggleBand(activeIdx, b)}
           onClearBands={() => onClearBands(activeIdx)}
           onLogReps={(r) => onLogReps(activeIdx, r)}
+          onPickRir={(value) => onPickRir(activeIdx, value)}
           onApplyLast={() => {
             if (exercise.mode === "bodyweight") {
               onPickBodyweight(activeIdx, activeSet.lastBodyweight || 175);

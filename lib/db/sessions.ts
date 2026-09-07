@@ -18,6 +18,7 @@ import { isStoredSessionFinished } from "@/lib/legacy/session-status";
 import { exerciseHintsWithDeloadBootstrap } from "@/lib/legacy/exercise-hints";
 import { isStoredBeltLoad, storedBeltLoad } from "@/lib/legacy/belt-load";
 import { regularProgramSessions } from "@/lib/training-block";
+import { normalizeRir } from "@/lib/legacy/set-rir";
 import type {
   HintMap,
   SessionDoc,
@@ -306,6 +307,7 @@ export type SavePayload = {
     set_type: "warmup" | "working";
     set_number?: number;
     reps?: string | number;
+    rir?: SetRow["rir"];
     weight_lb?: number | null;
     load_type?: "belt" | null;
     bands_json?: string | null;
@@ -325,6 +327,7 @@ export async function saveSession(
     set_type: s.set_type,
     set_number: s.set_number ?? 0,
     reps: s.reps ?? "",
+    rir: normalizeRir(s.rir),
     weight_lb: s.weight_lb ?? null,
     load_type: s.load_type ?? null,
     bands_json: s.bands_json ?? null,

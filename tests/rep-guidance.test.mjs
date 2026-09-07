@@ -188,6 +188,7 @@ const { SetChip } = loadComponent('../components/session/NavChip.jsx', {
 const empty = () => null;
 const loadProgression = loadComponent('../components/session/LoadProgression.jsx');
 const { ActiveSetBlock } = loadComponent('../components/session/ActiveSetBlock.jsx', {
+  './RirSelector': { RirSelector: empty },
   './LoadProgression': loadProgression,
   './Stepper': { GripSelector: empty, BandsGrid: empty }, './StageSelector': { StageSelector: empty }, './RepStrip': reps,
   './BarbellVisualizer': { BarbellVisualizer: empty }, './CableStackVisualizer': { CableStackVisualizer: empty },

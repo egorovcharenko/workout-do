@@ -118,6 +118,7 @@ function SetCard({ s, idx, exercise, onReopenSet, dur }) {
         <span title={previous ? `${previous.date} · ${previous.workout}` : undefined} style={{ color: T.muted }}>Last <strong style={{ color: T.text, fontWeight: 700 }}>{previous && !previous.comparable ? previous.label : lastReps ?? "—"}</strong>{lastReps != null && (!previous || previous.comparable) ? " reps" : ""}</span>
         {!s.completed && guidance?.rirLabel && guidance.rangeLabel && <span style={{ color: T.accentLight }}>{guidance.rirLabel} RIR</span>}
         {!s.completed && guidance?.suggested != null && <span style={{ color: T.accentLight }}>Suggested <strong>{guidance.suggested}</strong></span>}
+        {s.completed && s.rir != null && <span style={{ color: T.accentLight, whiteSpace: "nowrap" }}>{s.rir.replace("-", "–")} RIR</span>}
         {s.completed && <span style={{ color: deltaColor, fontWeight: 700 }}>
           {deltaText}
           {dur != null && <span style={{ color: T.muted, fontWeight: 500, fontSize: 9 }}> · {fmtSetDuration(dur)}</span>}

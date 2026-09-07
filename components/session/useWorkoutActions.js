@@ -10,6 +10,7 @@ import { loggedAtForSetUpdate } from "@/lib/legacy/duration-estimates";
 import { finishAndExit } from "@/lib/legacy/finish-workout";
 import { abandonAndExit } from "@/lib/legacy/abandon-workout";
 import { applySuggestedLoad } from "@/lib/legacy/load-guidance";
+import { toggleSetRir } from "@/lib/legacy/set-rir";
 import {
   buildLibraryExerciseTemplate,
   exerciseNameExists,
@@ -123,6 +124,12 @@ function useWorkoutActions({
   const onClearBands = (eIdx, sIdx) => {
     startTimer();
     updateAndSave(patchSet(eIdx, sIdx, { bands: [] }));
+  };
+
+  const onPickRir = (eIdx, sIdx, value) => {
+    const current = exercisesRef.current;
+    const next = toggleSetRir(current, eIdx, sIdx, value);
+    if (next !== current) updateAndSave(next);
   };
 
   const onLogReps = (eIdx, sIdx, r) => {
@@ -282,7 +289,7 @@ function useWorkoutActions({
       const newSet = {
         kind: "work", idx: newIdx, setNumber: newSetNumber,
         saveExerciseName: lastWork?.saveExerciseName || e.name,
-        completed: false, active: false, reps: null, weight: lastWork?.weight || 0,
+        completed: false, active: false, reps: null, rir: null, weight: lastWork?.weight || 0,
         bodyweight: lastWork?.bodyweight, grip: lastWork?.grip,
         bands: lastWork?.bands ? lastWork.bands.slice() : [],
         lastWeight: null, lastBands: [], lastReps: null,
@@ -414,6 +421,7 @@ function useWorkoutActions({
     onToggleBand,
     onClearBands,
     onLogReps,
+    onPickRir,
     onReopenSet,
     onSkipWarmup,
     onSkipExercise,

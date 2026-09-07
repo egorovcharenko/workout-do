@@ -9,12 +9,13 @@ import { EquipmentWeightSelector } from "./WeightSelection";
 import { BeltPlateVisualizer } from "./BeltPlateVisualizer";
 import { isCableStackExercise } from "@/lib/legacy/cable-stack";
 import { LoadProgression } from "./LoadProgression";
+import { RirSelector } from "./RirSelector";
 
 // ─── file: workout-session-activeset.js ───
 
 // BarbellVisualizer component has been extracted to its own file: /workout-session-barbell-visualizer.js
 
-function ActiveSetBlock({ exercise, set, totalWork, onPickWeight, onApplyLoadProgression, onPickBodyweight, onPickGrip, onToggleBand, onClearBands, onLogReps }) {
+function ActiveSetBlock({ exercise, set, totalWork, onPickWeight, onApplyLoadProgression, onPickBodyweight, onPickGrip, onToggleBand, onClearBands, onLogReps, onPickRir }) {
   const isBW = exercise.mode === "bodyweight";
   const isCable = isCableStackExercise(exercise.name, exercise.equipment);
   const bands = set.bands || [];
@@ -128,6 +129,7 @@ function ActiveSetBlock({ exercise, set, totalWork, onPickWeight, onApplyLoadPro
           logged={set.reps}
           onLog={onLogReps}
         />
+        <RirSelector value={set.rir} onPick={onPickRir} />
       </div>
 
 

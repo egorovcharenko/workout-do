@@ -9,6 +9,7 @@ export type SetRow = {
   set_type: "warmup" | "working";
   set_number: number;
   reps: string | number | null;
+  rir?: "0" | "1-2" | "3-4" | "5+" | null;
   weight_lb: number | null;
   load_type?: "belt" | null;
   bands_json: string | null;

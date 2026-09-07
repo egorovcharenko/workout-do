@@ -29,6 +29,7 @@ import { isBeltLoadExercise } from "@/lib/legacy/belt-load";
 import { createTrainingBlock, regularToBlockWorkoutId, trainingBlockHints, trainingBlockStatus, resolveTrainingBlockSession } from "@/lib/training-block";
 import { parseSessionState } from "@/lib/legacy/session-status";
 import { withRepGuidance } from "@/lib/legacy/rep-guidance";
+import { latestLoggedSet } from "@/lib/legacy/set-rir";
 import {
   firstPendingSetIndex,
   isResolvedSet,
@@ -324,6 +325,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
     setSessionDate(localDate()); setFocused(null); resetTimers(id);
     setWorkoutId(id); };
   const actions = useWorkoutActions({ workout, exercises, setExercises, sessionDate, sessionId, setSessionId, startedAt, elapsed, swaps, setSwaps, dataRef, startTimer, setRest, queueSave, cancelQueuedSave });
+  const lastLogged = latestLoggedSet(exercises);
   const currentIdx = (() => { let i = exercises.findIndex(e => !e.skipped && e.sets.some(s => s.active));
     if (i !== -1) return i;
     i = exercises.findIndex(e => !e.skipped && e.sets.some(s => !isResolvedSet(s)));
@@ -460,6 +462,9 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
                 onToggleBand={(sIdx, b) => actions.onToggleBand(i, sIdx, b)}
                 onClearBands={(sIdx) => actions.onClearBands(i, sIdx)}
                 onLogReps={(sIdx, r) => actions.onLogReps(i, sIdx, r)}
+                onPickRir={(sIdx, value) => actions.onPickRir(i, sIdx, value)}
+                lastLoggedSet={lastLogged}
+                onPickLastRir={(value) => lastLogged && actions.onPickRir(lastLogged.eIdx, lastLogged.sIdx, value)}
                 onSkipWarmup={() => actions.onSkipWarmup(i)}
                 onSkipExercise={() => actions.onSkipExercise(i)}
                 onDeferExercise={() => actions.onDeferExercise(i)}
