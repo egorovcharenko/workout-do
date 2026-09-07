@@ -409,3 +409,31 @@ test('the weight offer makes the reserve confirmation explicit and changes weigh
   assert.match(building, /1\/2 A workouts at 8 reps/);
   assert.doesNotMatch(building, /<button/);
 });
+
+
+test('regular workouts including restored Dips show RIR without changing existing work or rep ranges', () => {
+  const regularWorkout = shared.WORKOUTS.find(w=>w.id==='micro-arms');
+  const dips = ex('Dips',[set(1,25,{completed:true,reps:11,logged_at:'2026-09-07T17:30:00Z'}),set(2,25),set(3,25)],{beltLoad:true,repsOnly:true,repRange:'8-12'});
+  const dragon = ex('Dragon Fly Progression',[set(1,0,{grip:'single-leg'})],{stages:shared.DRAGONFLY_STAGES,assist:true,repRange:'3-8'});
+  const raw = [dips,dragon]; const before=JSON.stringify(raw);
+  const result=withRepGuidance(raw,[],{workout:regularWorkout,block:null,date:'2026-09-07'});
+  assert.equal(result[0].sets[1].repGuidance.rirLabel,'1–2');
+  assert.equal(result[0].sets[1].repGuidance.rangeLabel,'8–12');
+  assert.equal(result[0].sets[1].repGuidance.suggested,null);
+  assert.equal(result[1].sets[0].repGuidance.rirLabel,'2');
+  assert.equal(result[0].sets[0].reps,11);assert.equal(result[0].sets[0].logged_at,dips.sets[0].logged_at);
+  assert.deepEqual(result[0].sets.map(s=>s.weight),[25,25,25]);assert.equal(JSON.stringify(raw),before);
+  const html=renderToStaticMarkup(React.createElement(ActiveSetBlock,{exercise:result[0],set:result[0].sets[1]}));
+  assert.match(html,/Target <strong>1–2 RIR<\/strong>/);assert.doesNotMatch(html,/Suggested/);
+  assert.equal(navSetDisplay(result[0].sets[1],result[0]).reps,'8–12','Compact navigation retains the set target');
+});
+
+test('regular RIR leaves warm-ups, deloads and explicit per-set prescriptions alone', () => {
+  const w=shared.WORKOUTS.find(w=>w.id==='main-b');
+  const exercise=ex('Barbell RDL',[set(0,95,{kind:'warmup'}),set(1,205),set(2,205,{planTargetReps:5})],{repRange:'6-10'});
+  const result=withRepGuidance([exercise],[],{workout:w})[0];
+  assert.deepEqual(result.sets.map(s=>s.repGuidance.rirLabel),[null,'2',null]);
+  assert.equal(result.sets[2].repGuidance.suggested,5);
+  const deload=withRepGuidance([{...exercise,deload:true}],[],{workout:w})[0];
+  assert.ok(deload.sets.every(s=>!s.repGuidance.rirLabel));
+});
