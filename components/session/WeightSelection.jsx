@@ -15,7 +15,7 @@ function WeightSelectionFrame({ visual, controls, children, compact = false, vis
     }}>
       <div className={stacked ? "barbell-weight-layout" : undefined} style={{
         display: "grid",
-        gridTemplateColumns: stacked ? "minmax(0, 1fr)" : compact ? "minmax(92px, .8fr) minmax(0, 1.2fr)" : "minmax(180px, 1fr) minmax(220px, 1fr)",
+        gridTemplateColumns: stacked || !visual ? "minmax(0, 1fr)" : compact ? "minmax(92px, .8fr) minmax(0, 1.2fr)" : "minmax(180px, 1fr) minmax(220px, 1fr)",
         gap: stacked ? 4 : compact ? 10 : 14,
         alignItems: "center",
         minHeight: compact ? 62 : 84,
@@ -70,11 +70,11 @@ function EquipmentVisual({ kind }) {
   );
 }
 
-function EquipmentWeightSelector({ value, last, onPick, kind = "weight", compact = false }) {
+function EquipmentWeightSelector({ value, last, onPick, kind = null, compact = false }) {
   return (
     <WeightSelectionFrame
       compact={compact}
-      visual={<EquipmentVisual kind={kind} />}
+      visual={kind ? <EquipmentVisual kind={kind} /> : null}
       controls={(
         <WeightStepper
           value={value}

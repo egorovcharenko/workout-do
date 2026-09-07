@@ -7,7 +7,6 @@ import { BarbellVisualizer } from "./BarbellVisualizer";
 import { CableStackVisualizer } from "./CableStackVisualizer";
 import { EquipmentWeightSelector } from "./WeightSelection";
 import { BeltPlateVisualizer } from "./BeltPlateVisualizer";
-import { isCableStackExercise } from "@/lib/legacy/cable-stack";
 import { LoadProgression } from "./LoadProgression";
 import { RirSelector } from "./RirSelector";
 
@@ -17,7 +16,7 @@ import { RirSelector } from "./RirSelector";
 
 function ActiveSetBlock({ exercise, set, totalWork, onPickWeight, onApplyLoadProgression, onPickBodyweight, onPickGrip, onToggleBand, onClearBands, onLogReps, onPickRir }) {
   const isBW = exercise.mode === "bodyweight";
-  const isCable = isCableStackExercise(exercise.name, exercise.equipment);
+  const isCable = exercise.equipment === "cable";
   const bands = set.bands || [];
   const lastBands = set.lastBands || [];
   const baseW = isBW ? (set.bodyweight || 0) : set.weight;
@@ -30,9 +29,9 @@ function ActiveSetBlock({ exercise, set, totalWork, onPickWeight, onApplyLoadPro
   const lastReps = guidance ? previous?.reps : set.lastReps;
   const weightVisualKind = isBW
     ? "bodyweight"
-    : /dumbbell|\bdb\b|goblet|lunge|bulgarian/i.test(exercise.name)
+    : exercise.equipment === "dumbbell"
       ? "dumbbell"
-      : "weight";
+      : null;
 
   return (
     <div className={`active-set-block${exercise.isBarbell ? " active-set-barbell" : ""}`} style={{

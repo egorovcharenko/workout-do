@@ -212,7 +212,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
                   }
                 }
                 const isAssist = official ? !!official.assist : false;
-                const isBandOnly = official ? (official.equipment === "band" && !official.bandAddon && !isAssist && !official.repsOnly) : (name.toLowerCase().includes("band") && !isAssist);
+                const isBandOnly = official ? (official.equipment === "band" && !official.bandAddon && !isAssist && !official.repsOnly) : false;
                 
                 exs.push({
                   id: `custom-${name}`,
@@ -230,7 +230,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
                   assist: isAssist,
                   repsOnly: official ? !!official.repsOnly : false,
                   beltLoad: isBeltLoadExercise(name),
-                  isBarbell: official ? (official.equipment === "barbell" || official.name.includes("Barbell") || official.name === "Standing Overhead Press") : (name.toLowerCase().includes("barbell")),
+                  isBarbell: official?.equipment === "barbell",
                   equipment: official ? (official.equipment || null) : null,
                   sets: saved,
                   customAdded: true,
