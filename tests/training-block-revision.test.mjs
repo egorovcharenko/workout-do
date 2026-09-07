@@ -159,3 +159,16 @@ test('the restored regular Dips workout supplies the next block load after the o
   assert.deepEqual(plain(work(utils.flattenTemplate(w,{},hints),'Dips').map(s=>s.weight)),[27.5,27.5,27.5]);
   assert.equal(block.trainingBlockHints(w,[{...today,finished_at:null}],resumedRun)['Dips|working|1'],undefined);
 });
+
+
+test('accessory progression finds its regular baseline across unrelated workout days', () => {
+  const w = getWorkout('strength-accessories-2');
+  const rows = [1,2,3].map(n=>row('Calf Raises',n,55,20));
+  const past = [session('Squat Focus','2026-09-05',[row('Barbell Back Squat',1,135,8)]),
+    session('Shrugs Focus','2026-09-03',rows,{cable_weight_mode:'per_stack'}),
+    session('Dips Focus','2026-09-01',[row('Dips',1,25,11,{load_type:'belt'})]),
+    session('Shrugs Focus','2026-08-30',rows,{cable_weight_mode:'per_stack'})];
+  const sets = work(guide(w,past),'Calf Raises');
+  assert.equal(sets[0].repGuidance.loadProgression.qualifying,2);
+  assert.equal(sets[0].repGuidance.loadProgression.weight,56.25);
+});
