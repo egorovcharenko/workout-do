@@ -26,19 +26,24 @@ function SetChip({ d, k, onClick }) {
     }
   }
   return (
-    <button type="button" key={k} onClick={onClick} aria-label={`Select ${d.kind === "warmup" ? "warm-up" : "working"} set ${k + 1}`} style={{
-      display: "flex", alignItems: "center", justifyContent: "center", gap: 2, minWidth: 0, width: "100%", minHeight: 28,
+    <button type="button" key={k} onClick={onClick} aria-label={`Select ${d.kind === "warmup" ? "warm-up" : "working"} set ${k + 1}${d.lastReps != null ? `; last workout ${d.lastReps} reps` : ""}`} style={{
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1, minWidth: 0, width: "100%", minHeight: 28,
       padding: "3px 2px", borderRadius: 6,
       border: box.border, background: box.background, color: box.color,
       fontFamily: T.mono, fontSize: 12.5, fontWeight: 700,
       fontStyle: "normal", whiteSpace: "nowrap",
       cursor: onClick ? "pointer" : "default",
     }}>
+      <span style={{ display: "inline-flex", alignItems: "baseline", justifyContent: "center", gap: 2 }}>
       {d.rirLabel
         ? <span style={{ fontSize: 11 }}>{d.lb && d.lb !== "BW" ? `${d.lb} · ` : ''}{d.rirLabel} RIR</span>
         : d.repsOnly
         ? (d.reps != null ? d.reps : "—")
         : <>{d.lb || "—"}{d.weightMultiplier === 2 && <span style={{ color: box.xColor, fontWeight: 600, fontSize: 10 }}>×2</span>}<span style={{ color: box.xColor, fontWeight: 400, fontSize: 11 }}>×</span>{d.reps != null ? d.reps : "—"}</>}
+      </span>
+      {d.lastReps != null && <span title={d.lastTitle || undefined} style={{ color: d.state === "current" ? "rgba(255,255,255,0.85)" : T.muted, fontSize: 10, fontWeight: 500, lineHeight: 1.2 }}>
+        Last <strong style={{ fontWeight: 700 }}>{d.lastReps}</strong>
+      </span>}
     </button>
   );
 }

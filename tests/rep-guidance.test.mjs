@@ -196,6 +196,40 @@ const { ActiveSetBlock } = loadComponent('../components/session/ActiveSetBlock.j
   '@/lib/legacy/cable-stack': { isCableStackExercise: () => false },
 });
 
+test('navigation buttons show each previous set’s reps alongside the target range', () => {
+  const name = 'Cable Tricep Pushdowns';
+  const raw = [ex(name, [1, 2, 3].map(n => set(n, 55, { active: n === 1, targetRepRange: [5, 12] })))];
+  const past = session('past', 'Shrugs Focus', '2026-09-03', [14, 10, 8].map((reps, i) => row(name, i + 1, 55, reps)));
+  const guided = withRepGuidance(raw, [past], { ...options, block: null, workout: shared.WORKOUTS.find(w => w.id === 'micro-delts') })[0];
+  const before = JSON.stringify(guided);
+  guided.sets.forEach((s, i) => {
+    const display = navSetDisplay(s, guided);
+    assert.equal(display.reps, '5–12');
+    assert.equal(display.lastReps, [14, 10, 8][i]);
+    const html = renderToStaticMarkup(React.createElement(SetChip, { d: display, k: i }));
+    assert.match(html, /5–12/);
+    assert.match(html, new RegExp(`Last <strong[^>]*>${[14, 10, 8][i]}</strong>`));
+    assert.match(html, /2026-09-03/);
+  });
+  assert.equal(JSON.stringify(guided), before, 'Rendering must not log reps or change targets');
+  const completed = { ...guided.sets[0], completed: true, reps: 11 };
+  const display = navSetDisplay(completed, guided);
+  assert.equal(display.reps, 11);
+  assert.equal(display.lastReps, 14);
+});
+
+test('navigation last-rep labels never mistake template defaults for logged history', () => {
+  const exercise = ex('Calf Raises', [set(1, 55, { lastReps: 20, targetRepRange: [15, 20] })]);
+  const guided = withRepGuidance([exercise], [], { ...options, block: null })[0];
+  const display = navSetDisplay(guided.sets[0], guided);
+  assert.equal(display.lastReps, null);
+  assert.equal(display.reps, '15–20');
+  assert.equal(display.weightMultiplier, 2);
+  const html = renderToStaticMarkup(React.createElement(SetChip, { d: display, k: 0 }));
+  assert.doesNotMatch(html, /Last|last workout/);
+  assert.match(html, /×2/);
+});
+
 test('set cards and the rep picker render distinct previous, target and suggested values without logging anything', () => {
   const guided = withRepGuidance([ex(squat, [set(1, 135, { active: true, targetRepRange: [5, 8] })])],
     [session('past', 'Squat Focus', '2026-09-05', [row(squat, 1, 135, 6)])], options)[0];
