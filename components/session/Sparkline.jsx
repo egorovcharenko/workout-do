@@ -5,14 +5,16 @@ import { sparklineDomain, trainingPoints } from "@/lib/deload-progress";
 
 // ─── file: workout-session-sparkline.js ───
 
-function Sparkline({ exerciseName, data, valueKey, color, label, fmt, showTip, hideTip }) {
+function Sparkline({ exerciseName, data, valueKey, color, label, fmt, showTip, hideTip, allTime = false }) {
   const DAY_MS = 86400000;
   
   const today = localDate();
   const todayMs = Date.parse(today + 'T00:00:00Z');
+  const isAssist = isAssistExercise(exerciseName);
+  const isValidVal = (v) => v != null && Number.isFinite(v) && (isAssist ? v > -1000 : v > 0);
 
   const days = [];
-  for (let i = 29; i >= 0; i--) {
+  for (let i = 29; !allTime && i >= 0; i--) {
     const ms = todayMs - i * DAY_MS;
     const d = new Date(ms);
     days.push({
@@ -23,16 +25,24 @@ function Sparkline({ exerciseName, data, valueKey, color, label, fmt, showTip, h
       value: null,
     });
   }
+  const allDates = new Map();
   (data || []).forEach(d => {
+    if (allTime) {
+      const ms = Date.parse(d.date + 'T00:00:00Z');
+      if (!Number.isFinite(ms) || ms > todayMs || !isValidVal(+d[valueKey])) return;
+      allDates.set(d.date, { date: d.date, value: +d[valueKey], isDeload: !!d.isDeload, isToday: d.date === today });
+      return;
+    }
     const day = days.find(x => x.date === d.date);
     if (day) {
       day.value = +d[valueKey] || 0;
       day.isDeload = !!d.isDeload;
     }
   });
-
-  const isAssist = isAssistExercise(exerciseName);
-  const isValidVal = (v) => v != null && (isAssist ? v > -1000 : v > 0);
+  if (allTime) days.push(...[...allDates.values()].sort((a, b) => a.date.localeCompare(b.date)));
+  const startDate = days[0]?.date || today;
+  const startMs = Date.parse(startDate + 'T00:00:00Z');
+  const dateLabel = allTime ? startDate : startDate.slice(5);
 
   const presentDays = days.filter(d => isValidVal(d.value));
   const comparisonDays = trainingPoints(presentDays);
@@ -44,9 +54,9 @@ function Sparkline({ exerciseName, data, valueKey, color, label, fmt, showTip, h
           <span style={{ color: T.muted, fontFamily: T.mono, fontSize: 10, fontWeight: 700, letterSpacing: 0.3 }}>{label}</span>
           <span style={{ color: T.disabled, fontFamily: T.mono, fontSize: 10 }}>—</span>
         </div>
-        <div style={{ height: 38, display: "flex", alignItems: "center", justifyContent: "center", color: T.disabled, fontFamily: T.mono, fontSize: 10, border: `1px dashed ${T.cardBorder}`, borderRadius: 4 }}>no data in last 30 days</div>
+        <div style={{ height: 38, display: "flex", alignItems: "center", justifyContent: "center", color: T.disabled, fontFamily: T.mono, fontSize: 10, border: `1px dashed ${T.cardBorder}`, borderRadius: 4 }}>{allTime ? "no history yet" : "no data in last 30 days"}</div>
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 5 }}>
-          <span style={{ color: T.disabled, fontFamily: T.mono, fontSize: 9 }}>{days[0].date.slice(5)}</span>
+          <span style={{ color: T.disabled, fontFamily: T.mono, fontSize: 9 }}>{allTime ? "—" : dateLabel}</span>
           <span style={{ color: T.accentLight, fontFamily: T.mono, fontSize: 9, fontWeight: 800 }}>Today</span>
         </div>
       </div>
@@ -62,15 +72,15 @@ function Sparkline({ exerciseName, data, valueKey, color, label, fmt, showTip, h
   const { min, max } = sparklineDomain(presentDays, hasGoal ? goalVal : null);
   const range = max - min;
   const w = 280, h = 38, padX = 8, padY = 4;
-  const totalSlots = days.length - 1;
-  const dayX = (i) => padX + (i * (w - 2 * padX)) / totalSlots;
+  const timeSpan = Math.max(DAY_MS, todayMs - startMs);
+  const timeX = (ms) => w - padX - ((todayMs - ms) * (w - 2 * padX)) / timeSpan;
   const yFor = (v) => {
     const clamped = Math.max(min, Math.min(max, v));
     return h - padY - ((clamped - min) / range) * (h - 2 * padY);
   };
 
-  const pts = days.map((d, i) => isValidVal(d.value) ? {
-    x: dayX(i), y: yFor(d.value), value: d.value, isToday: d.isToday, isFuture: d.isFuture, date: d.date, isDeload: d.isDeload,
+  const pts = days.map(d => isValidVal(d.value) ? {
+    x: timeX(Date.parse(d.date + 'T00:00:00Z')), y: yFor(d.value), value: d.value, isToday: d.isToday, isFuture: d.isFuture, date: d.date, isDeload: d.isDeload,
   } : null);
   const presentPts = pts.filter(Boolean);
   const comparisonPts = trainingPoints(presentPts);
@@ -102,7 +112,7 @@ function Sparkline({ exerciseName, data, valueKey, color, label, fmt, showTip, h
           )}
         </span>
       </div>
-      <svg width="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ display: "block", height: h }}>
+      <svg role="img" aria-label={`${label} · ${allTime ? "all time" : "last 30 days"}`} width="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ display: "block", height: h }}>
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={color} stopOpacity="0.35" />
@@ -115,16 +125,15 @@ function Sparkline({ exerciseName, data, valueKey, color, label, fmt, showTip, h
           <g>
             <line x1={padX} y1={yFor(goalVal)} x2={w - padX} y2={yFor(goalVal)}
               stroke="rgba(239, 68, 68, 0.45)" strokeWidth="1" strokeDasharray="3 3" />
-            <text x={w - padX - 4} y={yFor(goalVal) + 9} font-size="7.5px" fill="rgba(239, 68, 68, 0.8)" font-weight="800" text-anchor="end">
+            <text x={w - padX - 4} y={yFor(goalVal) + 9} fontSize="7.5px" fill="rgba(239, 68, 68, 0.8)" fontWeight="800" textAnchor="end">
               Goal: {goalVal} lb
             </text>
           </g>
         )}
         {[0, 7, 14, 21, 28].map(d => {
-          const slotIdx = 29 - d;
-          if (slotIdx < 0) return null;
+          const x = timeX(todayMs - (allTime ? d / 28 * timeSpan : d * DAY_MS));
           return (
-            <line key={`g${d}`} x1={dayX(slotIdx)} y1={padY} x2={dayX(slotIdx)} y2={h - padY}
+            <line key={`g${d}`} x1={x} y1={padY} x2={x} y2={h - padY}
               stroke={d === 0 ? "rgba(96,165,250,0.18)" : "rgba(255,255,255,0.04)"}
               strokeWidth={d === 0 ? 1 : 0.5}
               strokeDasharray={d === 0 ? "" : "2 3"} />
@@ -147,7 +156,7 @@ function Sparkline({ exerciseName, data, valueKey, color, label, fmt, showTip, h
         })}
       </svg>
       <div style={{ display: "flex", justifyContent: "space-between", marginTop: 5 }}>
-        <span style={{ color: T.disabled, fontFamily: T.mono, fontSize: 9 }}>{days[0].date.slice(5)}</span>
+        <span style={{ color: T.disabled, fontFamily: T.mono, fontSize: 9 }}>{dateLabel}</span>
         <span style={{ color: T.accentLight, fontFamily: T.mono, fontSize: 9, fontWeight: 800 }}>Today</span>
       </div>
     </div>
