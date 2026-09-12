@@ -1,3 +1,4 @@
+import * as followupLoad from "../lib/legacy/followup-load.js";
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -30,6 +31,7 @@ const set = (number, extra = {}) => ({ kind: 'work', idx: number, setNumber: num
 const fixture = () => [{ name: 'Dips', beltLoad: true, repsOnly: true, sets: [set(1), set(2)] }];
 const { RirSelector } = load('../components/session/RirSelector.jsx', {
   'react/jsx-runtime': jsxRuntime, '@/lib/legacy/set-rir': rir,
+    '@/lib/legacy/followup-load': followupLoad,
 });
 
 test('RIR buttons are optional and unselected; choosing and clearing does not log or advance a set', () => {
@@ -65,6 +67,7 @@ test('RIR updates save through workout actions without restarting rest, changing
   const { useWorkoutActions } = load('../components/session/useWorkoutActions.js', {
     react: { useEffect: effect => effect(), useRef: current => ({ current }) },
     '@/lib/legacy/set-rir': rir,
+    '@/lib/legacy/followup-load': followupLoad,
     '@/lib/legacy/session-persistence': { saveSessionSets: () => {} },
   });
   const actions = useWorkoutActions({ workout: { name: 'Dips Focus' }, exercises,
@@ -104,6 +107,7 @@ test('every RIR option, unset, and cleared survive serialization, database save 
   let stored;
   const database = load('../lib/db/sessions.ts', {
     '@/lib/legacy/set-rir': rir,
+    '@/lib/legacy/followup-load': followupLoad,
     '@/lib/session-save-scope': saveScope,
     '@/lib/firebase/client': { db: () => ({}) },
     '@/lib/log': { log: () => {} },

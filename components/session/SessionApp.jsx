@@ -28,6 +28,7 @@ import { mergeTemplateAndSavedSet, shouldKeepRemovedWarmup } from "@/lib/legacy/
 import { isBeltLoadExercise } from "@/lib/legacy/belt-load";
 import { createTrainingBlock, regularToBlockWorkoutId, trainingBlockHints, trainingBlockStatus, resolveTrainingBlockSession } from "@/lib/training-block";
 import { parseSessionState } from "@/lib/legacy/session-status";
+import { withFollowupLoads } from "@/lib/legacy/followup-load";
 import { withRepGuidance } from "@/lib/legacy/rep-guidance";
 import { latestLoggedSet } from "@/lib/legacy/set-rir";
 import {
@@ -248,7 +249,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
         const deferredNames = loadDeferred(workout.name, activeDate);
         if (deferredNames.length) exs = applyDeferredOrder(exs, deferredNames);
         if (skippedNames.size || deferredNames.length) activateNextSet(exs);
-        setExercises(exs); setLoaded(true);
+        setExercises(withFollowupLoads(exs, workout)); setLoaded(true);
       } catch (e) { console.error("[V2] mount failed:", e);
         setLoadError(e.message || "The workout could not be loaded. Reload to try again.");
         setLoaded(true); } })(); return () => { cancelled = true; };

@@ -9,6 +9,7 @@ import { optimizeMigratedSquatBackoffs } from "@/lib/legacy/squat-progression";
 import { loggedAtForSetUpdate } from "@/lib/legacy/duration-estimates";
 import { finishAndExit } from "@/lib/legacy/finish-workout";
 import { abandonAndExit } from "@/lib/legacy/abandon-workout";
+import { withFollowupLoads, followupWeightPatch } from "@/lib/legacy/followup-load";
 import { applySuggestedLoad } from "@/lib/legacy/load-guidance";
 import { toggleSetRir } from "@/lib/legacy/set-rir";
 import {
@@ -53,6 +54,7 @@ function useWorkoutActions({
 
   const updateAndSave = (next) => {
     if (abandonInFlightRef.current) return;
+    next = withFollowupLoads(next, workout);
     exercisesRef.current = next;
     setExercises(next);
     queueSave(next, sessionId, startedAt, elapsed);
@@ -61,7 +63,8 @@ function useWorkoutActions({
 
   const onPickWeight = (eIdx, sIdx, w, base) => {
     startTimer();
-    updateAndSave(patchSet(eIdx, sIdx, { weight: w, barPlates: undefined }, base));
+    const current = base || exercisesRef.current;
+    updateAndSave(patchSet(eIdx, sIdx, followupWeightPatch(current[eIdx].sets[sIdx], w), current));
   };
 
   const onApplyLoadProgression = (eIdx, sIdx) => {
