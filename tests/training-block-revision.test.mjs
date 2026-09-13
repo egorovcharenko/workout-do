@@ -50,7 +50,7 @@ test('the revised block preserves the audited full rotation without extra squat 
   assert.deepEqual(shared.BLOCK_WORKOUTS.filter(w => w.exercises.some(e => e.name === 'Barbell Back Squat')).map(w => w.id), ['strength-a']);
   const arms = flatten(getWorkout('strength-accessories-1'));
   assert.deepEqual(plain(arms.map(e => [e.name, e.sets.map(s => s.weight ?? null)])), [
-    ['Dips', [25,25,25]], ['Bayesian Cable Curl', [20,20,20]], ['Reverse Flyes', [25,25,25]],
+    ['Dips', [25,25,25]], ['Bayesian Cable Curl', [20,20,20]], ['Single-Arm Cable Rear Delt Fly', [15,15,15]],
     ['Dumbbell Hammer Curls', [30,30,30]], ['Overhead Tricep Extension', [35,35,35]], ['Dragon Fly Progression', [null,null,null]],
   ]);
   assert.deepEqual(plain(work(flatten(getWorkout('strength-b')), 'Barbell RDL').map(s => s.weight)), [205,205,165]);
@@ -171,4 +171,33 @@ test('accessory progression finds its regular baseline across unrelated workout 
   const sets = work(guide(w,past),'Calf Raises');
   assert.equal(sets[0].repGuidance.loadProgression.qualifying,2);
   assert.equal(sets[0].repGuidance.loadProgression.weight,56.25);
+});
+
+test('replacement cable fly keeps three sets and seeds its actual cable history before Accessories 1 has a result', () => {
+  const name = 'Single-Arm Cable Rear Delt Fly';
+  const w = getWorkout('strength-accessories-1');
+  const source = session('Strength Accessories 2', '2026-09-10', [
+    row(name, 1, 15, 15), row(name, 2, 16.25, 11), row(name, 3, 16.25, 11),
+  ], { state_json: JSON.stringify({ trainingBlock: run }), cable_weight_mode: 'per_stack' });
+  const wrongRun = session('Strength Accessories 2', '2026-09-11', [row(name, 1, 50, 20)],
+    { state_json: JSON.stringify({ trainingBlock: { ...run, instanceId: 'other' } }) });
+  const dumbbells = session('Dips Focus', '2026-09-05', [row('Reverse Flyes', 1, 25, 12)]);
+  const sessions = [wrongRun, source, dumbbells];
+  const before = JSON.stringify(sessions);
+  let exercises = guide(w, sessions);
+  const cable = exercises.find(e => e.name === name);
+  assert.equal(cable.equipment, 'cable');
+  assert.deepEqual(plain(cable.sets.map(s => s.weight)), [15, 16.25, 16.25]);
+  assert.deepEqual(plain(cable.sets.map(s => s.repGuidance.previous.reps)), [15, 11, 11]);
+  assert.ok(cable.sets.every(s => s.repGuidance.rirLabel === '1–2'));
+  assert.ok(!exercises.some(e => e.name === 'Reverse Flyes'));
+  assert.equal(JSON.stringify(sessions), before);
+  assert.equal(shared.WORKOUTS.find(w => w.id === 'micro-arms').exercises.find(e => e.name === name).sets, 3);
+
+  const own = session(w.name, '2026-09-13', [1,2,3].map(n => row(name, n, 17.5, 10)),
+    { state_json: JSON.stringify({ trainingBlock: run }), cable_weight_mode: 'per_stack' });
+  const laterSource = { ...source, date: '2026-09-16', sets: [row(name, 1, 20, 15)] };
+  exercises = guide(w, [...sessions, own, laterSource]);
+  assert.deepEqual(plain(work(exercises, name).map(s => s.weight)), [17.5,17.5,17.5]);
+  assert.ok(work(exercises, name).every(s => s.repGuidance.previous.workout === w.name), 'After the first A accessory appearance, its own history owns progression');
 });
