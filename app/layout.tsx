@@ -4,6 +4,7 @@ import "./globals.css";
 import "@personal-suite/design-system/styles.css";
 import { AuthProvider } from "@/lib/firebase/auth";
 import { PwaRegistrar } from "@personal-suite/pwa";
+import { ScreenWakeLock } from "@/components/ScreenWakeLock";
 
 export const metadata: Metadata = {
   title: "Workouts",
@@ -29,6 +30,7 @@ export default function RootLayout({
     <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body className="antialiased" style={{ background: "#18191c" }}>
         <PwaRegistrar />
+        <ScreenWakeLock />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
