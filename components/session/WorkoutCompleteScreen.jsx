@@ -1,13 +1,15 @@
 "use client";
 import { useRef, useState } from "react";
 import { buildWorkoutRecap, recapDate, recapDuration } from "@/lib/legacy/workout-recap";
+import { buildRecap1rmTrends, recapTrendSession, renderRecap1rm } from "@/lib/legacy/recap-1rm";
 import { StrengthLevelUpload } from "./StrengthLevelUpload";
 
-function WorkoutCompleteScreen({ workoutName, elapsedSec, exercises, sessionDate, testMode = false, onReview, onFinish }) {
+function WorkoutCompleteScreen({ workoutName, elapsedSec, exercises, sessionDate, history = [], sessionId = null, startedAt = null, testMode = false, onReview, onFinish }) {
   const [finishing, setFinishing] = useState(false);
   const [finishError, setFinishError] = useState(false);
   const finishPending = useRef(false);
   const recap = buildWorkoutRecap(exercises);
+  const trends = buildRecap1rmTrends(history, recapTrendSession(exercises, sessionDate, sessionId, startedAt));
   const handleFinish = () => {
     if (finishPending.current) return;
     finishPending.current = true;
@@ -44,12 +46,16 @@ function WorkoutCompleteScreen({ workoutName, elapsedSec, exercises, sessionDate
                   <h2>{exercise.name}</h2>
                   {exercise.workingSets > 0 && <span>{exercise.workingSets} {exercise.workingSets === 1 ? "set" : "sets"}</span>}
                 </div>
+                <div className={trends[exercise.name] ? "workout-recap-results has-trend" : "workout-recap-results"}><div>
                 {exercise.groups.length ? exercise.groups.map((group, groupIndex) => (
                   <div className="workout-recap-set-group" key={groupIndex}>
                     <span className="workout-recap-load">{group.load}</span>
                     <span className="workout-recap-reps"><span className="workout-recap-times">× </span><strong>{group.reps.join(" · ")}</strong><small> reps</small></span>
                   </div>
                 )) : <p className="workout-recap-warmup-only">{exercise.warmupSets} warm-up {exercise.warmupSets === 1 ? "set" : "sets"} only</p>}
+                </div>
+                {trends[exercise.name] && <div dangerouslySetInnerHTML={{ __html: renderRecap1rm(trends[exercise.name]) }} />}
+                </div>
               </li>
             ))}
           </ol>

@@ -368,6 +368,9 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
     elapsedSec={completion.elapsedSec}
     exercises={exercises}
     sessionDate={sessionDate}
+    history={history}
+    sessionId={sessionId}
+    startedAt={startedAt}
     testMode={TEST_MODE}
     onReview={() => { setFocused({ idx: currentIdx, currentIdx }); completion.review(); }}
     onFinish={() => actions.onFinishWorkout(completion.elapsedSec)} />;

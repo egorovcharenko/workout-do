@@ -1,3 +1,4 @@
+import * as recap1rm from "../lib/legacy/recap-1rm.js";
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -124,7 +125,7 @@ function loadComponent(path, react = React) {
     jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true,
   } }).outputText;
   const dependencies = { react, 'react/jsx-runtime': jsxRuntime,
-    '@/lib/legacy/workout-recap': recap, './StrengthLevelUpload': { StrengthLevelUpload: () => null } };
+    '@/lib/legacy/workout-recap': recap, '@/lib/legacy/recap-1rm': recap1rm, './StrengthLevelUpload': { StrengthLevelUpload: () => null } };
   vm.runInNewContext(compiled, { exports, console: { error() {} }, require(id) {
     assert.ok(id in dependencies, `Unexpected dependency: ${id}`);
     return dependencies[id];
