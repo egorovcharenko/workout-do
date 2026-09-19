@@ -16,6 +16,7 @@ test('all-time recap trend uses the best working set per workout and replaces cu
   const before = JSON.stringify({history,current});
   const points = buildRecap1rmTrends(history,current)[name];
   assert.deepEqual(points.map(p=>p.value),[176,178.8,180]);
+  assert.deepEqual(points.map(p=>p.maxWeight),[160,145,150]);
   assert.deepEqual(points.map(p=>p.date),['2025-01-01','2026-09-12','2026-09-18']);
   assert.equal(JSON.stringify({history,current}),before);
   const html = renderLatestWorkoutRecap([old,previous,current],[],'2026-09-18');
@@ -35,7 +36,11 @@ test('live and stored charts agree, including legacy cable totals and current pe
   assert.deepEqual(points.map(p=>p.value),[160,160]);
   const html=renderRecap1rm(points);
   assert.doesNotMatch(html,/NaN|Infinity/);
-  assert.match(html,/L155.00,22.00/);
+  assert.deepEqual(points.map(p=>p.maxWeight),[120,120]);
+  assert.match(html,/L155.00,8.00/);
+  assert.match(html,/L155.00,36.00/);
+  assert.match(html,/MAX WT/);
+  assert.match(html,/stroke-dasharray="4 3"/);
 });
 
 test('rep scores, stages, assistance, warmups and invalid sets never become a weight-based 1RM', () => {
@@ -61,4 +66,18 @@ test('same-day later workouts and active home sessions are excluded from earlier
   assert.deepEqual(buildRecap1rmTrends([later,earlier],current)[name].map(p=>p.value),[176,180]);
   const html=renderLatestWorkoutRecap([earlier,current],[earlier],'2026-09-18');
   assert.match(html,/Estimated 1RM across 1 workout, latest 180 lb/);
+});
+
+test('maximum load can come from a different set than best 1RM and shares its chart scale', () => {
+  const current = session('now','2026-09-18',[row(160,3),row(150,8),row(200,1,{userSkipped:true})]);
+  const points = buildRecap1rmTrends([],current)[name];
+  assert.equal(points[0].value,190);
+  assert.equal(points[0].maxWeight,160);
+  const html = renderRecap1rm(points);
+  assert.match(html,/cy="8.00"/);
+  assert.match(html,/cy="36.00"/);
+  assert.match(html,/maximum working-set weight 160 lb/);
+  assert.doesNotMatch(html,/<path/);
+  const invalid = renderRecap1rm([{date:'2026-09-18',value:190,maxWeight:'<script>'}]);
+  assert.doesNotMatch(invalid,/NaN|Infinity|<script>|MAX WT/);
 });

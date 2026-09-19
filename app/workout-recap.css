@@ -49,7 +49,7 @@
 .workout-recap-results > * { min-width: 0; }
 .recap-1rm { color: #93C5FD; min-width: 0; }
 .recap-1rm-label, .recap-1rm-dates { display: flex; justify-content: space-between; gap: 4px; font: 10px/1.2 var(--suite-font-mono); }
-.recap-1rm-label > span { color: #A9BCD2; font-size: 9px; }
+.recap-1rm-label > span { color: inherit; font-size: 9px; }
 .recap-1rm-label strong { color: #DBEAFE; font-size: 12px; white-space: nowrap; }
 .recap-1rm-label small { font-size: 9px; font-weight: 400; }
 .recap-1rm svg { display: block; width: 100%; height: 40px; }
@@ -58,3 +58,9 @@
   .workout-recap-results.has-trend { gap: 10px; grid-template-columns: minmax(0, 1fr) 105px; }
   .workout-recap-results.has-trend .workout-recap-set-group { justify-content: flex-start; gap: 2px 6px; }
 }
+
+.recap-1rm-key { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.recap-1rm-key::before { content: ''; width: 8px; border-top: 2px solid currentColor; }
+.recap-max-weight { color: #FBBF24; }
+.recap-max-weight .recap-1rm-key::before { border-top-style: dashed; }
+.recap-max-weight strong { color: #FDE68A; }
