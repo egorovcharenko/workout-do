@@ -121,8 +121,8 @@ test('maximum load can come from a different set than best 1RM and shares its ch
   assert.equal(points[0].value,190);
   assert.equal(points[0].maxWeight,160);
   const html = renderRecap1rm(points);
-  assert.match(html,/cy="8.00"/);
-  assert.match(html,/cy="36.00"/);
+  assert.match(html,/cy="18.182%"/);
+  assert.match(html,/cy="81.818%"/);
   assert.match(html,/maximum working-set weight 160 lb/);
   assert.doesNotMatch(html,/<path/);
   const invalid = renderRecap1rm([{date:'2026-09-18',value:190,maxWeight:'<script>'}]);
@@ -179,10 +179,10 @@ test('all recap sparklines place the same date at the same x position, including
   const before = JSON.stringify(trends);
   const domain = recapTimeDomain(trends);
   assert.deepEqual(domain,{start:Date.parse('2025-12-01'),end:Date.parse('2026-03-01')});
-  const position = points => [...renderRecap1rm(points,domain).matchAll(/<circle cx="([0-9.]+)"[^>]*><title>2026-02-10:/g)].map(m=>m[1]);
+  const position = points => [...renderRecap1rm(points,domain).matchAll(/<circle cx="([0-9.]+)%"[^>]*><title>2026-02-10:/g)].map(m=>m[1]);
   assert.deepEqual(position(long),position(short));
   assert.deepEqual(position(long),position(single));
-  assert.ok(Number(position(single)[0]) > 120, 'A new exercise appears near the end of the common history');
+  assert.ok(Number(position(single)[0]) > 75, 'A new exercise appears near the end of the common history');
   assert.doesNotMatch(renderRecap1rm(single,domain),/<path/,'No invented history before the first result');
   for (const points of [long,short]) {
     const bars = renderRecapMonthlyChanges(points,domain);
@@ -199,7 +199,7 @@ test('home recap shares its timeline across exercises with different history len
   const old = session('old','2026-05-01',[row(145,6)]);
   const current = session('now','2026-09-19',[row(150,6),row(30,10,{exercise:other})]);
   const html = renderLatestWorkoutRecap([old,current],[],'2026-09-19');
-  const xs = [...html.matchAll(/<circle cx="([0-9.]+)"[^>]*><title>2026-09-19:/g)].map(m=>m[1]);
+  const xs = [...html.matchAll(/<circle cx="([0-9.]+)%"[^>]*><title>2026-09-19:/g)].map(m=>m[1]);
   assert.equal(xs.length,4);
   assert.equal(new Set(xs).size,1);
 });
