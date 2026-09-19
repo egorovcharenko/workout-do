@@ -44,14 +44,15 @@ const guide = (workout, sessions) => withRepGuidance(flatten(workout, sessions),
 test('the revised block preserves the audited full rotation without extra squat or flat-bench appearances', () => {
   const before = JSON.stringify(shared.WORKOUTS);
   const counts = shared.BLOCK_WORKOUTS.map(w => flatten(w).reduce((n, e) => n + e.sets.filter(s => s.kind === 'work').length, 0));
-  assert.deepEqual(counts, [17, 18, 17, 22]);
-  assert.equal(counts.reduce((a, b) => a + b), 74);
+  assert.deepEqual(counts, [17, 20, 17, 24]);
+  assert.equal(counts.reduce((a, b) => a + b), 78);
   assert.deepEqual(shared.BLOCK_WORKOUTS.filter(w => w.exercises.some(e => e.name === 'Barbell Bench Press')).map(w => w.id), ['strength-a']);
   assert.deepEqual(shared.BLOCK_WORKOUTS.filter(w => w.exercises.some(e => e.name === 'Barbell Back Squat')).map(w => w.id), ['strength-a']);
   const arms = flatten(getWorkout('strength-accessories-1'));
   assert.deepEqual(plain(arms.map(e => [e.name, e.sets.map(s => s.weight ?? null)])), [
     ['Dips', [25,25,25]], ['Bayesian Cable Curl', [20,20,20]], ['Single-Arm Cable Rear Delt Fly', [15,15,15]],
     ['Dumbbell Hammer Curls', [30,30,30]], ['Overhead Tricep Extension', [35,35,35]], ['Dragon Fly Progression', [null,null,null]],
+    ['Bench-Supported Dumbbell Wrist Curls', [5,5]],
   ]);
   assert.deepEqual(plain(work(flatten(getWorkout('strength-b')), 'Barbell RDL').map(s => s.weight)), [205,205,165]);
   assert.deepEqual(plain(work(flatten(getWorkout('strength-b')), 'Low Row').map(s => s.weight)), [65,65,60]);
@@ -200,4 +201,32 @@ test('replacement cable fly keeps three sets and seeds its actual cable history 
   exercises = guide(w, [...sessions, own, laterSource]);
   assert.deepEqual(plain(work(exercises, name).map(s => s.weight)), [17.5,17.5,17.5]);
   assert.ok(work(exercises, name).every(s => s.repGuidance.previous.workout === w.name), 'After the first A accessory appearance, its own history owns progression');
+});
+
+
+test('wrist curls finish both accessory days with dumbbell controls and optional RIR', () => {
+  const name = 'Bench-Supported Dumbbell Wrist Curls';
+  assert.equal(shared.findExerciseConfig(name).equipment, 'dumbbell');
+  for (const id of ['strength-accessories-1', 'strength-accessories-2']) {
+    const w = getWorkout(id);
+    const e = guide(w, []).at(-1);
+    assert.equal(e.name, name);
+    assert.equal(e.equipment, 'dumbbell');
+    assert.equal(e.sets.length, 2);
+    assert.ok(e.sets.every(s => s.kind === 'work' && s.rir == null && s.reps == null));
+    assert.deepEqual(plain(e.sets.map(s => s.repGuidance.range)), [[15,25],[15,25]]);
+    assert.ok(e.sets.every(s => s.repGuidance.rirLabel === '1–2'));
+    for (const [reps, rir, ready] of [[[25,24], '1-2', false], [[25,25], '0', false], [[25,25], '1-2', true]]) {
+      const prev = session(w.name, '2026-09-18', reps.map((r,i) => row(name,i+1,5,r,{rir})), {state_json:JSON.stringify({trainingBlock:run})});
+      const guided = guide(w, [prev]);
+      const wrist = guided.at(-1);
+      const offer = wrist.sets[0].repGuidance.loadProgression;
+      assert.equal(offer.ready, ready);
+      assert.equal(offer.weight, 7.5);
+      if (ready) {
+        const accepted = applySuggestedLoad(guided, guided.length-1, 0);
+        assert.deepEqual(plain(accepted.at(-1).sets.map(s => s.weight)), [7.5,7.5]);
+      }
+    }
+  }
 });

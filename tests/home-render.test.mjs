@@ -75,8 +75,8 @@ test('home recap escapes saved names and never renders empty or active-only hist
 });
 
 test('home resumes the persisted active session ahead of the plan without todaySets', () => {
-  const h = homeHarness({ workout_plan: JSON.stringify([{ workout: 'RDL Focus' }]) });
-  const date = shared.localDate();
+  const date = '2026-09-18';
+  const h = homeHarness({ workout_plan: JSON.stringify([{ workout: 'RDL Focus' }]) }, date);
   h.state.history = [{ id: 'live', workout_name: 'Squat Focus', date, sets: [{ exercise: 'Barbell Back Squat', reps: 6, set_type: 'working' }] }];
   h.state._activeSessions = [{ id: 'live', workout_name: 'Main: Squat', date }];
   assert.match(h.html(), /Resume Squat Focus/);
@@ -133,7 +133,7 @@ test('old paused or ended settings cannot reactivate the previous program', () =
   for (const saved of [{...scheduledBlock,resumeDate:'2026-09-08'},{...scheduledBlock,status:'ended'}]) {
     const html=homeHarness({training_block:JSON.stringify(saved)},'2026-09-07').html();
     assert.match(html,/Start Dips Focus/);
-    assert.match(html,/18 sets/);
+    assert.match(html,/20 sets/);
     assert.doesNotMatch(html,/Start Strength Accessories 1|Resumes|Regular program/);
   }
 });
