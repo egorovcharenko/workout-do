@@ -171,28 +171,3 @@ test('saved block sessions retain their identity and edited sets through resume 
   const normal = resumed.serializeForSave([], 'Squat Focus', null, null, 0, '2026-10-04');
   assert.equal(JSON.parse(normal.state_json).trainingBlock, undefined);
 });
-
-test('scheduling and cancellation atomically change only the block field and reject stale actions', async () => {
-  let stored = { workout_plan: settings.workout_plan, bodyweight: '165', deload_active: '0' };
-  const original = { ...stored };
-  const misc = loadModule('../lib/db/misc.ts', {
-    'firebase/firestore': {
-      doc: (...args) => { assert.ok(args.includes('owner-uid')); return 'settings/app'; },
-      runTransaction: async (_db, callback) => callback({
-        get: async () => ({ data: () => stored }),
-        set: (_ref, patch, options) => { assert.equal(options.merge, true); stored = { ...stored, ...patch }; },
-      }),
-    },
-    '@/lib/firebase/client': { db: () => ({}) },
-    '@/lib/training-block': { ...block, createTrainingBlock: (date, id) => block.createTrainingBlock(date, id, '2026-09-05'), trainingBlockStatus: s => block.trainingBlockStatus(s, '2026-09-05') },
-  }, { crypto: { randomUUID: () => 'transaction-run' } });
-  const saved = await misc.startTrainingBlock('owner-uid', '2026-09-06');
-  assert.equal(saved.startDate, '2026-09-06');
-  await assert.rejects(() => misc.startTrainingBlock('owner-uid', '2026-09-07'), /already/);
-  await assert.rejects(() => misc.endTrainingBlock('owner-uid', 'stale-run'), /changed/);
-  await misc.endTrainingBlock('owner-uid', saved.instanceId);
-  assert.equal(JSON.parse(stored.training_block).status, 'ended');
-  const unchanged = { ...stored };
-  delete unchanged.training_block;
-  assert.deepEqual(unchanged, original);
-});

@@ -7,14 +7,15 @@ import * as overview from '../components/home/overview.js';
 import { EXERCISE_MUSCLES } from '../lib/legacy/standards.js';
 import { cableStackMultiplier } from '../lib/legacy/cable-stack.js';
 import * as trainingBlock from '../lib/training-block.js';
+import { mainProgramSchedule } from '../lib/main-program.js';
 import { storedSessionProgress } from '../lib/legacy/session-status.js';
 import { renderLatestWorkoutRecap } from '../components/home/recap.js';
 
-function homeHarness(settings = {}, today = shared.localDate()) {
+function homeHarness(settings = {}, today = '2026-09-18') {
   const state = { loaded: true, history: [], lastSession: {}, measurements: [] };
   const elements = { planEditorText: { value: '' }, planEditorError: { style: {} } };
   const saves = [];
-  const context = vm.createContext({ ...shared, ...overview, ...trainingBlock, storedSessionProgress, EXERCISE_MUSCLES, cableStackMultiplier, state,
+  const context = vm.createContext({ ...shared, ...overview, ...trainingBlock, mainProgramSchedule, storedSessionProgress, EXERCISE_MUSCLES, cableStackMultiplier, state,
     renderLatestWorkoutRecap: (history, active) => renderLatestWorkoutRecap(history, active, today),
     localDate: () => today,
     trainingBlockStatus: settings => trainingBlock.trainingBlockStatus(settings, today),
@@ -23,7 +24,7 @@ function homeHarness(settings = {}, today = shared.localDate()) {
     api: { saveSettings: async data => saves.push(data) }, render: () => {},
     loadSkippedExercises: () => new Set(), renderCalendar: () => '', renderWorkoutSummaryCard: () => '', renderMeasurementsCard: () => '',
   });
-  const blockSource = fs.readFileSync(new URL('../components/home/trainingBlock.js', import.meta.url), 'utf8')
+  const blockSource = fs.readFileSync(new URL('../components/home/program.js', import.meta.url), 'utf8')
     .replace(/^import[\s\S]*?;\n/gm, '').replace(/export /g, '');
   vm.runInContext(blockSource, context);
   // Load the actual legacy renderer while replacing its database/DOM imports.
@@ -36,8 +37,8 @@ function homeHarness(settings = {}, today = shared.localDate()) {
 test('home keeps one primary workout, renders the remaining rotation, and supports empty history', () => {
   const h = homeHarness(); const html = h.html();
   assert.equal((html.match(/class="home-start"/g) || []).length, 1);
-  assert.match(html, /Start Squat Focus/);
-  assert.equal((html.match(/class="home-then-row"/g) || []).length, shared.WORKOUTS.filter(w => w.program).length - 1);
+  assert.match(html, /Start Strength A/);
+  assert.equal((html.match(/<a class="home-then-row"/g) || []).length, shared.MAIN_WORKOUTS.length - 1);
   assert.match(html, /0 sessions/);
   assert.doesNotMatch(html, /undefined|NaN/);
 });
@@ -56,7 +57,7 @@ test('home shows the latest workout recap expanded above the program and next wo
   assert.match(card, /135 lb/);
   assert.match(card, /10 · 8/);
   assert.doesNotMatch(card, /<details|<button|onclick=/, 'The screenshot card needs no click or expansion');
-  assert.ok(html.indexOf(card) < html.indexOf('class="home-hero"'));
+  assert.ok(html.indexOf(card) < html.indexOf('class="home-hero'));
   assert.equal(h.html(), html, 'Rerendering home keeps the recap visible');
 });
 
@@ -82,20 +83,16 @@ test('home resumes the persisted active session ahead of the plan without todayS
   assert.match(h.html(), /aria-valuenow="1"/);
 });
 
-test('deload lowers the displayed prescription and duration without changing templates', () => {
+test('old deload and queued plan settings do not change the permanent prescription', () => {
   const baseline = homeHarness().html();
-  const copy = JSON.stringify(shared.WORKOUTS);
-  const html = homeHarness({ deload_active: '1', deload_started: shared.localDate() }).html();
-  const values = str => str.match(/(\d+) sets · ~(\d+) min/).slice(1).map(Number);
-  assert.ok(values(html)[0] < values(baseline)[0]);
-  assert.ok(values(html)[1] < values(baseline)[1]);
-  assert.equal(JSON.stringify(shared.WORKOUTS), copy);
+  const html = homeHarness({ deload_active: '1', deload_started: '2026-09-18', workout_plan: JSON.stringify([{workout:'RDL Focus'}]) }).html();
+  assert.equal(html, baseline);
 });
 
 test('plan notes are escaped and saving preserves prescriptions and identity', async () => {
   const entry = { id: 'saved', workout: 'Squat Focus', note: '<img src=x>', added: '2026-09-01T00:00:00Z', items: [{ name: 'Barbell Bench Press', sets: [{ w: 155, r: 4 }] }] };
   const h = homeHarness({ workout_plan: JSON.stringify([entry]) });
-  assert.match(h.html(), /&lt;img src=x&gt;/);
+  assert.match(vm.runInContext('renderPlanEditor()', h.context), /&lt;img src=x&gt;/);
   h.elements.planEditorText.value = 'Squat Focus -- <img src=x>\n  Bench: 155x4';
   await vm.runInContext('savePlanEditor()', h.context);
   assert.deepEqual(JSON.parse(h.saves[0].workout_plan), [entry]);
@@ -108,54 +105,35 @@ test('plan notes are escaped and saving preserves prescriptions and identity', a
 const scheduledBlock = trainingBlock.createTrainingBlock('2026-09-06', 'home-run', '2026-09-05');
 const blockSettings = { training_block: JSON.stringify(scheduledBlock), workout_plan: JSON.stringify([{ workout: 'RDL Focus' }]) };
 
-test('home transitions from the saved program to the dated block and back after four weeks', () => {
-  const before = homeHarness(blockSettings, '2026-09-05').html();
-  assert.match(before, /Starts Sep 6/);
-  assert.match(before, /Start RDL Focus/);
-  const active = homeHarness(blockSettings, '2026-09-06').html();
-  assert.match(active, /Day 1 of 28/);
-  assert.match(active, /Start Strength A/);
-  assert.match(active, /Regular program returns Oct 4/);
-  assert.match(active, /End block early/);
-  assert.match(active, /4 sets · 1–2 RIR/);
-  assert.doesNotMatch(active, /3\/3\/3\/3|Stop at two if a third/);
-  const rest = homeHarness(blockSettings, '2026-09-08').html();
-  assert.match(rest, /No lifting scheduled today/);
-  assert.doesNotMatch(rest, /class="home-start"/);
-  const returned = homeHarness(blockSettings, '2026-10-04').html();
-  assert.match(returned, /Regular program restored/);
-  assert.match(returned, /Start RDL Focus/);
+test('permanent program has no block controls or expiry and keeps the same calendar rotation', () => {
+  for (const date of ['2026-09-06','2026-10-06','2027-01-04']) {
+    const html = homeHarness(blockSettings,date).html();
+    assert.match(html,/Start Strength A/);
+    assert.doesNotMatch(html,/4-week|Day .* of 28|Regular program|Schedule block|End block|Start date|Cancel block/);
+    assert.doesNotMatch(html,/Start RDL Focus/);
+  }
+  const rest = homeHarness(blockSettings,'2026-10-08').html();
+  assert.match(rest,/No lifting scheduled today/);
+  assert.equal((rest.match(/<a class="home-then-row"/g)||[]).length,4,'Every workout remains available on rest days');
+  assert.doesNotMatch(rest,/class="home-start"/);
 });
 
-test('completing today shows the next calendar days while an in-flight block still resumes after expiry', () => {
-  const finished = { id: 'complete', workout_name: 'Strength A', date: '2026-09-06', finished_at: '2026-09-06T12:00:00Z', state_json: JSON.stringify({ trainingBlock: scheduledBlock }), sets: [] };
-  const h = homeHarness(blockSettings, '2026-09-06');
-  h.state.history = [finished];
-  assert.match(h.html(), /DONE FOR TODAY/);
-  assert.doesNotMatch(h.html(), /class="home-start"/);
-  const resumed = homeHarness(blockSettings, '2026-10-04');
-  resumed.state._activeSessions = [{ workout_name: 'Strength B', date: '2026-10-03', state_json: JSON.stringify({ trainingBlock: scheduledBlock, setsMap: { bench: [{ completed: true }, { completed: false }] } }) }];
-  assert.match(resumed.html(), /Resume Strength B/);
+test('completing today shows recovery while active sessions still resume after the old expiry', () => {
+  const finished = {id:'complete',workout_name:'Strength A',date:'2026-09-06',finished_at:'2026-09-06T12:00:00Z',state_json:JSON.stringify({trainingBlock:scheduledBlock}),sets:[]};
+  const h=homeHarness(blockSettings,'2026-09-06'); h.state.history=[finished];
+  assert.match(h.html(),/DONE FOR TODAY/);
+  const resumed=homeHarness(blockSettings,'2026-10-04');
+  resumed.state._activeSessions=[{workout_name:'Strength B',date:'2026-10-03',state_json:JSON.stringify({trainingBlock:scheduledBlock,setsMap:{bench:[{completed:true},{completed:false}]}})}];
+  assert.match(resumed.html(),/Resume Strength B/);
+  resumed.state._activeSessions[0].state_json=JSON.stringify({setsMap:{bench:[{completed:false},{completed:false}]}});
+  assert.match(resumed.html(),/Resume Strength B/,'An unlogged but started workout is retained');
 });
 
-test('failed scheduling and cancellation keep the current program and show a retryable error', async () => {
-  const h = homeHarness(blockSettings, '2026-09-05');
-  const initial = JSON.stringify(h.context.window.USER_SETTINGS);
-  h.context.api.endTrainingBlock = async () => { throw new Error('Save failed'); };
-  await vm.runInContext('endCurrentTrainingBlock()', h.context);
-  assert.equal(JSON.stringify(h.context.window.USER_SETTINGS), initial);
-  assert.equal(h.state.blockBusy, false);
-  assert.match(h.html(), /role="alert">Save failed/);
-});
-
-
-test('pausing the block for today keeps Start Dips Focus on the actual home screen', () => {
-  const h = homeHarness({ training_block: JSON.stringify({ ...scheduledBlock, resumeDate: '2026-09-08' }),
-    workout_plan: JSON.stringify([{ workout: 'Dips Focus' }]) }, '2026-09-07');
-  const html = h.html();
-  assert.match(html, /Start Dips Focus/);
-  assert.match(html, /Resumes Sep 8/);
-  assert.doesNotMatch(html, /Start Strength Accessories 1/);
-  assert.match(html, /18 sets/);
-  assert.match(html, /3 × \+25 lb × 5–12 · 1–2 RIR/);
+test('old paused or ended settings cannot reactivate the previous program', () => {
+  for (const saved of [{...scheduledBlock,resumeDate:'2026-09-08'},{...scheduledBlock,status:'ended'}]) {
+    const html=homeHarness({training_block:JSON.stringify(saved)},'2026-09-07').html();
+    assert.match(html,/Start Strength Accessories 1/);
+    assert.match(html,/18 sets/);
+    assert.doesNotMatch(html,/Start Dips Focus|Resumes|Regular program/);
+  }
 });

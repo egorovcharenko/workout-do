@@ -5,12 +5,11 @@ import { api } from "@/lib/db/api";
 import {
   WORKOUTS,
   ALL_WORKOUTS,
-  BLOCK_WORKOUTS,
+  MAIN_WORKOUTS,
   T,
   LEGACY_WORKOUT_NAMES,
   localDate,
   isDeloadActive,
-  deloadDaysLeft,
   estimateTemplateWorkoutDuration,
   parseWorkoutPlan,
   SWAP_GROUPS,
@@ -24,9 +23,10 @@ import { renderWorkoutSummaryCard } from "./summary";
 import { renderMeasurementsCard } from "./measurementsCard";
 import { render } from "./shell";
 import { recentActivity, latestLift, latestBody } from "./overview";
-import { blockWorkoutCompleted, trainingBlockStatus } from "@/lib/training-block";
+import { blockWorkoutCompleted } from "@/lib/training-block";
 import { storedSessionProgress } from "@/lib/legacy/session-status";
-import { renderTrainingBlockCard, renderBlockRestDay, renderBlockUpcoming } from "./trainingBlock";
+import { mainProgramSchedule } from "@/lib/main-program";
+import { renderProgramRestDay, renderProgramUpcoming } from "./program";
 import { renderLatestWorkoutRecap } from "./recap";
 
 function renderWorkoutMuscleMap(w) {
@@ -260,23 +260,6 @@ async function reconcileWorkoutPlan() {
   } catch (e) { console.error("[PLAN] failed to save reconciled plan:", e); }
 }
 
-function renderPlanCard() {
-  const entries = parseWorkoutPlan(window.USER_SETTINGS || {});
-  if (!entries.length) return '';
-  const rows = entries.map((e, i) => `<div class="home-plan-row">
-    <span class="home-plan-index">${i + 1}</span><div class="home-row-copy">
-      <div class="home-kickers"><strong>${escapeHtml(LEGACY_WORKOUT_NAMES[e.workout] || e.workout)}</strong>${i === 0 ? '<span class="home-label home-accent">UP NEXT</span>' : ''}</div>
-      ${e.note ? `<p class="home-note">${escapeHtml(e.note)}</p>` : ''}
-      ${e.items?.length ? `<div class="home-prescriptions">${e.items.map(it => escapeHtml(`${it.add ? '+ ' : ''}${it.name}: ${compressPlanSets(it.sets)}`)).join('<br>')}</div>` : ''}
-    </div></div>`).join('');
-  return `<section><div class="home-section-heading"><h2 class="home-label">Plan</h2><button class="home-link" onclick="openPlanEditor()">Edit</button></div>${rows}</section>`;
-}
-
-function renderDeloadControl(deloadOn) {
-  const label = deloadOn ? `Deload · ${deloadDaysLeft(window.USER_SETTINGS)}d` : 'Deload';
-  return `<button class="home-chip ${deloadOn ? 'home-deload-active' : ''}" aria-pressed="${deloadOn}" onclick="toggleDeload()">${label}</button>`;
-}
-
 function renderPlanEditor() {
   const text = parseWorkoutPlan(window.USER_SETTINGS || {}).map(planEntryToText).join("\n");
   const names = WORKOUTS.filter(w => w.program).map(w => w.name).join(" · ");
@@ -391,9 +374,8 @@ function renderOverview() {
 
 function renderHome() {
   if (!state.loaded) return renderHomeSkeleton();
-  const blockInfo = trainingBlockStatus(window.USER_SETTINGS);
-  const blockActive = blockInfo.status === 'active';
-  const deloadOn = !blockActive && isDeloadActive(window.USER_SETTINGS || {});
+  const schedule = mainProgramSchedule(window.USER_SETTINGS, localDate());
+  const deloadOn = false;
   const getExpectedSets = (w) => {
     let count = 0;
     w.exercises.forEach(ex => {
@@ -425,33 +407,8 @@ function renderHome() {
   };
 
   const activeSess = state._activeSessions && state._activeSessions[0];
-  const program = blockActive ? BLOCK_WORKOUTS : WORKOUTS.filter(w => w.program);
-  const byId = id => WORKOUTS.find(w => w.id === id);
-
-  const ORDER = ['Squat Focus', 'Dips Focus', 'RDL Focus', 'Shrugs Focus'];
-  let lastCompletedName = null;
-  for (const s of (state.history || [])) {
-    const name = LEGACY_WORKOUT_NAMES[s.workout_name] || s.workout_name;
-    if (ORDER.includes(name)) {
-      lastCompletedName = name;
-      break;
-    }
-  }
-  let nextW = byId('main-a');
-  if (lastCompletedName) {
-    const idx = ORDER.indexOf(lastCompletedName);
-    const nextName = ORDER[(idx + 1) % ORDER.length];
-    const map = { 'Squat Focus': 'main-a', 'Dips Focus': 'micro-arms', 'RDL Focus': 'main-b', 'Shrugs Focus': 'micro-delts' };
-    nextW = byId(map[nextName]) || byId('main-a');
-  }
-  // A non-empty plan overrides the rotation: its front entry is up next.
-  const planEntries = parseWorkoutPlan(window.USER_SETTINGS || {});
-  if (planEntries.length) {
-    const planName = LEGACY_WORKOUT_NAMES[planEntries[0].workout] || planEntries[0].workout;
-    const planW = WORKOUTS.find(x => x.name === planName);
-    if (planW) nextW = planW;
-  }
-  if (blockActive) nextW = BLOCK_WORKOUTS.find(w => w.id === blockInfo.workoutId) || BLOCK_WORKOUTS[0];
+  const program = MAIN_WORKOUTS;
+  const nextW = program.find(w => w.id === schedule.workoutId) || program[0];
 
   let activeWorkout = nextW;
   let isOngoing = false;
@@ -465,7 +422,7 @@ function renderHome() {
       const progress = storedSessionProgress(activeSess);
       expected = progress?.total ?? getExpectedSets(w);
       logged = progress?.completed ?? getLoggedCount(w);
-      if (logged > 0 && logged < expected) {
+      if (expected > 0 && logged < expected) {
         activeWorkout = w;
         isOngoing = true;
         pct = Math.round((logged / expected) * 100);
@@ -483,17 +440,17 @@ function renderHome() {
     orderedProgram.push(...program);
   }
 
-  const completedToday = blockActive && blockWorkoutCompleted(state.history, blockInfo.block, nextW.name, localDate());
-  const hero = blockActive && !isOngoing && (!blockInfo.workoutId || completedToday)
-    ? renderBlockRestDay(!!blockInfo.workoutId && completedToday)
+  const completedToday = blockWorkoutCompleted(state.history, schedule.context, nextW.name, localDate());
+  const hero = !isOngoing && (!schedule.workoutId || completedToday)
+    ? renderProgramRestDay(!!schedule.workoutId && completedToday)
     : renderWorkoutCard(activeWorkout, true, isOngoing, logged, expected, pct);
-  const remaining = orderedProgram.filter(w => w.id !== activeWorkout.id).map(w => renderWorkoutCard(w, false)).join('');
+  const remaining = orderedProgram.filter(w => (!isOngoing && !schedule.workoutId) || w.id !== activeWorkout.id).map(w => renderWorkoutCard(w, false)).join('');
   return `<main class="home-page" style="${homeTokens()}">
-    <header class="home-header"><div><div class="home-date">${getSessionDateStr()}</div><h1>Workouts</h1></div><div class="home-header-actions"><button class="home-chip" onclick="openPlanEditor()">${blockActive ? 'Regular plan' : 'Plan'}</button>${blockActive ? '' : renderDeloadControl(deloadOn)}</div></header>
+    <header class="home-header"><div><div class="home-date">${getSessionDateStr()}</div><h1>Workouts</h1></div></header>
     ${state.loadError ? '<p role="alert" class="home-note">Your workout data could not be loaded. Reload to try again.</p>' : ''}
     ${renderLatestWorkoutRecap(state.history || [], state._activeSessions || [], undefined, { bodyweightLb: window.USER_SETTINGS?.bodyweight })}
-    ${renderTrainingBlockCard()}${blockActive ? '' : renderPlanCard()}${hero}
-    ${blockActive ? renderBlockUpcoming(blockInfo.block) : `<section><h2 class="home-label">Then</h2><div class="home-rotation">${remaining}</div></section>`}
+    ${hero}
+    ${renderProgramUpcoming(schedule, program)}<section><h2 class="home-label">Workouts</h2><div class="home-rotation">${remaining}</div></section>
     ${renderActivity()}${renderOverview()}
     <details class="home-details" ${state.progressOpen ? 'open' : ''} ontoggle="state.progressOpen=this.open"><summary>History & measurements</summary>${renderWorkoutSummaryCard()}${renderMeasurementsCard()}</details>
     <section class="home-tests"><h2 class="home-label">Test mode · nothing saved</h2><div>${program.filter(w => w.kind !== 'optional').map(w => `<a class="home-chip" href="/session?w=${w.id}&test=1">${escapeHtml(w.name)}</a>`).join('')}</div></section>

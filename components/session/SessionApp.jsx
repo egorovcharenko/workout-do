@@ -4,7 +4,7 @@ import Link from "next/link";
 import { api } from "@/lib/db/api";
 import { canApplyResolvedSessionId, selectScopedSaveTiming } from "@/lib/session-save-scope";
 import {
-  TEST_MODE, T, GRIP_LABELS, WORKOUTS, ALL_WORKOUTS, BLOCK_WORKOUTS, localDate, SWAP_GROUPS, isDeloadActive, planEntryForWorkout,
+  TEST_MODE, T, GRIP_LABELS, WORKOUTS, ALL_WORKOUTS, MAIN_WORKOUTS, localDate, SWAP_GROUPS, isDeloadActive, planEntryForWorkout,
   estimateActiveWorkoutDuration,
 } from "@/lib/legacy/shared";
 import { applySwaps } from "@/lib/legacy/standards";
@@ -26,8 +26,8 @@ import { DurationReadout } from "./DurationReadout";
 import { buildExerciseDurationHistory, estimateExerciseDurationMeta } from "@/lib/legacy/duration-estimates";
 import { mergeTemplateAndSavedSet, shouldKeepRemovedWarmup } from "@/lib/legacy/exercise-history";
 import { isBeltLoadExercise } from "@/lib/legacy/belt-load";
-import { createTrainingBlock, regularToBlockWorkoutId, trainingBlockHints, trainingBlockStatus, resolveTrainingBlockSession } from "@/lib/training-block";
-import { parseSessionState } from "@/lib/legacy/session-status";
+import { regularToBlockWorkoutId, trainingBlockHints, resolveTrainingBlockSession } from "@/lib/training-block";
+import { mainProgramContext } from "@/lib/main-program";
 import { withFollowupLoads } from "@/lib/legacy/followup-load";
 import { withRepGuidance } from "@/lib/legacy/rep-guidance";
 import { latestLoggedSet } from "@/lib/legacy/set-rir";
@@ -41,8 +41,8 @@ import {
 // ─── file: workout-session-app.js ───
 
 function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUrl = new URLSearchParams(window.location.search).get("w");
-    return (fromUrl && ALL_WORKOUTS.some(w => w.id === fromUrl)) ? fromUrl : (WORKOUTS.find(w => w.main) || WORKOUTS[0]).id; });
-  const requestedWorkout = useMemo(() => ALL_WORKOUTS.find(w => w.id === workoutId) || WORKOUTS[0], [workoutId]);
+    return (fromUrl && ALL_WORKOUTS.some(w => w.id === fromUrl)) ? fromUrl : MAIN_WORKOUTS[0].id; });
+  const requestedWorkout = useMemo(() => ALL_WORKOUTS.find(w => w.id === workoutId) || MAIN_WORKOUTS[0], [workoutId]);
   const [sessionWorkout, setSessionWorkout] = useState(null);
   const workout = sessionWorkout?.id === workoutId ? sessionWorkout : requestedWorkout;
   const [rawExercises, setExercises] = useState([]);
@@ -50,7 +50,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
   const [loaded, setLoaded] = useState(false);
   const [loadError, setLoadError] = useState(null);
   const [sessionBlock, setSessionBlock] = useState(null);
-  const [programWorkouts, setProgramWorkouts] = useState(WORKOUTS);
+  const [programWorkouts, setProgramWorkouts] = useState(MAIN_WORKOUTS);
   const [sessionId, setSessionId] = useState(null);
   const [focused, setFocused] = useState(null);
   const { elapsed, startedAt, rest, setElapsed, setStartedAt, setRest, startTimer, restAdd, restSkip, restToggle, resetTimers } = useWorkoutTimers(workoutId, rawExercises);
@@ -79,34 +79,26 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
         if (settings) {
           window.USER_SETTINGS = settings;
         }
-        const blockStatus = trainingBlockStatus(settings);
         const mappedId = regularToBlockWorkoutId(workout.id);
-        if (!TEST_MODE && !today && blockStatus.status === "active" && mappedId) {
+        if (!today && mappedId) {
           const url = new URL(window.location.href);
           url.searchParams.set("w", mappedId);
           window.history.replaceState({}, "", url);
           setWorkoutId(mappedId);
           return;
         }
-        const savedState = parseSessionState(today?.state_json);
         let blockContext = null;
         if (workout.trainingBlockId) {
-          if (!settings || results[1].status !== "fulfilled" || results[3].status !== "fulfilled") {
-            throw new Error("The block could not be loaded. Reload to try again.");
+          if (results[3].status !== "fulfilled") {
+            throw new Error("Your workout history could not be loaded. Reload to try again.");
           }
-          blockContext = savedState?.trainingBlock || (blockStatus.status === "active" ? blockStatus.block : null);
-          if (!blockContext && TEST_MODE) blockContext = createTrainingBlock(localDate(), "preview");
-          if (!blockContext) throw new Error(blockStatus.status === "paused"
-            ? "Your regular workout is available on the home screen today. The block resumes on " + blockStatus.block.resumeDate + "."
-            : blockStatus.status === "scheduled"
-            ? `This block starts ${blockStatus.block.startDate}. Your regular program is available until then.`
-            : "This block has ended. Your regular program is available on the home screen.");
+          blockContext = mainProgramContext(settings, today);
           ({ workout, block: blockContext } = resolveTrainingBlockSession(workout, blockContext, today, WORKOUTS));
           hints = trainingBlockHints(workout, allHistory, blockContext, today?.id);
         }
         setSessionWorkout(workout);
         setSessionBlock(blockContext);
-        const menu = blockStatus.status === "active" || blockContext ? BLOCK_WORKOUTS : WORKOUTS;
+        const menu = MAIN_WORKOUTS;
         setProgramWorkouts(menu.some(w => w.id === workout.id) ? menu : [workout, ...menu]);
         // Deload status is frozen per session: an existing today-session's
         // saved state wins over the current toggle, so flipping the toggle at
@@ -435,9 +427,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
             durationMeta={workoutDurationMeta}
             deload={!!window.SESSION_DELOAD} />
           {isFinished && <div className="workout-recap-return"><button type="button" onClick={completion.show}>View workout recap</button></div>}
-          {sessionBlock && <div style={{ margin: "0 16px 8px", color: T.accentLight, fontSize: 12 }}>
-            4-week strength block · Regular program returns {sessionBlock.returnDate}
-          </div>}
+
           <div className="exercise-nav-strip">
             {nav("strip")}
           </div>
