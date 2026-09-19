@@ -64,3 +64,8 @@
 .recap-max-weight { color: #FBBF24; }
 .recap-max-weight .recap-1rm-key::before { border-top-style: dashed; }
 .recap-max-weight strong { color: #FDE68A; }
+
+/* Monthly changes sit behind both load lines, on a separate zero-centered scale. */
+.recap-month-change.gain { fill: #34D399; fill-opacity: .2; }
+.recap-month-change.loss { fill: #F87171; fill-opacity: .2; }
+.recap-month-zero { stroke: #94A3B8; stroke-opacity: .18; stroke-width: .5; }

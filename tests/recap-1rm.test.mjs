@@ -1,10 +1,51 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildRecap1rmTrends, recapTrendSession, renderRecap1rm } from '../lib/legacy/recap-1rm.js';
+import { buildRecap1rmTrends, recapTrendSession, recapMonthlyChanges, renderRecap1rm } from '../lib/legacy/recap-1rm.js';
 import { renderLatestWorkoutRecap } from '../components/home/recap.js';
 const name = 'Barbell Bench Press';
 const row = (weight, reps, extra = {}) => ({ exercise: name, weight_lb: weight, reps, set_type: 'working', ...extra });
 const session = (id, date, sets, extra = {}) => ({ id, date, sets, workout_name: 'Strength A', finished_at: `${date}T19:00:00Z`, ...extra });
+
+test('monthly change uses month-end results, handles gaps and never mutates history', () => {
+  const points = [
+    { date:'2026-01-05', value:190 }, { date:'2025-12-20', value:200 },
+    { date:'2025-12-01', value:180 }, { date:'2026-01-25', value:195 },
+    { date:'2026-03-01', value:210 }, { date:'2026-04-02', value:210 },
+    { date:'2026-06-01', value:215 }, { date:'2026-06-20', value:218.3 },
+    { date:'2026-02-30', value:999 }, { date:'2026-02-01', value:Infinity },
+  ];
+  const before = structuredClone(points);
+  const months = recapMonthlyChanges(points);
+  assert.deepEqual(months.map(({month,delta})=>[month,delta]), [
+    ['2025-12',20], ['2026-01',-5], ['2026-03',null], ['2026-04',0], ['2026-06',3.3],
+  ]);
+  assert.equal(months[1].fromDate, '2025-12-20');
+  assert.equal(months[4].fromDate, '2026-06-01');
+  assert.deepEqual(points,before);
+});
+
+test('monthly bars align with calendar spans behind both lines, even on the first day of a month', () => {
+  const points = [
+    { date:'2024-01-01', value:180, maxWeight:150 },
+    { date:'2024-01-31', value:190, maxWeight:160 },
+    { date:'2024-02-29', value:185, maxWeight:155 },
+    { date:'2024-03-01', value:195, maxWeight:165 },
+  ];
+  const html = renderRecap1rm(points);
+  const bars = [...html.matchAll(/<rect class="recap-month-change (gain|loss)" x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/g)];
+  assert.equal(bars.length,3);
+  assert.deepEqual(bars.map(m=>m[1]),['gain','loss','gain']);
+  assert.deepEqual(bars.map(m=>Number(m[5])),[18,9,18]);
+  assert.equal(Number(bars[1][3]),22,'Losses extend below zero');
+  assert.ok(Number(bars[1][4]) < Number(bars[0][4]),'Leap February spans 29 days versus January 31');
+  assert.ok(Number(bars[2][4]) > 0,'The latest month remains visible on day one');
+  assert.ok(html.indexOf('class="recap-month-bars"') < html.indexOf('<path'));
+  assert.match(html,/2024-02: estimated 1RM -5 lb/);
+  assert.match(html,/stroke-dasharray="4 3"/);
+  assert.doesNotMatch(html,/NaN|Infinity/);
+  assert.doesNotMatch(renderRecap1rm([{date:'2026-09-01',value:180}]),/class="recap-month-bars"/);
+  assert.doesNotMatch(renderRecap1rm([{date:'2026-08-01',value:180},{date:'2026-09-01',value:180}]),/class="recap-month-bars"/);
+});
 
 test('all-time recap trend uses the best working set per workout and replaces current autosave exactly once', () => {
   const old = session('old', '2025-01-01', [row(160,3), row(150,3), row(200,10,{set_type:'warmup'})]);
@@ -37,8 +78,8 @@ test('live and stored charts agree, including legacy cable totals and current pe
   const html=renderRecap1rm(points);
   assert.doesNotMatch(html,/NaN|Infinity/);
   assert.deepEqual(points.map(p=>p.maxWeight),[120,120]);
-  assert.match(html,/L155.00,8.00/);
-  assert.match(html,/L155.00,36.00/);
+  assert.match(html,/L133.80,8.00/);
+  assert.match(html,/L133.80,36.00/);
   assert.match(html,/MAX WT/);
   assert.match(html,/stroke-dasharray="4 3"/);
 });
