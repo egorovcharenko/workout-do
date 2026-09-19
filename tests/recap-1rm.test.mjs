@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildRecap1rmTrends, recapTrendSession, recapMonthlyChanges, renderRecapMonthlyChanges, renderRecap1rm } from '../lib/legacy/recap-1rm.js';
+import { buildRecap1rmTrends, recapTrendSession, recapMonthlyChanges, renderRecapMonthlyChanges, renderRecap1rm, recapTimeDomain } from '../lib/legacy/recap-1rm.js';
 import { renderLatestWorkoutRecap } from '../components/home/recap.js';
 const name = 'Barbell Bench Press';
 const row = (weight, reps, extra = {}) => ({ exercise: name, weight_lb: weight, reps, set_type: 'working', ...extra });
@@ -167,4 +167,38 @@ test('pull-up charts do not invent bodyweight or mix malformed or assisted histo
     const assisted=session('assisted','2026-08-01',[row(150,50,{exercise:'Pull-Ups',bands_json})]);
     assert.equal(buildRecap1rmTrends([assisted],current,{bodyweightLb:165})['Pull-Ups'].length,1);
   }
+});
+
+
+test('all recap sparklines place the same date at the same x position, including a first result', () => {
+  const long = [{date:'2025-12-10',value:100,maxWeight:80},{date:'2025-12-20',value:102,maxWeight:80},{date:'2026-02-10',value:110,maxWeight:90}];
+  const short = [{date:'2026-02-01',value:20,maxWeight:15},{date:'2026-02-10',value:25,maxWeight:20}];
+  const single = [short[1]];
+  const trends = {long,short,single,invalid:[{date:'2020-02-30',value:999}]};
+  const before = JSON.stringify(trends);
+  const domain = recapTimeDomain(trends);
+  assert.deepEqual(domain,{start:Date.parse('2025-12-01'),end:Date.parse('2026-03-01')});
+  const position = points => [...renderRecap1rm(points,domain).matchAll(/<circle cx="([0-9.]+)"[^>]*><title>2026-02-10:/g)].map(m=>m[1]);
+  assert.deepEqual(position(long),position(short));
+  assert.deepEqual(position(long),position(single));
+  assert.ok(Number(position(single)[0]) > 120, 'A new exercise appears near the end of the common history');
+  assert.doesNotMatch(renderRecap1rm(single,domain),/<path/,'No invented history before the first result');
+  for (const points of [long,short]) {
+    const bars = renderRecapMonthlyChanges(points,domain);
+    assert.equal((bars.match(/recap-month-cell /g)||[]).length,3);
+    assert.match(bars,/December 2025/); assert.match(bars,/January 2026/); assert.match(bars,/February 2026/);
+  }
+  assert.match(renderRecapMonthlyChanges(short,domain),/December 2025: not enough data/);
+  assert.equal(JSON.stringify(trends),before);
+  assert.equal(recapTimeDomain({}),null);
+});
+
+test('home recap shares its timeline across exercises with different history lengths', () => {
+  const other = 'Dumbbell Hammer Curls';
+  const old = session('old','2026-05-01',[row(145,6)]);
+  const current = session('now','2026-09-19',[row(150,6),row(30,10,{exercise:other})]);
+  const html = renderLatestWorkoutRecap([old,current],[],'2026-09-19');
+  const xs = [...html.matchAll(/<circle cx="([0-9.]+)"[^>]*><title>2026-09-19:/g)].map(m=>m[1]);
+  assert.equal(xs.length,4);
+  assert.equal(new Set(xs).size,1);
 });

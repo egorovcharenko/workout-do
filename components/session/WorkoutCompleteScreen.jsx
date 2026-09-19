@@ -3,7 +3,7 @@ import { workoutDisplayName } from "@/lib/legacy/shared";
 
 import { useRef, useState } from "react";
 import { buildWorkoutRecap, recapDate, recapDuration } from "@/lib/legacy/workout-recap";
-import { buildRecap1rmTrends, recapTrendSession, renderRecap1rm, renderRecapMonthlyChanges } from "@/lib/legacy/recap-1rm";
+import { buildRecap1rmTrends, recapTrendSession, renderRecap1rm, renderRecapMonthlyChanges, recapTimeDomain } from "@/lib/legacy/recap-1rm";
 import { StrengthLevelUpload } from "./StrengthLevelUpload";
 
 function WorkoutCompleteScreen({ workoutName, elapsedSec, exercises, sessionDate, history = [], sessionId = null, startedAt = null, bodyweightLb = null, testMode = false, onReview, onFinish }) {
@@ -12,6 +12,7 @@ function WorkoutCompleteScreen({ workoutName, elapsedSec, exercises, sessionDate
   const finishPending = useRef(false);
   const recap = buildWorkoutRecap(exercises);
   const trends = buildRecap1rmTrends(history, recapTrendSession(exercises, sessionDate, sessionId, startedAt), { bodyweightLb });
+  const timeDomain = recapTimeDomain(trends);
   const handleFinish = () => {
     if (finishPending.current) return;
     finishPending.current = true;
@@ -56,7 +57,7 @@ function WorkoutCompleteScreen({ workoutName, elapsedSec, exercises, sessionDate
                   </div>
                 )) : <p className="workout-recap-warmup-only">{exercise.warmupSets} warm-up {exercise.warmupSets === 1 ? "set" : "sets"} only</p>}
                 </div>
-                {trends[exercise.name] && <div className="workout-recap-trend" dangerouslySetInnerHTML={{ __html: renderRecap1rm(trends[exercise.name]) + renderRecapMonthlyChanges(trends[exercise.name]) }} />}
+                {trends[exercise.name] && <div className="workout-recap-trend" dangerouslySetInnerHTML={{ __html: renderRecap1rm(trends[exercise.name], timeDomain) + renderRecapMonthlyChanges(trends[exercise.name], timeDomain) }} />}
                 </div>
               </li>
             ))}
