@@ -45,11 +45,8 @@ function WorkoutCompleteScreen({ workoutName, elapsedSec, exercises, sessionDate
           <ol className="workout-recap-exercises">
             {recap.exercises.map((exercise, index) => (
               <li className="workout-recap-exercise" key={index}>
-                <div className="workout-recap-exercise-heading">
-                  <h2>{exercise.name}</h2>
-                  {exercise.workingSets > 0 && <span>{exercise.workingSets} {exercise.workingSets === 1 ? "set" : "sets"}</span>}
-                </div>
-                <div className={trends[exercise.name] ? "workout-recap-results has-trend" : "workout-recap-results"}><div>
+                <div className={trends[exercise.name] ? "workout-recap-results has-trend" : "workout-recap-results"}><div className="workout-recap-details">
+                <div className="workout-recap-exercise-heading"><h2>{exercise.name}</h2></div>
                 {exercise.groups.length ? exercise.groups.map((group, groupIndex) => (
                   <div className="workout-recap-set-group" key={groupIndex}>
                     <span className="workout-recap-load">{group.load}</span>

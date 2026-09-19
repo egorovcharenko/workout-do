@@ -41,7 +41,7 @@ test('monthly bars display signed changes, calendar gaps and unchanged months wi
   assert.match(html, /January 2024: estimated 1RM \+10.5 lb/);
   assert.match(html, /February 2024: estimated 1RM −5.5 lb/);
   assert.match(html, /Mar <small>24<\/small>/);
-  assert.match(html, /1RM CHANGE · LB/);
+  assert.doesNotMatch(html, /1RM CHANGE · LB/);
   const gap = renderRecapMonthlyChanges([{date:'2025-12-01',value:180},{date:'2025-12-20',value:185},{date:'2026-02-01',value:190}]);
   assert.match(gap, /January 2026: not enough data/);
   assert.match(gap, /recap-month-value">—<\/strong>/);
