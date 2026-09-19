@@ -16,7 +16,7 @@
 .workout-recap-exercise + .workout-recap-exercise { border-top: 1px solid #273547; }
 .workout-recap-exercise-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 4px; }
 .workout-recap h2, .workout-recap h3 { margin: 0; min-width: 0; overflow-wrap: anywhere; font-size: 15px; font-weight: 750; line-height: 1.3; }
-.workout-recap-set-group { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 8px; font: 600 14px/1.4 var(--suite-font-mono); }
+.workout-recap-set-group { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: flex-start; gap: 2px 6px; font: 600 14px/1.4 var(--suite-font-mono); }
 .workout-recap-load { color: #93C5FD; overflow-wrap: anywhere; }
 .workout-recap-reps { min-width: 0; overflow-wrap: anywhere; }
 .workout-recap-reps strong { font-weight: 750; }
@@ -47,7 +47,7 @@
 }
 
 /* Keep the trend beside the actual sets so screenshot cards stay compact. */
-.workout-recap-results.has-trend, .workout-recap-chart-header { display: grid; grid-template-columns: minmax(0, 1fr) minmax(150px, 36%); gap: 12px; align-items: center; }
+.workout-recap-results.has-trend, .workout-recap-chart-header { display: grid; grid-template-columns: minmax(0, 1fr) minmax(150px, 40%); gap: 12px; align-items: center; }
 .workout-recap-results > * { min-width: 0; }
 .workout-recap-results.has-trend { align-items: stretch; }
 .workout-recap-trend { display: flex; flex-direction: column; }
@@ -83,7 +83,10 @@
 
 .workout-recap-chart-header { margin: 0 16px; padding: 4px 0 2px; }
 .workout-recap-chart-header .recap-month-grid { text-align: center; }
-.recap-trend-metrics { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 3px 8px; margin-top: 4px; color: #93C5FD; }
+.workout-recap-detail-body { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.workout-recap-set-groups { min-width: 0; }
+.workout-recap-metric-summary { margin-left: auto; }
+.recap-trend-metrics { display: flex; flex-direction: column; gap: 3px; color: #93C5FD; }
 .recap-trend-metrics .recap-1rm-label { display: flex; align-items: baseline; gap: 5px; white-space: nowrap; }
 @media (max-width: 380px) {
   .workout-recap-chart-header { margin-left: 12px; margin-right: 12px; }

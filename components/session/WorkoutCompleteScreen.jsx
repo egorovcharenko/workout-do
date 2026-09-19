@@ -48,13 +48,16 @@ function WorkoutCompleteScreen({ workoutName, elapsedSec, exercises, sessionDate
               <li className="workout-recap-exercise" key={index}>
                 <div className={trends[exercise.name] ? "workout-recap-results has-trend" : "workout-recap-results"}><div className="workout-recap-details">
                 <div className="workout-recap-exercise-heading"><h2>{exercise.name}</h2></div>
+                <div className="workout-recap-detail-body"><div className="workout-recap-set-groups">
                 {exercise.groups.length ? exercise.groups.map((group, groupIndex) => (
                   <div className="workout-recap-set-group" key={groupIndex}>
                     <span className="workout-recap-load">{group.load}</span>
                     <span className="workout-recap-reps"><span className="workout-recap-times">× </span><strong>{group.reps.join("·")}</strong><small> reps</small></span>
                   </div>
                 )) : <p className="workout-recap-warmup-only">{exercise.warmupSets} warm-up {exercise.warmupSets === 1 ? "set" : "sets"} only</p>}
-                {trends[exercise.name] && <div dangerouslySetInnerHTML={{ __html: renderRecapTrendMetrics(trends[exercise.name]) }} />}
+                </div>
+                {trends[exercise.name] && <div className="workout-recap-metric-summary" dangerouslySetInnerHTML={{ __html: renderRecapTrendMetrics(trends[exercise.name]) }} />}
+                </div>
                 </div>
                 {trends[exercise.name] && <div className="workout-recap-trend" dangerouslySetInnerHTML={{ __html: renderRecap1rm(trends[exercise.name], timeDomain) + renderRecapMonthlyChanges(trends[exercise.name], timeDomain) }} />}
                 </div>
