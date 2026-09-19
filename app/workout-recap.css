@@ -70,3 +70,6 @@
 .recap-month-change.gain { fill: #34D399; fill-opacity: .85; }
 .recap-month-change.loss { fill: #F87171; fill-opacity: .85; }
 .recap-month-zero { stroke: #94A3B8; stroke-opacity: .4; stroke-width: .5; }
+
+.recap-month-axis { position: relative; height: 12px; color: #CBD5E1; font: 8px/12px var(--suite-font-mono); }
+.recap-month-axis span { position: absolute; transform: translateX(-50%); white-space: nowrap; }

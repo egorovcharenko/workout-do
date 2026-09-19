@@ -42,6 +42,12 @@ test('monthly bars align with calendar spans below both lines, even on the first
   assert.ok(html.indexOf('class="recap-month-bars"') > html.indexOf('</svg>'));
   assert.doesNotMatch(html.slice(0,html.indexOf('</svg>')), /recap-month-change/);
   assert.match(html,/2024-02: estimated 1RM -5 lb/);
+  assert.match(html,/title="January 2024">Jan<\/span>/);
+  assert.match(html,/title="February 2024">Feb<\/span>/);
+  assert.match(html,/title="March 2024">Mar<\/span>/);
+  const gap = renderRecap1rm([{date:'2025-12-01',value:180},{date:'2026-02-01',value:190}]);
+  assert.match(gap,/title="January 2026">Jan<\/span>/,'Missing workouts do not collapse calendar months');
+  assert.match(gap,/recap-1rm-dates"><span>2025<\/span><span>2026<\/span>/);
   assert.match(html,/stroke-dasharray="4 3"/);
   assert.doesNotMatch(html,/NaN|Infinity/);
   assert.doesNotMatch(renderRecap1rm([{date:'2026-09-01',value:180}]),/class="recap-month-bars"/);
