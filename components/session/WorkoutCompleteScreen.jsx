@@ -56,9 +56,8 @@ function WorkoutCompleteScreen({ workoutName, elapsedSec, exercises, sessionDate
                   </div>
                 )) : <p className="workout-recap-warmup-only">{exercise.warmupSets} warm-up {exercise.warmupSets === 1 ? "set" : "sets"} only</p>}
                 </div>
-                {trends[exercise.name] && <div dangerouslySetInnerHTML={{ __html: renderRecap1rm(trends[exercise.name]) }} />}
+                {trends[exercise.name] && <div className="workout-recap-trend" dangerouslySetInnerHTML={{ __html: renderRecap1rm(trends[exercise.name]) + renderRecapMonthlyChanges(trends[exercise.name]) }} />}
                 </div>
-                {trends[exercise.name] && <div dangerouslySetInnerHTML={{ __html: renderRecapMonthlyChanges(trends[exercise.name]) }} />}
               </li>
             ))}
           </ol>
