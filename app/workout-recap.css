@@ -65,7 +65,6 @@
 .recap-1rm-key { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
 .recap-1rm-key::before { content: ''; width: 8px; border-top: 2px solid currentColor; }
 .recap-max-weight { color: #FBBF24; }
-.recap-max-weight .recap-1rm-key::before { border-top-style: dashed; }
 .recap-max-weight strong { color: #FDE68A; }
 
 /* Monthly changes stay beneath their sparkline in the same compact column. */

@@ -87,7 +87,7 @@ test('live and stored charts agree, including legacy cable totals and current pe
   assert.match(html,/L133.80,8.00/);
   assert.match(html,/L133.80,36.00/);
   assert.match(renderRecapTrendMetrics(points),/MAX WT/);
-  assert.match(html,/stroke-dasharray="4 3"/);
+  assert.doesNotMatch(html,/stroke-dasharray/);
 });
 
 test('rep scores, stages, assistance, warmups and invalid sets never become a weight-based 1RM', () => {
