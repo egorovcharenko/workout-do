@@ -1,3 +1,4 @@
+import { workoutDisplayName } from "../../lib/legacy/shared.js";
 // ─── file: workout-ui-home-calendar.js ───
 // Calendar rendering logic for the Home tab of Workout Tracker
 
@@ -65,8 +66,8 @@ function renderCalendar() {
     const isToday = d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
     const workouts = dateMap[dateStr] || [];
     const badges = workouts.map(w => {
-      const b = WORKOUT_BADGES[w.name];
-      const label = (b ? b.label : w.name) + (w.deload ? '·D' : '');
+      const b = WORKOUT_BADGES[workoutDisplayName(w.name)];
+      const label = (b ? b.label : workoutDisplayName(w.name)) + (w.deload ? '·D' : '');
       return badgeHTML(b, label, w.deload);
     }).join("");
     const bg = isToday ? "background:#12223A;border-radius:8px;" : "";

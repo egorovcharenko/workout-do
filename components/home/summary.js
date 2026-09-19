@@ -1,3 +1,4 @@
+import { workoutDisplayName } from "../../lib/legacy/shared.js";
 // ─── file: workout-ui-home-summary.js ───
 
 import {
@@ -23,7 +24,7 @@ function renderWorkoutSummaryCard() {
   const _esc = (s) => String(s == null ? '' : s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-  const name = _esc(latest.workout_name);
+  const name = _esc(workoutDisplayName(latest.workout_name));
   const dateStr = _esc(latest.date);
   const durSec = latest.duration_sec || 0;
   const m = Math.floor(durSec / 60);

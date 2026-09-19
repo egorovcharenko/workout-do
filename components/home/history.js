@@ -1,7 +1,7 @@
 // ─── file: workout-ui-history.js ───
 // UI rendering logic for the History tab of Workout Tracker
 
-import { ALL_WORKOUTS as WORKOUTS } from "@/lib/legacy/shared";
+import { workoutDisplayName, ALL_WORKOUTS as WORKOUTS } from "@/lib/legacy/shared";
 import {
   EXERCISE_MUSCLES,
   getMuscleImpact,
@@ -299,7 +299,7 @@ function renderSessionList() {
       return `<div style="background:#111722;border:1px solid #293445;border-left:4px solid ${color};border-radius:8px;padding:12px 14px;margin-bottom:8px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:14px;font-weight:600;color:#F3F4F6">${s.workout_name}</span>
+          <span style="font-size:14px;font-weight:600;color:#F3F4F6">${workoutDisplayName(s.workout_name)}</span>
           ${s.is_deload ? '<span style="font-size:13px;background:#fef3c7;color:#FBBF24;border:1px solid #fcd34d;padding:1px 5px;border-radius:9999px;font-weight:700;font-family:ui-monospace,Menlo,monospace">DELOAD</span>' : ''}
           ${volSparkHTML}
         </div>

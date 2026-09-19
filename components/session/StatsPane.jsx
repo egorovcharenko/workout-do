@@ -1,6 +1,7 @@
 "use client";
+
 import { useState } from "react";
-import { T, localDate } from "@/lib/legacy/shared";
+import { workoutDisplayName, T, localDate } from "@/lib/legacy/shared";
 import { beltAdjustedRepScore, calcSet1RM, calcStoredSet1RM, decodeStageScore, isAssistExercise } from "@/lib/legacy/standards";
 import { Sparkline } from "./Sparkline";
 import { effectiveExerciseWeight, effectiveStoredExerciseWeight } from "@/lib/legacy/cable-stack";
@@ -87,7 +88,7 @@ function PreviousSessions({ history, exercise, sessionId }) {
                 <tr key={session.id || `${session.date}-${rowIndex}`} style={{ background: rowIndex % 2 ? "rgba(255,255,255,0.012)" : "transparent" }}>
                   <th
                     scope="row"
-                    title={session.workout_name || session.date}
+                    title={workoutDisplayName(session.workout_name) || session.date}
                     style={{ position: "sticky", left: 0, zIndex: 1, padding: "9px 8px", borderBottom: isLast ? "none" : border, background: rowIndex % 2 ? "#121925" : "#111827", color: T.muted, fontFamily: T.mono, fontSize: 9, fontWeight: 700, textAlign: "left" }}>
                     {displayDate(session.date)}
                     {!!session.is_deload && <span style={{ display: "block", marginTop: 3, color: T.amber, fontSize: 7, letterSpacing: 0.5 }}>DELOAD</span>}

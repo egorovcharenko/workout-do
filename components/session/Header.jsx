@@ -1,7 +1,8 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { T, estimateTemplateWorkoutDuration } from "@/lib/legacy/shared";
+import { workoutDisplayName, T, estimateTemplateWorkoutDuration } from "@/lib/legacy/shared";
 import { DurationReadout } from "./DurationReadout";
 
 // ─── file: workout-session-header.js ───
@@ -56,7 +57,7 @@ function Header({ workout, workouts, onPickWorkout, onAbandon, done, total, elap
               padding: 0, cursor: hasMenu ? "pointer" : "default", display: "flex", alignItems: "center", gap: 6,
               maxWidth: "100%",
             }}>
-              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{workout.name}</span>
+              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{workoutDisplayName(workout.name)}</span>
               {hasMenu && <span style={{ color: T.faint, fontSize: 12, transform: open ? "rotate(180deg)" : "rotate(0)", transition: "transform 160ms ease" }}>▾</span>}
             </button>
             {hasMenu && open && (
@@ -77,7 +78,7 @@ function Header({ workout, workouts, onPickWorkout, onAbandon, done, total, elap
                       fontSize: 14, fontWeight: sel ? 700 : 500,
                       padding: "9px 12px", borderRadius: 7, cursor: "pointer",
                     }}>
-                      {w.name}
+                      {workoutDisplayName(w.name)}
                       <span style={{ marginLeft: 8, color: T.faint, fontSize: 11, fontWeight: 500 }}>plan {Math.round(estimateTemplateWorkoutDuration(w) / 60)}m</span>
                     </button>
                   );

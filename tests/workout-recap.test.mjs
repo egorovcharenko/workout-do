@@ -1,3 +1,4 @@
+import * as shared from "../lib/legacy/shared.js";
 import * as recap1rm from "../lib/legacy/recap-1rm.js";
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -124,7 +125,7 @@ function loadComponent(path, react = React) {
     module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022,
     jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true,
   } }).outputText;
-  const dependencies = { react, 'react/jsx-runtime': jsxRuntime,
+  const dependencies = { '@/lib/legacy/shared': shared, react, 'react/jsx-runtime': jsxRuntime,
     '@/lib/legacy/workout-recap': recap, '@/lib/legacy/recap-1rm': recap1rm, './StrengthLevelUpload': { StrengthLevelUpload: () => null } };
   vm.runInNewContext(compiled, { exports, console: { error() {} }, require(id) {
     assert.ok(id in dependencies, `Unexpected dependency: ${id}`);
@@ -143,7 +144,7 @@ test('screenshot card shows the workout and actual sets with controls outside it
   const html = renderToStaticMarkup(React.createElement(WorkoutCompleteScreen, props));
   const card = html.match(/<article\b[\s\S]*?<\/article>/)?.[0];
   assert.ok(card);
-  assert.match(card, /Strength A/);
+  assert.match(card, /Squat Focus/);
   assert.match(card, /Sep 6, 2026/);
   assert.match(card, /54 min/);
   assert.match(card, /Working sets<\/dt><dd>4<\/dd>/);

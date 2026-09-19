@@ -37,7 +37,7 @@ function homeHarness(settings = {}, today = '2026-09-18') {
 test('home keeps one primary workout, renders the remaining rotation, and supports empty history', () => {
   const h = homeHarness(); const html = h.html();
   assert.equal((html.match(/class="home-start"/g) || []).length, 1);
-  assert.match(html, /Start Strength A/);
+  assert.match(html, /Start Squat Focus/);
   assert.equal((html.match(/<a class="home-then-row"/g) || []).length, shared.MAIN_WORKOUTS.length - 1);
   assert.match(html, /0 sessions/);
   assert.doesNotMatch(html, /undefined|NaN/);
@@ -108,7 +108,7 @@ const blockSettings = { training_block: JSON.stringify(scheduledBlock), workout_
 test('permanent program has no block controls or expiry and keeps the same calendar rotation', () => {
   for (const date of ['2026-09-06','2026-10-06','2027-01-04']) {
     const html = homeHarness(blockSettings,date).html();
-    assert.match(html,/Start Strength A/);
+    assert.match(html,/Start Squat Focus/);
     assert.doesNotMatch(html,/4-week|Day .* of 28|Regular program|Schedule block|End block|Start date|Cancel block/);
     assert.doesNotMatch(html,/Start RDL Focus/);
   }
@@ -124,16 +124,16 @@ test('completing today shows recovery while active sessions still resume after t
   assert.match(h.html(),/DONE FOR TODAY/);
   const resumed=homeHarness(blockSettings,'2026-10-04');
   resumed.state._activeSessions=[{workout_name:'Strength B',date:'2026-10-03',state_json:JSON.stringify({trainingBlock:scheduledBlock,setsMap:{bench:[{completed:true},{completed:false}]}})}];
-  assert.match(resumed.html(),/Resume Strength B/);
+  assert.match(resumed.html(),/Resume RDL Focus/);
   resumed.state._activeSessions[0].state_json=JSON.stringify({setsMap:{bench:[{completed:false},{completed:false}]}});
-  assert.match(resumed.html(),/Resume Strength B/,'An unlogged but started workout is retained');
+  assert.match(resumed.html(),/Resume RDL Focus/,'An unlogged but started workout is retained');
 });
 
 test('old paused or ended settings cannot reactivate the previous program', () => {
   for (const saved of [{...scheduledBlock,resumeDate:'2026-09-08'},{...scheduledBlock,status:'ended'}]) {
     const html=homeHarness({training_block:JSON.stringify(saved)},'2026-09-07').html();
-    assert.match(html,/Start Strength Accessories 1/);
+    assert.match(html,/Start Dips Focus/);
     assert.match(html,/18 sets/);
-    assert.doesNotMatch(html,/Start Dips Focus|Resumes|Regular program/);
+    assert.doesNotMatch(html,/Start Strength Accessories 1|Resumes|Regular program/);
   }
 });

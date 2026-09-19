@@ -1,3 +1,4 @@
+import { workoutDisplayName } from "../../lib/legacy/shared.js";
 // ─── file: workout-ui-home-strength-level-sync.js ───
 // Home-screen batch upload of finished sessions to Strength Level.
 //
@@ -44,7 +45,7 @@ function openSLHistorySync() {
     .map(
       (w) =>
         `<div style="display:flex;justify-content:space-between;gap:8px;padding:2px 0">
-          <span style="color:#E5E7EB">${esc(w.name)}</span>
+          <span style="color:#E5E7EB">${esc(workoutDisplayName(w.name))}</span>
           <span style="color:#9ca3af;font-family:monospace">${esc(w.date)} · ${w.setCount} sets</span>
         </div>`,
     )

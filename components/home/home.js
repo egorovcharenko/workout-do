@@ -3,6 +3,7 @@
 
 import { api } from "@/lib/db/api";
 import {
+  workoutDisplayName,
   WORKOUTS,
   ALL_WORKOUTS,
   MAIN_WORKOUTS,
@@ -69,7 +70,7 @@ function renderWorkoutCard(w, isSuggested, isOngoing, logged, expected, pct) {
   if (!isSuggested) {
     const lead = w.exercises.flatMap(ex => ex.supersetExercises || [ex]).slice(0, 2).map(ex => ex.name).join(' · ');
     return `<a class="home-then-row" href="/session?w=${encodeURIComponent(w.id)}">
-      <span class="home-row-copy"><strong>${escapeHtml(w.name)}</strong><span class="home-lead">${escapeHtml(lead)}</span></span>
+      <span class="home-row-copy"><strong>${escapeHtml(workoutDisplayName(w.name))}</strong><span class="home-lead">${escapeHtml(lead)}</span></span>
       <span class="home-duration">~${minutes} min</span></a>`;
   }
   const rowHTML = ex => {
@@ -89,11 +90,11 @@ function renderWorkoutCard(w, isSuggested, isOngoing, logged, expected, pct) {
   return `<section class="home-hero" aria-label="Up next workout">
     <div class="home-hero-top"><div class="home-row-copy">
       <div class="home-kickers"><span class="home-label home-accent">${isOngoing ? 'IN PROGRESS' : fromPlan ? 'UP NEXT · FROM PLAN' : 'UP NEXT'}</span>${deload ? '<span class="home-deload-badge">DELOAD</span>' : ''}</div>
-      <h2>${escapeHtml(w.name)}</h2><span class="home-meta">${sets} sets · ~${minutes} min</span>
+      <h2>${escapeHtml(workoutDisplayName(w.name))}</h2><span class="home-meta">${sets} sets · ~${minutes} min</span>
       ${isOngoing ? `<div class="home-progress" role="progressbar" aria-label="Workout sets" aria-valuemin="0" aria-valuemax="${expected}" aria-valuenow="${logged}"><span style="width:${pct}%"></span></div><span class="home-meta">${logged}/${expected} sets</span>` : ''}
     </div>${renderWorkoutMuscleMap(w)}</div>
     <div class="home-exercises">${rows}</div>
-    <a class="home-start" href="/session?w=${encodeURIComponent(w.id)}">${isOngoing ? 'Resume' : 'Start'} ${escapeHtml(w.name)}</a>
+    <a class="home-start" href="/session?w=${encodeURIComponent(w.id)}">${isOngoing ? 'Resume' : 'Start'} ${escapeHtml(workoutDisplayName(w.name))}</a>
   </section>`;
 }
 
@@ -453,7 +454,7 @@ function renderHome() {
     ${renderProgramUpcoming(schedule, program)}<section><h2 class="home-label">Workouts</h2><div class="home-rotation">${remaining}</div></section>
     ${renderActivity()}${renderOverview()}
     <details class="home-details" ${state.progressOpen ? 'open' : ''} ontoggle="state.progressOpen=this.open"><summary>History & measurements</summary>${renderWorkoutSummaryCard()}${renderMeasurementsCard()}</details>
-    <section class="home-tests"><h2 class="home-label">Test mode · nothing saved</h2><div>${program.filter(w => w.kind !== 'optional').map(w => `<a class="home-chip" href="/session?w=${w.id}&test=1">${escapeHtml(w.name)}</a>`).join('')}</div></section>
+    <section class="home-tests"><h2 class="home-label">Test mode · nothing saved</h2><div>${program.filter(w => w.kind !== 'optional').map(w => `<a class="home-chip" href="/session?w=${w.id}&test=1">${escapeHtml(workoutDisplayName(w.name))}</a>`).join('')}</div></section>
     <button class="home-chip home-sync" onclick="window.openSLHistorySync()">Upload missing workouts to Strength Level</button>
     ${state.planEditorOpen ? renderPlanEditor() : ''}
   </main>`;

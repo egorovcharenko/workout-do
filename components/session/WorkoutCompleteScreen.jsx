@@ -1,4 +1,6 @@
 "use client";
+import { workoutDisplayName } from "@/lib/legacy/shared";
+
 import { useRef, useState } from "react";
 import { buildWorkoutRecap, recapDate, recapDuration } from "@/lib/legacy/workout-recap";
 import { buildRecap1rmTrends, recapTrendSession, renderRecap1rm } from "@/lib/legacy/recap-1rm";
@@ -32,7 +34,7 @@ function WorkoutCompleteScreen({ workoutName, elapsedSec, exercises, sessionDate
               <span>{testMode ? "Test workout · not saved" : "Workout complete"}</span>
               <time dateTime={sessionDate}>{recapDate(sessionDate)}</time>
             </div>
-            <h1>{workoutName}</h1>
+            <h1>{workoutDisplayName(workoutName)}</h1>
           </header>
           <dl className="workout-recap-metrics">
             <div><dt>Time</dt><dd>{recapDuration(elapsedSec)}</dd></div>

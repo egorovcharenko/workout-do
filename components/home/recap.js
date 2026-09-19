@@ -1,3 +1,4 @@
+import { workoutDisplayName } from "../../lib/legacy/shared.js";
 import { buildRecap1rmTrends, renderRecap1rm } from "../../lib/legacy/recap-1rm.js";
 import { buildStoredWorkoutRecap, latestCompletedWorkout, recapDate, recapDuration } from '../../lib/legacy/workout-recap.js';
 import { localDate } from '../../lib/legacy/shared.js';
@@ -12,7 +13,7 @@ export function renderLatestWorkoutRecap(history, activeSessions = [], today = l
   return `<article class="workout-recap home-workout-recap" aria-label="Latest workout recap">
     <header class="workout-recap-header">
       <div class="workout-recap-eyebrow"><span>Latest workout</span><time datetime="${escapeHtml(session.date)}">${escapeHtml(recapDate(session.date))}</time></div>
-      <h2 class="workout-recap-title">${escapeHtml(session.workout_name)}</h2>
+      <h2 class="workout-recap-title">${escapeHtml(workoutDisplayName(session.workout_name))}</h2>
     </header>
     <dl class="workout-recap-metrics">
       <div><dt>Time</dt><dd>${session.duration_sec > 0 ? escapeHtml(recapDuration(session.duration_sec)) : '—'}</dd></div>
