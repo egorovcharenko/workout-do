@@ -1,5 +1,5 @@
 import { workoutDisplayName } from "../../lib/legacy/shared.js";
-import { buildRecap1rmTrends, renderRecap1rm } from "../../lib/legacy/recap-1rm.js";
+import { buildRecap1rmTrends, renderRecap1rm, renderRecapMonthlyChanges } from "../../lib/legacy/recap-1rm.js";
 import { buildStoredWorkoutRecap, latestCompletedWorkout, recapDate, recapDuration } from '../../lib/legacy/workout-recap.js';
 import { localDate } from '../../lib/legacy/shared.js';
 
@@ -22,7 +22,7 @@ export function renderLatestWorkoutRecap(history, activeSessions = [], today = l
     </dl>
     <ol class="workout-recap-exercises">${recap.exercises.map(exercise => `<li class="workout-recap-exercise">
       <div class="workout-recap-exercise-heading"><h3>${escapeHtml(exercise.name)}</h3>${exercise.workingSets ? `<span>${exercise.workingSets} ${exercise.workingSets === 1 ? 'set' : 'sets'}</span>` : ''}</div>
-      <div class="workout-recap-results${trends[exercise.name] ? ' has-trend' : ''}"><div>${exercise.groups.length ? exercise.groups.map(group => `<div class="workout-recap-set-group"><span class="workout-recap-load">${escapeHtml(group.load)}</span><span class="workout-recap-reps"><span class="workout-recap-times">× </span><strong>${group.reps.join(' · ')}</strong><small> reps</small></span></div>`).join('') : `<p class="workout-recap-warmup-only">${exercise.warmupSets} warm-up ${exercise.warmupSets === 1 ? 'set' : 'sets'} only</p>`}</div>${renderRecap1rm(trends[exercise.name])}</div>
+      <div class="workout-recap-results${trends[exercise.name] ? ' has-trend' : ''}"><div>${exercise.groups.length ? exercise.groups.map(group => `<div class="workout-recap-set-group"><span class="workout-recap-load">${escapeHtml(group.load)}</span><span class="workout-recap-reps"><span class="workout-recap-times">× </span><strong>${group.reps.join(' · ')}</strong><small> reps</small></span></div>`).join('') : `<p class="workout-recap-warmup-only">${exercise.warmupSets} warm-up ${exercise.warmupSets === 1 ? 'set' : 'sets'} only</p>`}</div>${renderRecap1rm(trends[exercise.name])}</div>${renderRecapMonthlyChanges(trends[exercise.name])}
     </li>`).join('')}</ol>
     <footer class="workout-recap-footer"><span>${recap.warmupSets ? `+ ${recap.warmupSets} warm-up ${recap.warmupSets === 1 ? 'set' : 'sets'}` : `${recap.exercises.length} ${recap.exercises.length === 1 ? 'exercise' : 'exercises'}`}</span><span class="workout-recap-brand">workouts</span></footer>
   </article>`;

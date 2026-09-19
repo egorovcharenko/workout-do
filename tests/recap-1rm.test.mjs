@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildRecap1rmTrends, recapTrendSession, recapMonthlyChanges, renderRecap1rm } from '../lib/legacy/recap-1rm.js';
+import { buildRecap1rmTrends, recapTrendSession, recapMonthlyChanges, renderRecapMonthlyChanges, renderRecap1rm } from '../lib/legacy/recap-1rm.js';
 import { renderLatestWorkoutRecap } from '../components/home/recap.js';
 const name = 'Barbell Bench Press';
 const row = (weight, reps, extra = {}) => ({ exercise: name, weight_lb: weight, reps, set_type: 'working', ...extra });
@@ -24,34 +24,32 @@ test('monthly change uses month-end results, handles gaps and never mutates hist
   assert.deepEqual(points,before);
 });
 
-test('monthly bars align with calendar spans below both lines, even on the first day of a month', () => {
+test('monthly bars display signed changes, calendar gaps and unchanged months without inventing gains', () => {
   const points = [
     { date:'2024-01-01', value:180, maxWeight:150 },
-    { date:'2024-01-31', value:190, maxWeight:160 },
+    { date:'2024-01-31', value:190.5, maxWeight:160 },
     { date:'2024-02-29', value:185, maxWeight:155 },
     { date:'2024-03-01', value:195, maxWeight:165 },
+    { date:'2024-04-01', value:195, maxWeight:165 },
   ];
-  const html = renderRecap1rm(points);
-  const bars = [...html.matchAll(/<rect class="recap-month-change (gain|loss)" x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/g)];
-  assert.equal(bars.length,3);
-  assert.deepEqual(bars.map(m=>m[1]),['gain','loss','gain']);
-  assert.deepEqual(bars.map(m=>Number(m[5])),[11,5.5,11]);
-  assert.equal(Number(bars[1][3]),14,'Losses extend below zero');
-  assert.ok(Number(bars[1][4]) < Number(bars[0][4]),'Leap February spans 29 days versus January 31');
-  assert.ok(Number(bars[2][4]) > 0,'The latest month remains visible on day one');
-  assert.ok(html.indexOf('class="recap-month-bars"') > html.indexOf('</svg>'));
-  assert.doesNotMatch(html.slice(0,html.indexOf('</svg>')), /recap-month-change/);
-  assert.match(html,/2024-02: estimated 1RM -5 lb/);
-  assert.match(html,/title="January 2024">Jan<\/span>/);
-  assert.match(html,/title="February 2024">Feb<\/span>/);
-  assert.match(html,/title="March 2024">Mar<\/span>/);
-  const gap = renderRecap1rm([{date:'2025-12-01',value:180},{date:'2026-02-01',value:190}]);
-  assert.match(gap,/title="January 2026">Jan<\/span>/,'Missing workouts do not collapse calendar months');
-  assert.match(gap,/recap-1rm-dates"><span>2025<\/span><span>2026<\/span>/);
-  assert.match(html,/stroke-dasharray="4 3"/);
-  assert.doesNotMatch(html,/NaN|Infinity/);
-  assert.doesNotMatch(renderRecap1rm([{date:'2026-09-01',value:180}]),/class="recap-month-bars"/);
-  assert.doesNotMatch(renderRecap1rm([{date:'2026-08-01',value:180},{date:'2026-09-01',value:180}]),/class="recap-month-bars"/);
+  const html = renderRecapMonthlyChanges(points);
+  assert.match(html, /recap-month-cell gain/);
+  assert.match(html, /recap-month-cell loss/);
+  assert.match(html, /recap-month-value">\+10.5<\/strong>/);
+  assert.match(html, /recap-month-value">−5.5<\/strong>/);
+  assert.match(html, /recap-month-value">0<\/strong>/);
+  assert.match(html, /January 2024: estimated 1RM \+10.5 lb/);
+  assert.match(html, /February 2024: estimated 1RM −5.5 lb/);
+  assert.match(html, /Mar <small>24<\/small>/);
+  assert.match(html, /1RM CHANGE · LB/);
+  const gap = renderRecapMonthlyChanges([{date:'2025-12-01',value:180},{date:'2025-12-20',value:185},{date:'2026-02-01',value:190}]);
+  assert.match(gap, /January 2026: not enough data/);
+  assert.match(gap, /recap-month-value">—<\/strong>/);
+  assert.match(gap, /February 2026: not enough data/);
+  assert.equal(renderRecapMonthlyChanges([{date:'2026-09-01',value:180}]),'');
+  assert.match(renderRecapMonthlyChanges([{date:'2026-08-01',value:180},{date:'2026-09-01',value:180}]),/recap-month-cell flat/);
+  assert.doesNotMatch(html, /NaN|Infinity/);
+  assert.doesNotMatch(renderRecap1rm(points), /recap-month-cell/, 'Monthly values render separately below the sparkline');
 });
 
 test('all-time recap trend uses the best working set per workout and replaces current autosave exactly once', () => {

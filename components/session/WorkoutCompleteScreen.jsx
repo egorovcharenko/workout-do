@@ -3,7 +3,7 @@ import { workoutDisplayName } from "@/lib/legacy/shared";
 
 import { useRef, useState } from "react";
 import { buildWorkoutRecap, recapDate, recapDuration } from "@/lib/legacy/workout-recap";
-import { buildRecap1rmTrends, recapTrendSession, renderRecap1rm } from "@/lib/legacy/recap-1rm";
+import { buildRecap1rmTrends, recapTrendSession, renderRecap1rm, renderRecapMonthlyChanges } from "@/lib/legacy/recap-1rm";
 import { StrengthLevelUpload } from "./StrengthLevelUpload";
 
 function WorkoutCompleteScreen({ workoutName, elapsedSec, exercises, sessionDate, history = [], sessionId = null, startedAt = null, bodyweightLb = null, testMode = false, onReview, onFinish }) {
@@ -58,6 +58,7 @@ function WorkoutCompleteScreen({ workoutName, elapsedSec, exercises, sessionDate
                 </div>
                 {trends[exercise.name] && <div dangerouslySetInnerHTML={{ __html: renderRecap1rm(trends[exercise.name]) }} />}
                 </div>
+                {trends[exercise.name] && <div dangerouslySetInnerHTML={{ __html: renderRecapMonthlyChanges(trends[exercise.name]) }} />}
               </li>
             ))}
           </ol>
