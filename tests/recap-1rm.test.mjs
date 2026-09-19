@@ -81,3 +81,44 @@ test('maximum load can come from a different set than best 1RM and shares its ch
   const invalid = renderRecap1rm([{date:'2026-09-18',value:190,maxWeight:'<script>'}]);
   assert.doesNotMatch(invalid,/NaN|Infinity|<script>|MAX WT/);
 });
+
+test('pull-up trends use a shared bodyweight baseline and only typed belt loads add weight', () => {
+  const pullup = (weight,reps,extra={}) => row(weight,reps,{exercise:'Pull-Ups',...extra});
+  const old = session('old','2026-08-01',[pullup(175,6)]);
+  const previous = session('previous','2026-09-01',[pullup(0,8)]);
+  const current = session('now','2026-09-18',[pullup(25,5,{load_type:'belt'}),pullup(0,9)]);
+  const points = buildRecap1rmTrends([old,previous],current,{bodyweightLb:165})['Pull-Ups'];
+  assert.deepEqual(points.map(p=>p.value),[198,209,221.7]);
+  assert.deepEqual(points.map(p=>p.maxWeight),[165,165,190]);
+  const html = renderLatestWorkoutRecap([old,previous,current],[],'2026-09-18',{bodyweightLb:165});
+  assert.match(html,/latest 221.7 lb/);
+  assert.match(html,/maximum working-set weight 190 lb/);
+  assert.match(html,/current bodyweight 165 lb/);
+  assert.match(html,/MAX WT/);
+});
+
+test('live pull-up recap agrees with saved rows and filters assistance and skipped sets', () => {
+  const current = recapTrendSession([{name:'Pull-Ups',repsOnly:true,beltLoad:true,equipment:'band',sets:[
+    {kind:'work',weight:25,reps:5,completed:true},
+    {kind:'work',weight:0,reps:50,completed:true,bands:[25]},
+    {kind:'work',weight:50,reps:20,completed:false},
+    {kind:'work',weight:50,reps:20,completed:true,userSkipped:true},
+    {kind:'warmup',weight:50,reps:20,completed:true},
+  ]}],'2026-09-18','now');
+  const live = buildRecap1rmTrends([],current,{bodyweightLb:'165'})['Pull-Ups'];
+  assert.equal(live[0].value,221.7);
+  assert.equal(live[0].maxWeight,190);
+  const stored = session('now','2026-09-18',[row(25,5,{exercise:'Pull-Ups',load_type:'belt'})]);
+  assert.deepEqual(live,buildRecap1rmTrends([],stored,{bodyweightLb:165})['Pull-Ups']);
+});
+
+test('pull-up charts do not invent bodyweight or mix malformed or assisted history', () => {
+  const current=session('now','2026-09-18',[row(0,8,{exercise:'Pull-Ups'})]);
+  for (const bodyweightLb of [undefined,null,0,-1,Infinity,'bad']) {
+    assert.deepEqual(buildRecap1rmTrends([],current,{bodyweightLb}),{});
+  }
+  for (const bands_json of ['[25]','bad','{}']) {
+    const assisted=session('assisted','2026-08-01',[row(150,50,{exercise:'Pull-Ups',bands_json})]);
+    assert.equal(buildRecap1rmTrends([assisted],current,{bodyweightLb:165})['Pull-Ups'].length,1);
+  }
+});

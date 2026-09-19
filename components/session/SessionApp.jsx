@@ -364,6 +364,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
       </div> ); }
   if (loadError) return <div style={{ padding: 24, color: T.text }}><p role="alert">{loadError}</p><Link href="/" style={{ color: T.accentLight }}>Back to workouts</Link></div>;
   if (completion.showRecap) return <WorkoutCompleteScreen
+    bodyweightLb={window.USER_SETTINGS?.bodyweight}
     workoutName={workout.name}
     elapsedSec={completion.elapsedSec}
     exercises={exercises}

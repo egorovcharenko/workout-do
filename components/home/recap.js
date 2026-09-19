@@ -4,11 +4,11 @@ import { localDate } from '../../lib/legacy/shared.js';
 
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 
-export function renderLatestWorkoutRecap(history, activeSessions = [], today = localDate()) {
+export function renderLatestWorkoutRecap(history, activeSessions = [], today = localDate(), options = {}) {
   const session = latestCompletedWorkout(history, activeSessions, today);
   if (!session) return '';
   const recap = buildStoredWorkoutRecap(session);
-  const trends = buildRecap1rmTrends(history.filter(item => !activeSessions.some(active => active.id === item.id)), session);
+  const trends = buildRecap1rmTrends(history.filter(item => !activeSessions.some(active => active.id === item.id)), session, options);
   return `<article class="workout-recap home-workout-recap" aria-label="Latest workout recap">
     <header class="workout-recap-header">
       <div class="workout-recap-eyebrow"><span>Latest workout</span><time datetime="${escapeHtml(session.date)}">${escapeHtml(recapDate(session.date))}</time></div>

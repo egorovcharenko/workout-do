@@ -4,12 +4,12 @@ import { buildWorkoutRecap, recapDate, recapDuration } from "@/lib/legacy/workou
 import { buildRecap1rmTrends, recapTrendSession, renderRecap1rm } from "@/lib/legacy/recap-1rm";
 import { StrengthLevelUpload } from "./StrengthLevelUpload";
 
-function WorkoutCompleteScreen({ workoutName, elapsedSec, exercises, sessionDate, history = [], sessionId = null, startedAt = null, testMode = false, onReview, onFinish }) {
+function WorkoutCompleteScreen({ workoutName, elapsedSec, exercises, sessionDate, history = [], sessionId = null, startedAt = null, bodyweightLb = null, testMode = false, onReview, onFinish }) {
   const [finishing, setFinishing] = useState(false);
   const [finishError, setFinishError] = useState(false);
   const finishPending = useRef(false);
   const recap = buildWorkoutRecap(exercises);
-  const trends = buildRecap1rmTrends(history, recapTrendSession(exercises, sessionDate, sessionId, startedAt));
+  const trends = buildRecap1rmTrends(history, recapTrendSession(exercises, sessionDate, sessionId, startedAt), { bodyweightLb });
   const handleFinish = () => {
     if (finishPending.current) return;
     finishPending.current = true;
