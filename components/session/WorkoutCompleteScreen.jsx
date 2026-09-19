@@ -35,13 +35,13 @@ function WorkoutCompleteScreen({ workoutName, elapsedSec, exercises, sessionDate
               <span>{testMode ? "Test workout · not saved" : "Workout complete"}</span>
               <time dateTime={sessionDate}>{recapDate(sessionDate)}</time>
             </div>
-            <h1>{workoutDisplayName(workoutName)}</h1>
-          </header>
+            <div className="workout-recap-heading-row"><h1>{workoutDisplayName(workoutName)}</h1>
           <dl className="workout-recap-metrics">
             <div><dt>Time</dt><dd>{recapDuration(elapsedSec)}</dd></div>
             <div><dt>Working sets</dt><dd>{recap.workingSets}</dd></div>
             <div><dt>Reps</dt><dd>{recap.reps}</dd></div>
-          </dl>
+          </dl></div>
+          </header>
           {timeDomain && <div className="workout-recap-chart-header"><div /><div dangerouslySetInnerHTML={{ __html: renderRecapTimeHeader(timeDomain) }} /></div>}
           <ol className="workout-recap-exercises">
             {recap.exercises.map((exercise, index) => (

@@ -14,13 +14,13 @@ export function renderLatestWorkoutRecap(history, activeSessions = [], today = l
   return `<article class="workout-recap home-workout-recap" aria-label="Latest workout recap">
     <header class="workout-recap-header">
       <div class="workout-recap-eyebrow"><span>Latest workout</span><time datetime="${escapeHtml(session.date)}">${escapeHtml(recapDate(session.date))}</time></div>
-      <h2 class="workout-recap-title">${escapeHtml(workoutDisplayName(session.workout_name))}</h2>
-    </header>
+      <div class="workout-recap-heading-row"><h2 class="workout-recap-title">${escapeHtml(workoutDisplayName(session.workout_name))}</h2>
     <dl class="workout-recap-metrics">
       <div><dt>Time</dt><dd>${session.duration_sec > 0 ? escapeHtml(recapDuration(session.duration_sec)) : '—'}</dd></div>
       <div><dt>Working sets</dt><dd>${recap.workingSets}</dd></div>
       <div><dt>Reps</dt><dd>${recap.reps}</dd></div>
-    </dl>
+    </dl></div>
+    </header>
     ${timeDomain ? `<div class="workout-recap-chart-header"><div></div>${renderRecapTimeHeader(timeDomain)}</div>` : ''}
     <ol class="workout-recap-exercises">${recap.exercises.map(exercise => `<li class="workout-recap-exercise">
       <div class="workout-recap-results${trends[exercise.name] ? ' has-trend' : ''}"><div class="workout-recap-details"><div class="workout-recap-exercise-heading"><h3>${escapeHtml(exercise.name)}</h3></div>${exercise.groups.length ? exercise.groups.map(group => `<div class="workout-recap-set-group"><span class="workout-recap-load">${escapeHtml(group.load)}</span><span class="workout-recap-reps"><span class="workout-recap-times">× </span><strong>${group.reps.join('·')}</strong><small> reps</small></span></div>`).join('') : `<p class="workout-recap-warmup-only">${exercise.warmupSets} warm-up ${exercise.warmupSets === 1 ? 'set' : 'sets'} only</p>`}${renderRecapTrendMetrics(trends[exercise.name])}</div>${trends[exercise.name] ? `<div class="workout-recap-trend">${renderRecap1rm(trends[exercise.name], timeDomain)}${renderRecapMonthlyChanges(trends[exercise.name], timeDomain)}</div>` : ''}</div>

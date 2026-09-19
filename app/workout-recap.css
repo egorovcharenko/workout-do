@@ -5,11 +5,12 @@
 .workout-recap-header { padding: 12px 16px 10px; border-top: 3px solid #60A5FA; }
 .workout-recap-eyebrow { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 5px 12px; color: #A9BCD2; font-size: 11px; font-weight: 600; }
 .workout-recap-eyebrow > span { color: #86EFAC; }
-.workout-recap h1, .workout-recap .workout-recap-title { margin: 5px 0 0; font-size: clamp(24px, 5.8vw, 28px); font-weight: 800; line-height: 1.1; letter-spacing: -.8px; overflow-wrap: anywhere; }
-.workout-recap-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0 16px; padding: 8px 0; border-top: 1px solid #304052; border-bottom: 1px solid #304052; }
-.workout-recap-metrics > div + div { padding-left: 14px; border-left: 1px solid #304052; }
-.workout-recap-metrics dt { color: #A9BCD2; font-size: 10px; line-height: 1.3; }
-.workout-recap-metrics dd { margin: 2px 0 0; font: 750 clamp(18px, 4vw, 21px)/1.2 var(--suite-font-mono); white-space: nowrap; }
+.workout-recap-heading-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 7px; }
+.workout-recap h1, .workout-recap .workout-recap-title { margin: 0; font-size: clamp(16px, 3.8vw, 22px); font-weight: 800; line-height: 1.1; letter-spacing: -.8px; overflow-wrap: anywhere; }
+.workout-recap-metrics { display: grid; grid-template-columns: repeat(3, max-content); flex-shrink: 0; gap: 10px; margin: 0; padding: 0; }
+.workout-recap-metrics > div + div { padding-left: 10px; border-left: 1px solid #304052; }
+.workout-recap-metrics dt { color: #A9BCD2; font-size: 9px; line-height: 1.3; }
+.workout-recap-metrics dd { margin: 2px 0 0; font: 750 clamp(12px, 3vw, 16px)/1.2 var(--suite-font-mono); white-space: nowrap; }
 .workout-recap-exercises { list-style: none; margin: 0; padding: 0 16px; }
 .workout-recap-exercise { padding: 5px 0; }
 .workout-recap-exercise + .workout-recap-exercise { border-top: 1px solid #273547; }
@@ -37,10 +38,12 @@
 @media (max-width: 380px) {
   .workout-recap-screen { padding: 12px 8px; }
   .workout-recap-header { padding: 10px 12px 8px; }
-  .workout-recap-metrics, .workout-recap-footer { margin-left: 12px; margin-right: 12px; }
+  .workout-recap-footer { margin-left: 12px; margin-right: 12px; }
   .workout-recap-exercises { padding-left: 12px; padding-right: 12px; }
   .workout-recap-set-group { font-size: 13px; }
-  .workout-recap-metrics > div + div { padding-left: 9px; }
+  .workout-recap-metrics { gap: 6px; }
+  .workout-recap-metrics dt { font-size: 8px; }
+  .workout-recap-metrics > div + div { padding-left: 6px; }
 }
 
 /* Keep the trend beside the actual sets so screenshot cards stay compact. */
