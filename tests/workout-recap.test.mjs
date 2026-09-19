@@ -151,9 +151,9 @@ test('screenshot card shows the workout and actual sets with controls outside it
   assert.match(card, /Reps<\/dt><dd>28<\/dd>/);
   assert.match(card, /Barbell Back Squat/);
   assert.match(card, /135 lb/);
-  assert.match(card, /<strong>8 · 7<\/strong>/);
+  assert.match(card, /<strong>8·7<\/strong>/);
   assert.match(card, /BW/);
-  assert.match(card, /<strong>7 · 6<\/strong>/);
+  assert.match(card, /<strong>7·6<\/strong>/);
   assert.match(card, /\+ 1 warm-up set/);
   assert.doesNotMatch(card, /<button|<input|<select|165|saved to your history|Suggested/);
   assert.match(html.slice(html.indexOf('</article>')), /Review sets/);

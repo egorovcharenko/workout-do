@@ -55,7 +55,7 @@ test('home shows the latest workout recap expanded above the program and next wo
   assert.ok(card, 'The recap is directly on home');
   assert.match(card, /54 min/);
   assert.match(card, /135 lb/);
-  assert.match(card, /10 · 8/);
+  assert.match(card, /10·8/);
   assert.doesNotMatch(card, /<details|<button|onclick=/, 'The screenshot card needs no click or expansion');
   assert.ok(html.indexOf(card) < html.indexOf('class="home-hero'));
   assert.equal(h.html(), html, 'Rerendering home keeps the recap visible');

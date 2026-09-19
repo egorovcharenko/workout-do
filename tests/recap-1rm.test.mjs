@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildRecap1rmTrends, recapTrendSession, recapMonthlyChanges, renderRecapMonthlyChanges, renderRecap1rm, recapTimeDomain } from '../lib/legacy/recap-1rm.js';
+import { buildRecap1rmTrends, recapTrendSession, recapMonthlyChanges, renderRecapMonthlyChanges, renderRecap1rm, recapTimeDomain, renderRecapTrendMetrics, renderRecapTimeHeader } from '../lib/legacy/recap-1rm.js';
 import { renderLatestWorkoutRecap } from '../components/home/recap.js';
 const name = 'Barbell Bench Press';
 const row = (weight, reps, extra = {}) => ({ exercise: name, weight_lb: weight, reps, set_type: 'working', ...extra });
@@ -40,7 +40,8 @@ test('monthly bars display signed changes, calendar gaps and unchanged months wi
   assert.match(html, /recap-month-value">0<\/strong>/);
   assert.match(html, /January 2024: estimated 1RM \+10.5 lb/);
   assert.match(html, /February 2024: estimated 1RM −5.5 lb/);
-  assert.match(html, /Mar <small>24<\/small>/);
+  assert.doesNotMatch(html, /recap-month-name/);
+  assert.match(renderRecapTimeHeader(recapTimeDomain({points})), /Mar <small>24<\/small>/);
   assert.doesNotMatch(html, /1RM CHANGE · LB/);
   const gap = renderRecapMonthlyChanges([{date:'2025-12-01',value:180},{date:'2025-12-20',value:185},{date:'2026-02-01',value:190}]);
   assert.match(gap, /January 2026: not enough data/);
@@ -85,7 +86,7 @@ test('live and stored charts agree, including legacy cable totals and current pe
   assert.deepEqual(points.map(p=>p.maxWeight),[120,120]);
   assert.match(html,/L133.80,8.00/);
   assert.match(html,/L133.80,36.00/);
-  assert.match(html,/MAX WT/);
+  assert.match(renderRecapTrendMetrics(points),/MAX WT/);
   assert.match(html,/stroke-dasharray="4 3"/);
 });
 
@@ -201,4 +202,29 @@ test('home recap shares its timeline across exercises with different history len
   const xs = [...html.matchAll(/<circle cx="([0-9.]+)"[^>]*><title>2026-09-19:/g)].map(m=>m[1]);
   assert.equal(xs.length,4);
   assert.equal(new Set(xs).size,1);
+});
+
+
+test('dips trends use total load and share live/stored semantics without counting assistance', () => {
+  const dip = (w,r,extra={}) => row(w,r,{exercise:'Dips',...extra});
+  const current = session('now','2026-09-19',[dip(25,11,{load_type:'belt'}),dip(0,12)]);
+  const old = session('old','2026-05-01',[dip(165,8)]);
+  const assisted = session('assisted','2026-08-01',[dip(25,30,{load_type:'belt',bands_json:'[25]'})]);
+  const before=JSON.stringify([old,assisted,current]);
+  const points = buildRecap1rmTrends([old,assisted],current,{bodyweightLb:165}).Dips;
+  assert.deepEqual(points.map(p=>[p.value,p.maxWeight]),[[209,165],[259.7,190]]);
+  const live = recapTrendSession([{name:'Dips',equipment:'bodyweight',beltLoad:true,repsOnly:true,sets:[
+    {kind:'work',weight:25,reps:11,completed:true}, {kind:'work',weight:0,reps:12,completed:true},
+    {kind:'work',weight:50,reps:30,completed:true,bands:[25]},
+    {kind:'warmup',weight:90,reps:30,completed:true},
+  ]}],'2026-09-19','now');
+  assert.deepEqual(buildRecap1rmTrends([old,assisted],live,{bodyweightLb:165}).Dips,points);
+  assert.deepEqual(buildRecap1rmTrends([old],current),{});
+  assert.equal(JSON.stringify([old,assisted,current]),before);
+  const html = renderLatestWorkoutRecap([old,current],[],'2026-09-19',{bodyweightLb:165});
+  assert.match(html,/latest 259.7 lb/);
+  assert.equal((html.match(/Shared chart timeline/g)||[]).length,1);
+  assert.match(html,/workout-recap-details[\s\S]*recap-trend-metrics[\s\S]*workout-recap-trend/);
+  assert.doesNotMatch(renderRecap1rm(points),/recap-1rm-label/);
+  assert.doesNotMatch(renderRecapMonthlyChanges(points),/recap-month-name/);
 });
