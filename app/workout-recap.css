@@ -68,7 +68,7 @@
 /* Monthly changes stay beneath their sparkline in the same compact column. */
 .recap-month-summary { margin-top: 4px; }
 .recap-month-heading { color: #A9BCD2; font: 8px/1.2 var(--suite-font-mono); margin-bottom: 2px; }
-.recap-month-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(42px, 1fr)); gap: 6px 2px; }
+.recap-month-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(30px, 1fr)); gap: 6px 2px; }
 .recap-month-cell { min-width: 0; text-align: center; color: #A9BCD2; font: 10px/1.2 var(--suite-font-mono); }
 .recap-month-cell.gain { color: #6EE7B7; }
 .recap-month-cell.loss { color: #FCA5A5; }
