@@ -24,7 +24,7 @@ test('monthly change uses month-end results, handles gaps and never mutates hist
   assert.deepEqual(points,before);
 });
 
-test('monthly bars align with calendar spans behind both lines, even on the first day of a month', () => {
+test('monthly bars align with calendar spans below both lines, even on the first day of a month', () => {
   const points = [
     { date:'2024-01-01', value:180, maxWeight:150 },
     { date:'2024-01-31', value:190, maxWeight:160 },
@@ -35,11 +35,12 @@ test('monthly bars align with calendar spans behind both lines, even on the firs
   const bars = [...html.matchAll(/<rect class="recap-month-change (gain|loss)" x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/g)];
   assert.equal(bars.length,3);
   assert.deepEqual(bars.map(m=>m[1]),['gain','loss','gain']);
-  assert.deepEqual(bars.map(m=>Number(m[5])),[18,9,18]);
-  assert.equal(Number(bars[1][3]),22,'Losses extend below zero');
+  assert.deepEqual(bars.map(m=>Number(m[5])),[11,5.5,11]);
+  assert.equal(Number(bars[1][3]),14,'Losses extend below zero');
   assert.ok(Number(bars[1][4]) < Number(bars[0][4]),'Leap February spans 29 days versus January 31');
   assert.ok(Number(bars[2][4]) > 0,'The latest month remains visible on day one');
-  assert.ok(html.indexOf('class="recap-month-bars"') < html.indexOf('<path'));
+  assert.ok(html.indexOf('class="recap-month-bars"') > html.indexOf('</svg>'));
+  assert.doesNotMatch(html.slice(0,html.indexOf('</svg>')), /recap-month-change/);
   assert.match(html,/2024-02: estimated 1RM -5 lb/);
   assert.match(html,/stroke-dasharray="4 3"/);
   assert.doesNotMatch(html,/NaN|Infinity/);

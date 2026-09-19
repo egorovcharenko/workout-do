@@ -52,7 +52,7 @@
 .recap-1rm-label > span { color: inherit; font-size: 9px; }
 .recap-1rm-label strong { color: #DBEAFE; font-size: 12px; white-space: nowrap; }
 .recap-1rm-label small { font-size: 9px; font-weight: 400; }
-.recap-1rm svg { display: block; width: 100%; height: 40px; }
+.recap-1rm svg { display: block; width: 100%; height: auto; aspect-ratio: 160 / 44; }
 .recap-1rm-dates { color: #A9BCD2; font-size: 8px; }
 @media (max-width: 380px) {
   .workout-recap-results.has-trend { gap: 10px; grid-template-columns: minmax(0, 1fr) 105px; }
@@ -65,7 +65,8 @@
 .recap-max-weight .recap-1rm-key::before { border-top-style: dashed; }
 .recap-max-weight strong { color: #FDE68A; }
 
-/* Monthly changes sit behind both load lines, on a separate zero-centered scale. */
-.recap-month-change.gain { fill: #34D399; fill-opacity: .2; }
-.recap-month-change.loss { fill: #F87171; fill-opacity: .2; }
-.recap-month-zero { stroke: #94A3B8; stroke-opacity: .18; stroke-width: .5; }
+/* Monthly changes sit below the load lines, with the same calendar alignment. */
+.recap-1rm .recap-month-bars { aspect-ratio: 160 / 28; margin: 2px 0 4px; }
+.recap-month-change.gain { fill: #34D399; fill-opacity: .85; }
+.recap-month-change.loss { fill: #F87171; fill-opacity: .85; }
+.recap-month-zero { stroke: #94A3B8; stroke-opacity: .4; stroke-width: .5; }
