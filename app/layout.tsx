@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { GeistMono, GeistSans } from "@personal-suite/design-system/fonts";
 import "./globals.css";
 import "@personal-suite/design-system/styles.css";
-import { AuthProvider } from "@/lib/firebase/auth";
 import { PwaRegistrar } from "@personal-suite/pwa";
 import { ChartTooltips } from "@/components/ChartTooltips";
 import { ScreenWakeLock } from "@/components/ScreenWakeLock";
@@ -33,7 +32,7 @@ export default function RootLayout({
         <PwaRegistrar />
         <ScreenWakeLock />
         <ChartTooltips />
-        <AuthProvider>{children}</AuthProvider>
+        {children}
       </body>
     </html>
   );

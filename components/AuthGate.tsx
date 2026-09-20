@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode } from "react";
-import { useAuth } from "@/lib/firebase/auth";
+import { AuthProvider, useAuth } from "@/lib/firebase/auth";
 import { signInWithGoogle } from "@/lib/firebase/auth-actions";
 
 /**
@@ -10,6 +10,10 @@ import { signInWithGoogle } from "@/lib/firebase/auth-actions";
  * signed in → children.
  */
 export default function AuthGate({ children }: { children: ReactNode }) {
+  return <AuthProvider><SignedInGate>{children}</SignedInGate></AuthProvider>;
+}
+
+function SignedInGate({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
 
   if (loading) {

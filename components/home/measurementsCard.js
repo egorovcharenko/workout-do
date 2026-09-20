@@ -1,4 +1,5 @@
 import { state } from "./state";
+import { renderProgressShareControls } from "./progressShare";
 import { renderProgress } from "./progress";
 import { MEASUREMENT_METRICS, _formatMeasurementDate, _renderMeasurementForm } from "./measurements";
 
@@ -35,7 +36,8 @@ function renderMeasurementsCard() {
     activeSessions: state._activeSessions || [],
     bodyweightLb: window.USER_SETTINGS?.bodyweight,
     metrics: MEASUREMENT_METRICS,
-    controls: `<div class="progress-controls">${actionSectionHTML}</div>`,
+    headerControls: `<button class="progress-share-button" onclick="shareProgress()" ${state.progressShareBusy ? 'disabled' : ''}>${state.progressShareBusy ? 'Sharing…' : 'Share'}</button>`,
+    controls: `${renderProgressShareControls()}<div class="progress-controls">${actionSectionHTML}</div>`,
   });
 }
 

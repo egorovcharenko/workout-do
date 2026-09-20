@@ -14,6 +14,7 @@ import { ALL_WORKOUTS as WORKOUTS, localDate } from "@/lib/legacy/shared";
 import { api } from "@/lib/db/api";
 import { setSessionStateCache } from "@/lib/legacy/session-persistence";
 import { state } from "./state";
+import { loadProgressShare, shareProgress, copyProgressLink, stopSharingProgress } from "./progressShare";
 import {
   sparkTip,
   microSparkline,
@@ -104,6 +105,7 @@ function initHomeApp() {
     reloadMeasurements,
     submitMeasurement,
     deleteMeasurement,
+    shareProgress, copyProgressLink, stopSharingProgress,
     // workout-ui-persistence.js
     loadHomeData,
     // workout-ui-home-strength-level-sync.js
@@ -130,6 +132,7 @@ function initHomeApp() {
   } else {
     render();
     loadHomeData();
+    void loadProgressShare();
   }
 }
 

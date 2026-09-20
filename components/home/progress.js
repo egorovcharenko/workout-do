@@ -12,7 +12,7 @@ const validDate = date => /^\d{4}-\d{2}-\d{2}$/.test(date || '') && Number.isFin
 export function buildProgress(history = [], measurements = [], { activeSessions = [], today = localDate(), metrics = [], bodyweightLb } = {}) {
   const seen = new Set();
   const sessions = history.filter(session => {
-    if (!validDate(session.date) || session.date > today || (session.id && seen.has(session.id))
+    if (session.is_deload === true || Number(session.is_deload) === 1 || !validDate(session.date) || session.date > today || (session.id && seen.has(session.id))
       || activeSessions.some(active => active.id === session.id)
       || !latestCompletedWorkout([session], activeSessions, today)) return false;
     if (session.id) seen.add(session.id);
@@ -77,9 +77,12 @@ function measurementRow(metric, domain) {
 }
 
 export function renderProgress(history, measurements, options = {}) {
-  const { groups, trends, timeDomain } = buildProgress(history, measurements, options);
+  return renderProgressModel(buildProgress(history, measurements, options), options);
+}
+
+export function renderProgressModel({ groups, trends, timeDomain }, options = {}) {
   return `<section class="workout-recap home-history-progress" aria-label="All-time progress">
-    <header class="workout-recap-header"><div class="workout-recap-heading-row"><h2 class="workout-recap-title">All-time progress</h2></div></header>
+    <header class="workout-recap-header"><div class="workout-recap-heading-row"><h2 class="workout-recap-title">All-time progress</h2>${options.headerControls || ''}</div></header>
     ${timeDomain ? `<div class="workout-recap-chart-header"><span class="progress-caption">Latest sets & measurements</span>${renderRecapTimeHeader(timeDomain)}</div>` : ''}
     ${groups.map(group => `<section class="progress-group" aria-label="${esc(group.label)}"><h2 class="progress-group-title">${esc(group.label)}</h2>
       <ol class="workout-recap-exercises">${group.exercises.map(exercise => {

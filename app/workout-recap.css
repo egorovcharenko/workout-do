@@ -121,3 +121,13 @@
 .chart-tooltip-measurement { color: #5EEAD4; }
 .workout-chart-tooltip small { display: block; margin-top: 4px; color: #A9BCD2; font-size: 10px; }
 .recap-1rm[data-chart-points] > svg { pointer-events: none; }
+
+.shared-progress-page { width: 100%; max-width: 900px; margin: 0 auto; padding: 16px 12px; color: #F3F4F6; }
+.shared-progress-page .home-history-progress { margin-top: 0; }
+.progress-share-button { flex-shrink: 0; min-height: 36px; border: 1px solid #425A77; border-radius: 8px; padding: 6px 10px; background: #182B42; color: #93C5FD; font: 600 12px var(--suite-font-sans); cursor: pointer; }
+.progress-share-button:disabled { opacity: .55; cursor: wait; }
+.progress-share-panel { padding: 10px 16px; border-top: 1px solid #304052; }
+.progress-share-panel p { margin: 0 0 8px; font-size: 12px; color: #A9BCD2; }
+.progress-share-panel input { width: 100%; min-width: 0; padding: 9px; margin-bottom: 8px; border: 1px solid #425A77; border-radius: 6px; color: #E5E7EB; background: #0B1015; font-size: 12px; }
+.progress-share-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.progress-share-actions a { color: #93C5FD; font-size: 12px; }
