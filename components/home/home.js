@@ -409,7 +409,8 @@ function renderHome() {
 
   const activeSess = state._activeSessions && state._activeSessions[0];
   const program = MAIN_WORKOUTS;
-  const nextW = program.find(w => w.id === schedule.workoutId) || program[0];
+  const nextWorkoutId = schedule.workoutId || schedule.upcoming.find(day => day.workoutId)?.workoutId;
+  const nextW = program.find(w => w.id === nextWorkoutId) || program[0];
 
   let activeWorkout = nextW;
   let isOngoing = false;
@@ -443,7 +444,7 @@ function renderHome() {
 
   const completedToday = blockWorkoutCompleted(state.history, schedule.context, nextW.name, localDate());
   const hero = !isOngoing && (!schedule.workoutId || completedToday)
-    ? renderProgramRestDay(!!schedule.workoutId && completedToday)
+    ? renderProgramRestDay(completedToday, nextW)
     : renderWorkoutCard(activeWorkout, true, isOngoing, logged, expected, pct);
   const remaining = orderedProgram.filter(w => (!isOngoing && !schedule.workoutId) || w.id !== activeWorkout.id).map(w => renderWorkoutCard(w, false)).join('');
   return `<main class="home-page" style="${homeTokens()}">

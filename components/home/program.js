@@ -2,9 +2,10 @@ import { workoutDisplayName } from "../../lib/legacy/shared.js";
 const escape = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const dateLabel = date => new Date(`${date}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-export function renderProgramRestDay(completed = false) {
+export function renderProgramRestDay(completed = false, nextWorkout = null) {
   return `<section class="home-hero home-rest-day" aria-label="${completed ? 'Workout complete' : 'Rest day'}"><span class="home-label home-accent">${completed ? 'DONE FOR TODAY' : 'TODAY'}</span>
-    <h2>${completed ? 'Workout complete' : 'Rest day'}</h2><p class="home-note">${completed ? 'Your next scheduled day is below.' : 'No lifting scheduled today.'}</p></section>`;
+    <h2>${completed ? 'Workout complete' : 'Rest recommended'}</h2><p class="home-note">${completed ? 'Your next scheduled day is below.' : 'A rest day can help you recover. If you feel ready, you can train today.'}</p>
+    ${!completed && nextWorkout ? `<a class="home-start" href="/session?w=${encodeURIComponent(nextWorkout.id)}">Start ${escape(workoutDisplayName(nextWorkout.name))} today</a>` : ''}</section>`;
 }
 
 export function renderProgramUpcoming(schedule, workouts) {

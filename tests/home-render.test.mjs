@@ -113,9 +113,38 @@ test('permanent program has no block controls or expiry and keeps the same calen
     assert.doesNotMatch(html,/Start RDL Focus/);
   }
   const rest = homeHarness(blockSettings,'2026-10-08').html();
-  assert.match(rest,/No lifting scheduled today/);
+  assert.match(rest,/Rest recommended/);
   assert.equal((rest.match(/<a class="home-then-row"/g)||[]).length,4,'Every workout remains available on rest days');
-  assert.doesNotMatch(rest,/class="home-start"/);
+  assert.match(rest,/class="home-start" href="\/session\?w=strength-b">Start RDL Focus today/);
+});
+
+test('both rest days offer the next scheduled workout and keep recovery advice non-blocking', () => {
+  for (const [date, id, name] of [
+    ['2026-09-20', 'strength-b', 'RDL Focus'],
+    ['2026-09-23', 'strength-a', 'Squat Focus'],
+  ]) {
+    const h = homeHarness(blockSettings, date);
+    const html = h.html();
+    assert.match(html, /Rest recommended/);
+    assert.match(html, /If you feel ready, you can train today/);
+    assert.ok(html.includes(`class="home-start" href="/session?w=${id}">Start ${name} today</a>`));
+    assert.equal((html.match(/class="home-start"/g) || []).length, 1);
+    assert.equal(h.saves.length, 0, 'Offering an optional workout does not write settings');
+  }
+});
+
+test('rest-day workouts resume when active and show completion once finished', () => {
+  const h = homeHarness(blockSettings, '2026-09-20');
+  const session = { id: 'optional', workout_name: 'Strength B', date: '2026-09-20',
+    state_json: JSON.stringify({ trainingBlock: scheduledBlock,
+      setsMap: { rdl: [{ completed: true }, { completed: false }] } }), sets: [] };
+  h.state._activeSessions = [session];
+  assert.match(h.html(), /Resume RDL Focus/);
+  assert.doesNotMatch(h.html(), /Rest recommended|Start RDL Focus today/);
+  h.state._activeSessions = [];
+  h.state.history = [{ ...session, finished_at: '2026-09-20T12:00:00Z' }];
+  assert.match(h.html(), /DONE FOR TODAY/);
+  assert.doesNotMatch(h.html(), /Start RDL Focus today/);
 });
 
 test('completing today shows recovery while active sessions still resume after the old expiry', () => {
