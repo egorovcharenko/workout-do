@@ -73,7 +73,7 @@ function measurementRow(metric, domain) {
 
 export function renderProgress(history, measurements, options = {}) {
   const { groups, trends, timeDomain } = buildProgress(history, measurements, options);
-  return `<section class="workout-recap home-progress" aria-label="All-time progress">
+  return `<section class="workout-recap home-history-progress" aria-label="All-time progress">
     <header class="workout-recap-header"><div class="workout-recap-heading-row"><h2 class="workout-recap-title">All-time progress</h2></div></header>
     ${timeDomain ? `<div class="workout-recap-chart-header"><span class="progress-caption">Latest sets & measurements</span>${renderRecapTimeHeader(timeDomain)}</div>` : ''}
     ${groups.map(group => `<section class="progress-group" aria-label="${esc(group.label)}"><h2 class="progress-group-title">${esc(group.label)}</h2>
