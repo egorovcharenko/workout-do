@@ -88,6 +88,24 @@
 .workout-recap-metric-summary { margin-left: auto; }
 .recap-trend-metrics { display: flex; flex-direction: column; gap: 3px; color: #93C5FD; }
 .recap-trend-metrics .recap-1rm-label { display: flex; align-items: baseline; gap: 5px; white-space: nowrap; }
+
+/* The all-history view shares the recap layout and one calendar axis. */
+.home-progress { margin-top: 20px; }
+.home-progress .progress-group-title { margin: 12px 16px 2px; padding-top: 8px; border-top: 1px solid #304052; color: #93C5FD; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
+.home-progress .workout-recap-exercise { padding: 9px 0; }
+.home-progress .workout-recap-exercise-heading { flex-wrap: wrap; gap: 2px 8px; }
+.home-progress time, .progress-caption { color: #A9BCD2; font-size: 10px; }
+.home-progress .workout-recap-exercise-heading time { white-space: nowrap; }
+.progress-measurement .workout-recap-load { font: 600 14px/1.4 var(--suite-font-mono); }
+.progress-measurement-chart { color: #5EEAD4; min-height: 40px; }
+.progress-delta { margin-left: auto; color: #A9BCD2; font: 12px var(--suite-font-mono); }
+.progress-delta.gain { color: #6EE7B7; }
+.progress-delta.loss { color: #FCA5A5; }
+.progress-controls { padding: 0 16px 16px; }
+.progress-controls button { min-height: 40px; }
+.home-progress .recap-month-grid { grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); grid-template-columns: none; }
+.home-progress .recap-month-name { white-space: normal; }
+.home-progress .recap-month-name small { display: block; }
 @media (max-width: 380px) {
   .workout-recap-chart-header { margin-left: 12px; margin-right: 12px; }
 }

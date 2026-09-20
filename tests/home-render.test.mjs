@@ -22,7 +22,7 @@ function homeHarness(settings = {}, today = '2026-09-18') {
     upcomingBlockDays: block => trainingBlock.upcomingBlockDays(block, today),
     window: { USER_SETTINGS: settings }, document: { getElementById: id => elements[id] }, console,
     api: { saveSettings: async data => saves.push(data) }, render: () => {},
-    loadSkippedExercises: () => new Set(), renderCalendar: () => '', renderWorkoutSummaryCard: () => '', renderMeasurementsCard: () => '',
+    loadSkippedExercises: () => new Set(), renderCalendar: () => '', renderWorkoutSummaryCard: () => '', renderMeasurementsCard: () => '<section aria-label="All-time progress"></section>',
   });
   const blockSource = fs.readFileSync(new URL('../components/home/program.js', import.meta.url), 'utf8')
     .replace(/^import[\s\S]*?;\n/gm, '').replace(/export /g, '');
@@ -165,4 +165,11 @@ test('old paused or ended settings cannot reactivate the previous program', () =
     assert.match(html,/20 sets/);
     assert.doesNotMatch(html,/Start Strength Accessories 1|Resumes|Regular program/);
   }
+});
+
+ test('home exposes all-time exercise and body progress at the bottom instead of the old history disclosure', () => {
+  const html = homeHarness().html();
+  assert.match(html, /aria-label="All-time progress"/);
+  assert.doesNotMatch(html, /<summary>History & measurements<\/summary>/);
+  assert.ok(html.indexOf('aria-label="All-time progress"') > html.indexOf('Upload missing workouts'));
 });

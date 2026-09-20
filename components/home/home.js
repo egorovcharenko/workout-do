@@ -20,7 +20,6 @@ import { loadSkippedExercises } from "@/lib/legacy/session-persistence";
 import { cableStackMultiplier } from "@/lib/legacy/cable-stack";
 import { state } from "./state";
 import { renderCalendar } from "./calendar";
-import { renderWorkoutSummaryCard } from "./summary";
 import { renderMeasurementsCard } from "./measurementsCard";
 import { render } from "./shell";
 import { recentActivity, latestLift, latestBody } from "./overview";
@@ -454,10 +453,10 @@ function renderHome() {
     ${hero}
     ${renderProgramUpcoming(schedule, program)}<section><h2 class="home-label">Workouts</h2><div class="home-rotation">${remaining}</div></section>
     ${renderActivity()}${renderOverview()}
-    <details class="home-details" ${state.progressOpen ? 'open' : ''} ontoggle="state.progressOpen=this.open"><summary>History & measurements</summary>${renderWorkoutSummaryCard()}${renderMeasurementsCard()}</details>
     <section class="home-tests"><h2 class="home-label">Test mode · nothing saved</h2><div>${program.filter(w => w.kind !== 'optional').map(w => `<a class="home-chip" href="/session?w=${w.id}&test=1">${escapeHtml(workoutDisplayName(w.name))}</a>`).join('')}</div></section>
     <button class="home-chip home-sync" onclick="window.openSLHistorySync()">Upload missing workouts to Strength Level</button>
     ${state.planEditorOpen ? renderPlanEditor() : ''}
+    ${renderMeasurementsCard()}
   </main>`;
 }
 

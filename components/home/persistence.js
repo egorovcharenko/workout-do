@@ -11,7 +11,7 @@ import { render } from "./shell";
 async function loadHomeData() {
   try {
     const [histRes, activeRes, measRes, settingsRes, hintsRes, ormRes] = await Promise.all([
-      api.history(100),
+      api.allHistory(),
       api.activeSessions(),
       api.measurements(),
       api.settings(),
