@@ -1,3 +1,4 @@
+import { chartInspectionAttributes } from "../../lib/chart-inspection.js";
 import { EXERCISE_MUSCLES } from '../../lib/legacy/standards.js';
 import { localDate } from '../../lib/legacy/shared.js';
 import { buildStoredWorkoutRecap, latestCompletedWorkout, recapDate } from '../../lib/legacy/workout-recap.js';
@@ -50,7 +51,11 @@ function measurementChart(metric, domain) {
     x: 5 + (Date.parse(point.date) - domain.start) / (domain.end - domain.start) * 150,
     y: high === low ? 22 : 36 - (point.value - low) / (high - low) * 28,
   }));
-  return `<div class="recap-1rm progress-measurement-chart"><svg role="img" aria-label="${esc(metric.label)} measurement history">
+  const inspection = chartInspectionAttributes(points.map(point => ({
+    date: point.date, x: point.x / 160 * 100,
+    values: [{ label: metric.label, value: point.value, unit: metric.unit || 'cm', kind: 'measurement' }],
+  })));
+  return `<div class="recap-1rm progress-measurement-chart" aria-label="${esc(metric.label)} history" ${inspection}><svg role="img" aria-label="${esc(metric.label)} measurement history">
     <svg width="100%" height="100%" viewBox="0 0 160 44" preserveAspectRatio="none" aria-hidden="true">
       ${points.length > 1 ? `<path d="${points.map((p, i) => `${i ? 'L' : 'M'}${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' ')}" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>` : ''}
     </svg>

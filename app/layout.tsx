@@ -4,6 +4,7 @@ import "./globals.css";
 import "@personal-suite/design-system/styles.css";
 import { AuthProvider } from "@/lib/firebase/auth";
 import { PwaRegistrar } from "@personal-suite/pwa";
+import { ChartTooltips } from "@/components/ChartTooltips";
 import { ScreenWakeLock } from "@/components/ScreenWakeLock";
 
 export const metadata: Metadata = {
@@ -31,6 +32,7 @@ export default function RootLayout({
       <body className="antialiased" style={{ background: "#18191c" }}>
         <PwaRegistrar />
         <ScreenWakeLock />
+        <ChartTooltips />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
