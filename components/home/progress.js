@@ -9,7 +9,7 @@ const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&a
 const validDate = date => /^\d{4}-\d{2}-\d{2}$/.test(date || '') && Number.isFinite(Date.parse(date))
   && new Date(date).toISOString().slice(0, 10) === date;
 
-export function buildProgress(history = [], measurements = [], { activeSessions = [], today = localDate(), metrics = [], bodyweightLb } = {}) {
+export function buildProgress(history = [], measurements = [], { activeSessions = [], today = localDate(), metrics = [], bodyweightLb, minWorkouts = 1 } = {}) {
   const seen = new Set();
   const sessions = history.filter(session => {
     if (session.is_deload === true || Number(session.is_deload) === 1 || !validDate(session.date) || session.date > today || (session.id && seen.has(session.id))
@@ -20,13 +20,21 @@ export function buildProgress(history = [], measurements = [], { activeSessions 
   }).sort((a, b) => a.date.localeCompare(b.date)
     || String(a.started_at || a.created_at || '').localeCompare(String(b.started_at || b.created_at || '')));
   const latest = new Map();
+  const workoutCounts = new Map();
   for (const session of sessions) {
     const logged = { ...session, sets: (session.sets || []).filter(set => set.completed !== false && !set.userSkipped) };
+    const performed = new Set();
     for (const exercise of buildStoredWorkoutRecap(logged).exercises) {
-      if (exercise.workingSets) latest.set(exercise.name, { ...exercise, date: session.date });
+      if (exercise.workingSets) {
+        latest.set(exercise.name, { ...exercise, date: session.date });
+        performed.add(exercise.name);
+      }
     }
+    for (const name of performed) workoutCounts.set(name, (workoutCounts.get(name) || 0) + 1);
   }
-  const trends = buildAllTime1rmTrends(sessions, { bodyweightLb });
+  for (const name of latest.keys()) if (workoutCounts.get(name) < minWorkouts) latest.delete(name);
+  const trends = Object.fromEntries(Object.entries(buildAllTime1rmTrends(sessions, { bodyweightLb }))
+    .filter(([name]) => latest.has(name)));
   const metricRows = metrics.map(metric => ({ ...metric, points: measurements.flatMap(entry => {
     const date = String(entry.taken_at || entry.date || '').slice(0, 10);
     const value = Number(entry[metric.id]);

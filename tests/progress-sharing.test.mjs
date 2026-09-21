@@ -32,6 +32,24 @@ test('public snapshot includes only progress, with no account data, notes, activ
   assert.match(html, /data-chart-points/);
 });
 
+test('shared progress requires four distinct non-deload workouts, not four sets or chart points', () => {
+  const third = workout('third', '2026-09-17', 145);
+  const three = history.filter(s => s.id !== 'sep');
+  three.push(third);
+  // Extra sets and a repeated history document must not count as extra workouts.
+  third.sets.push({ ...third.sets[0], reps: 6 });
+  const measurements = [{ taken_at: '2026-09-16', chest_cm: 99.5 }];
+  const hidden = buildSharedProgress([...three, third], measurements, {}, now);
+  assert.equal(hidden.groups.flatMap(g => g.exercises).length, 0);
+  assert.deepEqual(hidden.trends, {});
+  assert.equal(hidden.groups.flatMap(g => g.metrics).length, 1);
+  const fourth = workout('fourth', '2026-09-17', 150);
+  const visible = buildSharedProgress([...three, fourth], measurements, {}, now);
+  assert.deepEqual(visible.groups.flatMap(g => g.exercises).map(e => e.name), ['Barbell Bench Press']);
+  assert.equal(visible.trends['Barbell Bench Press'].length, 4);
+  assert.equal(visible.groups[0].exercises[0].groups[0].load, '150 lb');
+});
+
 function database() {
   const entries = new Map();
   const snapshot = path => ({ exists: entries.has(path), data: () => entries.get(path) });
