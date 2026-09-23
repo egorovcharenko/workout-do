@@ -1,6 +1,7 @@
 "use client";
 import React, { useCallback, useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
+import { CABLE_CHEST_FLY, restoreChestFlyPrescription } from "@/lib/cable-chest-fly";
 import { api } from "@/lib/db/api";
 import { canApplyResolvedSessionId, selectScopedSaveTiming } from "@/lib/session-save-scope";
 import {
@@ -141,7 +142,9 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
         if (savedSetsMap && Object.keys(savedSetsMap).length) {
           const templateNames = new Set(exs.map(ex => ex.name));
           exs = exs.map(ex => {
-            const saved = savedSetsMap[ex.name];
+            const saved = ex.name === CABLE_CHEST_FLY.name
+              ? restoreChestFlyPrescription(ex.sets, savedSetsMap[ex.name])
+              : savedSetsMap[ex.name];
             if (saved && saved.length) {
               const savedWarmups = saved.filter(s => s.kind === "warmup");
               const savedWorking = saved.filter(s => s.kind === "work");
