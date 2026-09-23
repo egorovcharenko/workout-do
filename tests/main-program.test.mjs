@@ -11,9 +11,9 @@ const work = MAIN_WORKOUTS[0];
 const row=(weight,reps,number=1)=>({exercise:'Barbell Back Squat',set_type:'working',set_number:number,weight_lb:weight,reps,rir:'1-2'});
 const saved=(id,date,rows,context=run)=>({id,date,workout_name:work.name,finished_at:date+'T12:00:00Z',state_json:JSON.stringify({trainingBlock:context}),sets:rows});
 
-test('permanent program retains all four prescriptions, load policies and 80 working sets',()=>{
+test('permanent program retains all four prescriptions, load policies and 81 working sets',()=>{
   assert.deepEqual(MAIN_WORKOUTS.map(w=>w.exercises),BLOCK_WORKOUTS.map(w=>w.exercises));
-  assert.equal(MAIN_WORKOUTS.flatMap(w=>w.exercises).reduce((n,e)=>n+e.sets,0),80);
+  assert.equal(MAIN_WORKOUTS.flatMap(w=>w.exercises).reduce((n,e)=>n+e.sets,0),81);
   assert.ok(MAIN_WORKOUTS.every(w=>w.permanent&&w.program&&!w.hidden));
   assert.deepEqual(MAIN_WORKOUTS.map(w=>w.id),BLOCK_WORKOUTS.map(w=>w.id));
 });
