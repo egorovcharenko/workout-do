@@ -44,8 +44,8 @@ const guide = (workout, sessions) => withRepGuidance(flatten(workout, sessions),
 test('the revised block preserves the audited full rotation without extra squat or flat-bench appearances', () => {
   const before = JSON.stringify(shared.WORKOUTS);
   const counts = shared.BLOCK_WORKOUTS.map(w => flatten(w).reduce((n, e) => n + e.sets.filter(s => s.kind === 'work').length, 0));
-  assert.deepEqual(counts, [17, 20, 17, 24]);
-  assert.equal(counts.reduce((a, b) => a + b), 78);
+  assert.deepEqual(counts, [17, 20, 17, 26]);
+  assert.equal(counts.reduce((a, b) => a + b), 80);
   assert.deepEqual(shared.BLOCK_WORKOUTS.filter(w => w.exercises.some(e => e.name === 'Barbell Bench Press')).map(w => w.id), ['strength-a']);
   assert.deepEqual(shared.BLOCK_WORKOUTS.filter(w => w.exercises.some(e => e.name === 'Barbell Back Squat')).map(w => w.id), ['strength-a']);
   const arms = flatten(getWorkout('strength-accessories-1'));
@@ -228,5 +228,26 @@ test('wrist curls finish both accessory days with dumbbell controls and optional
         assert.deepEqual(plain(accepted.at(-1).sets.map(s => s.weight)), [7.5,7.5]);
       }
     }
+  }
+});
+
+test('cable chest fly starts Shrugs Focus with per-stack loading and progresses both sets together', () => {
+  const name = 'Cable Chest Fly';
+  const w = getWorkout('strength-accessories-2');
+  const e = guide(w, [])[0];
+  assert.equal(e.name, name);
+  assert.equal(e.equipment, 'cable');
+  assert.equal(e.rest, 120);
+  assert.equal(shared.findExerciseConfig(name).equipment, 'cable');
+  assert.equal(cable.cableStackMultiplier(name), 2);
+  assert.equal(cable.effectiveExerciseWeight(name, 10), 20);
+  assert.deepEqual(plain(e.sets.map(s => s.repGuidance.range)), [[12,20],[12,20]]);
+  assert.ok(e.sets.every(s => !s.completed && s.reps == null && s.rir == null && s.repGuidance.rirLabel === '2'));
+  assert.ok(!getWorkout('strength-accessories-1').exercises.some(e => e.name === name));
+  for (const [reps, ready] of [[[20,19], false], [[20,20], true]]) {
+    const prev = session(w.name, '2026-09-18', reps.map((r,i) => row(name,i+1,10,r,{rir:'1-2'})), {state_json:JSON.stringify({trainingBlock:run})});
+    const offer = guide(w, [prev])[0].sets[0].repGuidance.loadProgression;
+    assert.equal(offer.ready, ready);
+    assert.equal(offer.weight, 11.25);
   }
 });
