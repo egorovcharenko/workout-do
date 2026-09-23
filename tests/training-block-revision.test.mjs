@@ -241,12 +241,17 @@ test('cable chest fly starts Shrugs Focus with per-stack loading and progresses 
   assert.equal(shared.findExerciseConfig(name).equipment, 'cable');
   assert.equal(cable.cableStackMultiplier(name), 2);
   assert.equal(cable.effectiveExerciseWeight(name, 10), 20);
-  assert.deepEqual(plain(e.sets.map(s => s.repGuidance.range)), [[12,20],[12,20]]);
-  assert.ok(e.sets.every(s => !s.completed && s.reps == null && s.rir == null && s.repGuidance.rirLabel === '2'));
+  assert.equal(e.sets.length, 3);
+  assert.equal(e.sets[0].kind, 'warmup');
+  assert.equal(e.sets[0].weight, 10);
+  assert.deepEqual(plain(e.sets[0].repGuidance.range), [10,10]);
+  const working = e.sets.filter(s => s.kind === 'work');
+  assert.deepEqual(plain(working.map(s => s.repGuidance.range)), [[12,20],[12,20]]);
+  assert.ok(working.every(s => !s.completed && s.reps == null && s.rir == null && s.repGuidance.rirLabel === '2'));
   assert.ok(!getWorkout('strength-accessories-1').exercises.some(e => e.name === name));
   for (const [reps, ready] of [[[20,19], false], [[20,20], true]]) {
     const prev = session(w.name, '2026-09-18', reps.map((r,i) => row(name,i+1,10,r,{rir:'1-2'})), {state_json:JSON.stringify({trainingBlock:run})});
-    const offer = guide(w, [prev])[0].sets[0].repGuidance.loadProgression;
+    const offer = guide(w, [prev])[0].sets.find(s => s.kind === 'work').repGuidance.loadProgression;
     assert.equal(offer.ready, ready);
     assert.equal(offer.weight, 11.25);
   }
