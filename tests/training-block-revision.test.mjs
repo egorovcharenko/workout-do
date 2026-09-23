@@ -237,7 +237,7 @@ test('cable chest fly starts Shrugs Focus with per-stack loading and progresses 
   const e = guide(w, [])[0];
   assert.equal(e.name, name);
   assert.equal(e.equipment, 'cable');
-  assert.equal(e.rest, 120);
+  assert.equal(e.rest, 90);
   assert.equal(shared.findExerciseConfig(name).equipment, 'cable');
   assert.equal(cable.cableStackMultiplier(name), 2);
   assert.equal(cable.effectiveExerciseWeight(name, 10), 20);
