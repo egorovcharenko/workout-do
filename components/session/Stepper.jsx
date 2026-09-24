@@ -38,7 +38,7 @@ function WeightStepper({ value, last, pr, onPick, label, compact = false, showLa
   return (
     <div style={{ marginTop: embedded ? 0 : (compact ? 9 : 14) }}>
       {label && (
-        <div style={{ marginBottom: 6, color: T.muted, fontFamily: T.mono, fontSize: 10, fontWeight: 700, letterSpacing: 0.6 }}>
+        <div className="ui-label" style={{ marginBottom: 6 }}>
           {label}
         </div>
       )}
@@ -82,7 +82,7 @@ function GripSelector({ grips, selected, last, onPick }) {
   return (
     <div style={{ marginTop: 14 }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 8 }}>
-        <span style={{ color: T.muted, fontFamily: T.mono, fontSize: 10, fontWeight: 700, letterSpacing: 0.6 }}>GRIP</span>
+        <span className="ui-label">Grip</span>
         {last && last !== selected && (
           <button onClick={() => onPick(last)} style={{ background: "transparent", border: 0, color: T.accentLight, fontFamily: T.mono, fontSize: 11, fontWeight: 700, padding: 0, cursor: "pointer" }}>
             use last: {last}
@@ -124,8 +124,8 @@ function BandsGrid({ bands, lastBands, onToggle, onClear, isAssist }) {
   return (
     <div style={{ marginTop: 14 }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 8 }}>
-        <span style={{ color: T.muted, fontFamily: T.mono, fontSize: 10, fontWeight: 700, letterSpacing: 0.6 }}>
-          {isAssist ? "ASSISTANCE" : "BANDS"} <span style={{ color: T.faint, fontWeight: 500 }}>· tap to add</span>
+        <span className="ui-label">
+          {isAssist ? "Assistance" : "Bands"} <span style={{ color: T.faint, fontWeight: 500 }}>· tap to add</span>
         </span>
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
           {showUseLast && (

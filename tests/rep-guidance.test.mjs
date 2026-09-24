@@ -247,7 +247,7 @@ test('set cards and the rep picker render distinct previous, target and suggeste
   assert.match(html, /aria-label="Log 6 reps \(last workout\)" data-last="true"/);
   assert.equal((html.match(/aria-label="Log /g) || []).length, 20);
   const card = renderToStaticMarkup(React.createElement(SetCard, { s: guided.sets[0], idx: 0, exercise: guided }));
-  assert.match(card, /TARGET/);
+  assert.match(card, /Target/);
   assert.match(card, /Suggested <strong>7<\/strong>/);
   assert.doesNotMatch(card, />Last .*?>5<\/strong>/);
   assert.deepEqual(chosen, []);
@@ -279,7 +279,7 @@ test('pull-up cards, navigation and picker show target RIR without suggesting or
   assert.doesNotMatch(html, /Suggested|data-suggested/);
   const card = renderToStaticMarkup(React.createElement(SetCard, { s: current, idx: 0, exercise: guided }));
   assert.match(card, /1–2 RIR/);
-  assert.match(card, /TARGET/);
+  assert.match(card, /Target/);
   assert.doesNotMatch(card, /Suggested|>3</);
   const chip = renderToStaticMarkup(React.createElement(SetChip, { d: navSetDisplay(current, guided), k: 0 }));
   assert.match(chip, /1–2 RIR/);

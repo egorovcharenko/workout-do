@@ -13,7 +13,7 @@ import { buildExerciseSessionHistory, selectTopSet } from "@/lib/legacy/exercise
 
 const Section = ({ label, children }) => (
   <div style={{ marginBottom: 14 }}>
-    <div style={{ color: T.muted, fontFamily: T.mono, fontSize: 9, fontWeight: 800, letterSpacing: 0.9, marginBottom: 8 }}>
+    <div className="ui-label" style={{ marginBottom: 8 }}>
       {label}
     </div>
     {children}
@@ -33,7 +33,7 @@ function PreviousSessions({ history, exercise, sessionId }) {
   const { rows, columnCount } = buildExerciseSessionHistory(history, exercise.name, sessionId);
   if (!rows.length) {
     return (
-      <Section label="PREVIOUS SESSIONS">
+      <Section label="Previous sessions">
         <div style={{ color: T.faint, fontFamily: T.mono, fontSize: 10 }}>No previous sessions yet.</div>
       </Section>
     );
@@ -58,7 +58,7 @@ function PreviousSessions({ history, exercise, sessionId }) {
   const setWidth = 104;
   const border = `1px solid ${T.cardBorder}`;
   return (
-    <Section label="TOP SETS">
+    <Section label="Top sets">
       {best && <div className="history-best">{summaryRow(best, "BEST")}
         <div className="history-best-date">{displayDate(best.session.date)}</div>
       </div>}
@@ -250,25 +250,25 @@ function StatsPane({ exercise, history, statHistory, sessionId }) {
       }}
     >
       <div style={{ marginBottom: 12 }}>
-        <div style={{ color: T.faint, fontFamily: T.mono, fontSize: 9, fontWeight: 800, letterSpacing: 1.0, marginBottom: 4 }}>STATS</div>
+        <div className="ui-label" style={{ marginBottom: 4 }}>Stats</div>
         <div style={{ color: T.strong, fontSize: 16, fontWeight: 800, letterSpacing: -0.3, lineHeight: 1.2 }}>{exercise.name}</div>
       </div>
 
-      <Section label="PROGRESS · OVER LAST 30 DAYS">
+      <Section label="Progress · last 30 days">
         <Sparkline exerciseName={exercise.name} data={ormHist} valueKey="orm" color="#60A5FA"
-          label={exercise.stages ? "STAGE" : isRepsOnly ? "TOP REPS" : "1RM EST"}
+          label={exercise.stages ? "Stage" : isRepsOnly ? "Top reps" : "Est. 1RM"}
           fmt={exercise.stages
             ? (v => { const d = decodeStageScore(v); return `S${d.stage} · ${d.reps} reps`; })
             : isRepsOnly ? (v => `${Math.round(v)} reps`)
             : (v => `${Math.round(v)} lb`)}
           showTip={showTip} hideTip={hideTip} />
-        {exercise.beltLoad && <Sparkline exerciseName={exercise.name} data={wtHist} valueKey="wt" color="#C084FC" label="ADDED LOAD" fmt={v => `+${Math.round(v)} lb`} showTip={showTip} hideTip={hideTip} />}
-        {exercise.beltLoad && <Sparkline exerciseName={exercise.name} data={volHist} valueKey="vol" color="#34D399" label="PLATE VOLUME" fmt={v => `${Math.round(v).toLocaleString()} lb`} showTip={showTip} hideTip={hideTip} />}
+        {exercise.beltLoad && <Sparkline exerciseName={exercise.name} data={wtHist} valueKey="wt" color="#C084FC" label="Added load" fmt={v => `+${Math.round(v)} lb`} showTip={showTip} hideTip={hideTip} />}
+        {exercise.beltLoad && <Sparkline exerciseName={exercise.name} data={volHist} valueKey="vol" color="#34D399" label="Plate volume" fmt={v => `${Math.round(v).toLocaleString()} lb`} showTip={showTip} hideTip={hideTip} />}
       </Section>
 
-      {!isRepsOnly && <Section label="ALL TIME">
+      {!isRepsOnly && <Section label="All time">
         <Sparkline exerciseName={exercise.name} data={ormHist} valueKey="orm" color="#34D399" allTime
-          label={exercise.stages ? "STAGE" : "1RM EST"}
+          label={exercise.stages ? "Stage" : "Est. 1RM"}
           fmt={exercise.stages
             ? (v => { const d = decodeStageScore(v); return `S${d.stage} · ${d.reps} reps`; })
             : (v => `${Math.round(v)} lb`)}

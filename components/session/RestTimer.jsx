@@ -12,7 +12,7 @@ function RestTimer({ rest, onAdd, onSkip, onToggle }) {
   const urgent = !done && !paused && left <= 10;
   const accent = urgent ? "#ff4d6d" : done ? T.green : T.amber;
   const glow = urgent ? "255,77,109" : done ? "52,211,153" : "251,191,36";
-  const status = done ? "REST COMPLETE" : paused ? "REST PAUSED" : urgent ? "GET READY" : "RESTING";
+  const status = done ? "Rest complete" : paused ? "Rest paused" : urgent ? "Get ready" : "Resting";
 
   return (
     <section

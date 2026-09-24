@@ -16,16 +16,16 @@
 
 .label {
   color: #6b7280;
-  font-size: 8px;
-  font-weight: 800;
-  letter-spacing: .55px;
-  text-transform: uppercase;
+  font-family: var(--suite-font-sans, system-ui, sans-serif);
+  font-size: 11px;
+  font-weight: 500;
 }
 
 .value {
   color: #9ca3af;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .expected .label,
@@ -49,7 +49,7 @@
 }
 
 .nav .label {
-  font-size: 7px;
+  font-size: 10px;
 }
 
 .nav .value {
@@ -66,10 +66,9 @@
 }
 
 .header .metric {
-  padding: 3px 6px;
-  border: 1px solid rgba(255,255,255,.05);
-  border-radius: 6px;
-  background: rgba(255,255,255,.02);
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.055);
 }
 
 .header .separator {

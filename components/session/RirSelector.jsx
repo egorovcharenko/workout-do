@@ -7,6 +7,7 @@ function RirSelector({ value, onPick, context }) {
   return (
     <div className="rir-selector" role="group" aria-label={`${label} (optional)`}>
       <span className="rir-selector-label" title={label}>{label}</span>
+      <span className="rir-segment">
       {RIR_OPTIONS.map(option => (
         <button
           key={option.value}
@@ -16,6 +17,7 @@ function RirSelector({ value, onPick, context }) {
           onClick={() => onPick(option.value)}
         >{option.label}</button>
       ))}
+      </span>
     </div>
   );
 }

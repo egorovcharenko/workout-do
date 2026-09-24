@@ -68,16 +68,18 @@ button { font-family: inherit; }
    below the fold. The compact treatment is desktop-only; mobile keeps its
    larger touch-first layout. */
 .rep-entry-dock { margin-top: 10px; }
-.rir-selector { display: flex; align-items: center; gap: 6px; max-width: 100%; margin-top: 6px; color: #9ca3af; font-family: var(--suite-font-mono); font-size: 12px; }
+.rir-selector { display: flex; align-items: center; gap: 10px; max-width: 100%; margin-top: 8px; color: #9ca3af; font: 500 13px var(--suite-font-sans); }
 .rir-selector-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rir-selector button { flex: 0 0 auto; min-width: 44px; min-height: 40px; padding: 4px 8px; border: 1px solid #374151; border-radius: 8px; background: rgba(255,255,255,0.03); color: #e5e7eb; font: inherit; font-weight: 700; cursor: pointer; }
-.rir-selector button[aria-pressed="true"] { border-color: #60a5fa; background: rgba(59,130,246,0.2); color: #bfdbfe; box-shadow: inset 0 0 0 1px #60a5fa; }
+.rir-segment { display: flex; gap: 2px; padding: 3px; border-radius: 14px; background: rgba(255,255,255,0.06); }
+.rir-selector button { flex: 0 0 auto; min-width: 50px; min-height: 40px; padding: 4px 8px; border: 0; border-radius: 11px; background: transparent; color: #d1d5db; font: 700 14px var(--suite-font-mono); font-variant-numeric: tabular-nums; cursor: pointer; transition: background 140ms ease, color 140ms ease; }
+.rir-selector button[aria-pressed="true"] { background: #3B82F6; color: #fff; box-shadow: 0 4px 12px -4px rgba(59,130,246,.8); }
 .rir-selector button:focus-visible { outline: 2px solid #bfdbfe; outline-offset: 2px; }
-.load-guidance { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 4px; color: #9ca3af; font-family: var(--suite-font-mono); font-size: 11px; line-height: 1.4; }
+.load-guidance { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 4px; color: #9ca3af; font-family: var(--suite-font-sans); font-size: 12.5px; line-height: 1.45; }
+.load-guidance strong { font-family: var(--suite-font-mono); }
 .load-guidance strong { color: #93c5fd; white-space: nowrap; }
 .load-guidance small { font-size: inherit; }
 .load-guidance-status { margin-left: auto; }
-.load-guidance button { margin-left: auto; min-height: 36px; padding: 6px 10px; border: 1px solid #60a5fa; border-radius: 8px; background: #1e3a5f; color: #dbeafe; font: inherit; font-weight: 700; cursor: pointer; }
+.load-guidance button { margin-left: auto; min-height: 40px; padding: 8px 14px; border: 0; border-radius: 12px; background: #3B82F6; color: #fff; color: #dbeafe; font: inherit; font-weight: 700; cursor: pointer; }
 .load-guidance button:focus-visible { outline: 2px solid #bfdbfe; outline-offset: 3px; }
 .rep-guidance { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 12px; padding: 3px 4px 0; color: #9ca3af; font-family: var(--suite-font-mono); font-size: 11px; line-height: 1.4; }
 .rep-guidance > span { white-space: nowrap; }
@@ -239,7 +241,7 @@ button { font-family: inherit; }
 .barbell-weight-heading { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .barbell-weight-heading > span { flex-shrink: 0; }
 .loaded-plate-controls { display: flex; gap: 4px; min-width: 0; overflow-x: auto; padding: 3px; }
-.loaded-plate-label { align-self: center; flex: 0 0 auto; color: #6B7280; font: 600 10px var(--suite-font-mono); letter-spacing: .4px; text-transform: uppercase; }
+.loaded-plate-label { align-self: center; flex: 0 0 auto; color: #6B7280; font: 500 12px var(--suite-font-sans); }
 .loaded-plate-controls button { flex: 0 0 auto; min-width: 30px; height: 28px; padding: 0 5px; border: 0; border-radius: 4px; font: 800 12px var(--suite-font-mono); cursor: pointer; }
 
 .history-top-set { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 8px 0; font-family: var(--suite-font-mono); }
@@ -297,3 +299,6 @@ button { font-family: inherit; }
   .weight-frame-stack-narrow { grid-template-columns: minmax(0, 1fr) !important; }
   .weight-frame-stack-narrow > div:first-child { min-height: 72px !important; }
 }
+
+/* Section and field labels: sentence case in the UI sans, not tiny uppercase mono. */
+.ui-label { color: #9CA3AF; font: 600 12.5px var(--suite-font-sans, system-ui, sans-serif); letter-spacing: -.1px; }

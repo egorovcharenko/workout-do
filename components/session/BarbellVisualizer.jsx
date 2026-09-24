@@ -95,7 +95,7 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false, sets = [],
           <WeightStepper
             label={(
               <div className="barbell-weight-heading">
-                <span>WEIGHT</span>
+                <span className="ui-label">Weight</span>
                 {loadedPlateControls}
               </div>
             )}

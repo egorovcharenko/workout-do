@@ -62,16 +62,16 @@ function SetCard({ s, idx, exercise, onReopenSet, dur }) {
 
   return (
     <button ref={btnRef} onClick={tappable ? () => onReopenSet(idx) : undefined} disabled={!tappable} style={{
-      padding: "7px 9px", borderRadius: 9,
+      padding: "8px 10px", borderRadius: 12,
       cursor: tappable ? "pointer" : "default",
       background: isCurrent
         ? (isWarm ? "rgba(217,119,6,0.12)" : "rgba(59,130,246,0.14)")
-        : s.completed ? "rgba(255,255,255,0.03)" : "transparent",
+        : s.completed ? "rgba(255,255,255,0.045)" : "rgba(255,255,255,0.025)",
       boxShadow: isCurrent
         ? (isWarm ? "inset 0 0 0 2px rgba(251,191,36,0.55), 0 4px 14px -4px rgba(217,119,6,0.45)"
                   : "inset 0 0 0 2px rgba(96,165,250,0.6), 0 4px 14px -4px rgba(59,130,246,0.5)")
         : "none",
-      border: isCurrent ? "0" : `1px ${s.completed ? "solid" : "dashed"} rgba(255,255,255,0.05)`,
+      border: 0,
       opacity: 1,
       display: "flex", flexDirection: "column", alignItems: "stretch", justifyContent: "center", gap: 5,
       flex: "1 0 auto", flexShrink: 0, transition: "all 200ms ease",
@@ -79,7 +79,7 @@ function SetCard({ s, idx, exercise, onReopenSet, dur }) {
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 6 }}>
       <span style={{ color: isWarm ? T.amber : isCurrent ? T.accentLight : T.faint, fontFamily: T.mono, fontSize: 9, fontWeight: 800, letterSpacing: 0.7 }}>
         {setStripLabel(s, exercise.sets)}
-        {!s.completed && (guidance?.rangeLabel || guidance?.rirLabel) && <span style={{ color: T.muted, marginLeft: 4, fontSize: 8 }}>TARGET</span>}
+        {!s.completed && (guidance?.rangeLabel || guidance?.rirLabel) && <span style={{ color: T.muted, marginLeft: 5, fontSize: 10, fontFamily: "var(--suite-font-sans)", fontWeight: 500, letterSpacing: 0 }}>Target</span>}
       </span>
       {(() => {
         const targetRange = s.targetRepRange;

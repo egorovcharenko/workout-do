@@ -52,7 +52,7 @@ function Sparkline({ exerciseName, data, valueKey, color, label, fmt, showTip, h
     return (
       <div style={{ marginBottom: 14 }}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-          <span style={{ color: T.muted, fontFamily: T.mono, fontSize: 10, fontWeight: 700, letterSpacing: 0.3 }}>{label}</span>
+          <span className="ui-label">{label}</span>
           <span style={{ color: T.disabled, fontFamily: T.mono, fontSize: 10 }}>—</span>
         </div>
         <div style={{ height: 38, display: "flex", alignItems: "center", justifyContent: "center", color: T.disabled, fontFamily: T.mono, fontSize: 10, border: `1px dashed ${T.cardBorder}`, borderRadius: 4 }}>{allTime ? "no history yet" : "no data in last 30 days"}</div>
@@ -102,7 +102,7 @@ function Sparkline({ exerciseName, data, valueKey, color, label, fmt, showTip, h
   return (
     <div style={{ marginBottom: 14 }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 5 }}>
-        <span style={{ color: T.muted, fontFamily: T.mono, fontSize: 10, fontWeight: 700, letterSpacing: 0.3 }}>{label}</span>
+        <span className="ui-label">{label}</span>
         <span style={{ fontFamily: T.mono, fontSize: 11, fontWeight: 800, color: T.strong }}>
           {fmt(displayDay.value)}
           {displayDay.isDeload && <span style={{ color: T.amber, marginLeft: 6, fontSize: 9 }}>DELOAD</span>}

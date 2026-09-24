@@ -88,7 +88,7 @@ function renderWorkoutCard(w, isSuggested, isOngoing, logged, expected, pct) {
   const fromPlan = !w.trainingBlockId && !isOngoing && parseWorkoutPlan(window.USER_SETTINGS || {}).length > 0;
   return `<section class="home-hero" aria-label="Up next workout">
     <div class="home-hero-top"><div class="home-row-copy">
-      <div class="home-kickers"><span class="home-label home-accent">${isOngoing ? 'IN PROGRESS' : fromPlan ? 'UP NEXT · FROM PLAN' : 'UP NEXT'}</span>${deload ? '<span class="home-deload-badge">DELOAD</span>' : ''}</div>
+      <div class="home-kickers"><span class="home-label home-accent">${isOngoing ? 'In progress' : fromPlan ? 'Up next · from plan' : 'Up next'}</span>${deload ? '<span class="home-deload-badge">DELOAD</span>' : ''}</div>
       <h2>${escapeHtml(workoutDisplayName(w.name))}</h2><span class="home-meta">${sets} sets · ~${minutes} min</span>
       ${isOngoing ? `<div class="home-progress" role="progressbar" aria-label="Workout sets" aria-valuemin="0" aria-valuemax="${expected}" aria-valuenow="${logged}"><span style="width:${pct}%"></span></div><span class="home-meta">${logged}/${expected} sets</span>` : ''}
     </div>${renderWorkoutMuscleMap(w)}</div>
@@ -339,7 +339,7 @@ function homeTokens() {
 
 function renderHomeSkeleton() {
   return `<main class="home-page" style="${homeTokens()}" aria-busy="true" aria-label="Loading workouts">
-    <header class="home-header"><div><div class="home-date">${new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</div><h1>Workouts</h1></div></header>
+    <header class="home-header"><div><div class="home-date">${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</div><h1>Workouts</h1></div></header>
     <section class="home-hero">${[28, 20, 130, 56].map(height => `<div class="shimmer" style="height:${height}px"></div>`).join('')}</section>
     <div class="shimmer" style="height:190px"></div><div class="shimmer" style="height:70px"></div><div class="shimmer" style="height:120px"></div>
   </main>`;
@@ -412,7 +412,7 @@ function renderHome() {
 
   const getSessionDateStr = () => {
     const today = new Date();
-    return today.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+    return today.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
   };
 
   const activeSess = state._activeSessions && state._activeSessions[0];

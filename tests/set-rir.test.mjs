@@ -46,7 +46,7 @@ test('RIR buttons are optional and unselected; choosing and clearing does not lo
     let exercises = fixture();
     const before = JSON.stringify(exercises);
     const tree = RirSelector({ value: null, onPick: picked => { exercises = rir.toggleSetRir(exercises, 0, 0, picked); } });
-    tree.props.children[1].find(button => button.key === value).props.onClick();
+    tree.props.children[1].props.children.find(button => button.key === value).props.onClick();
     assert.equal(exercises[0].sets[0].rir, value);
     assert.equal(exercises[0].sets[0].completed, false);
     assert.equal(exercises[0].sets[0].reps, null);

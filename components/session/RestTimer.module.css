@@ -30,7 +30,7 @@
   align-items: center;
   gap: 5px;
   color: var(--rest-accent);
-  font: 700 9px ui-monospace, Menlo, monospace;
+  font: 600 12px var(--suite-font-sans, system-ui, sans-serif);
   letter-spacing: .4px;
 }
 

@@ -78,8 +78,8 @@ test('stats replaces volume with all-time 1RM and retains saved same-day best wh
   const sessions = [session('today-high', '2026-09-10', 20, 12), session('today-low', '2026-09-10', 15, 10)];
   const statHistory = { orm: { [name]: [{ date: '2024-01-01', orm: 10 }] } };
   const markup = renderToStaticMarkup(React.createElement(StatsPane, { exercise, history: sessions, statHistory }));
-  assert.doesNotMatch(markup, /VOLUME/);
-  assert.match(markup, /ALL TIME/);
+  assert.doesNotMatch(markup, /volume/i);
+  assert.match(markup, /All time/);
   assert.equal(charts.length, 2);
   assert.ok(charts.every(chart => chart.valueKey === 'orm'));
   assert.equal(charts[0].allTime, undefined);
