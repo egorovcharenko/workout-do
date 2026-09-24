@@ -34,9 +34,9 @@ function RepCell({ n, inRange, isLast, isSuggested, isLogged, onClick, compact =
       data-last={isLast || undefined}
       onClick={onClick}
       style={{
-        position: "relative", width: compact ? 34 : 38, height: compact ? 38 : 44, borderRadius: compact ? 8 : 9,
+        position: "relative", width: compact ? 42 : 46, height: compact ? 44 : 50, borderRadius: compact ? 9 : 10,
         background: bg, border, color,
-        fontFamily: T.mono, fontWeight: isLogged || isLast || isSuggested ? 800 : 600, fontSize: compact ? 13 : 14,
+        fontFamily: T.mono, fontWeight: isLogged || isLast || isSuggested ? 800 : 600, fontSize: compact ? 15 : 16,
         cursor: "pointer", flexShrink: 0, touchAction: "manipulation",
         transition: "transform 80ms ease, background 120ms ease",
         animation: isLogged ? "set-pulse 320ms ease-out" : "none",

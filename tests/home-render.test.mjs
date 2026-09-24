@@ -38,12 +38,13 @@ test('home keeps one primary workout, renders the remaining rotation, and suppor
   const h = homeHarness(); const html = h.html();
   assert.equal((html.match(/class="home-start"/g) || []).length, 1);
   assert.match(html, /Start Squat Focus/);
+  assert.ok(html.indexOf('class="home-start"') < html.indexOf('class="home-exercises"'), 'The start button is above the exercise list');
   assert.equal((html.match(/<a class="home-then-row"/g) || []).length, shared.MAIN_WORKOUTS.length - 1);
   assert.match(html, /0 sessions/);
   assert.doesNotMatch(html, /undefined|NaN/);
 });
 
-test('home shows the latest workout recap expanded above the program and next workout', () => {
+test('home puts the next workout first, with the latest workout recap expanded right below it', () => {
   const h = homeHarness({}, '2026-09-06');
   h.state.history = [{ id: 'done', workout_name: 'Strength A', date: '2026-09-06', duration_sec: 3240,
     finished_at: '2026-09-06T18:00:00Z', sets: [
@@ -57,7 +58,7 @@ test('home shows the latest workout recap expanded above the program and next wo
   assert.match(card, /135 lb/);
   assert.match(card, /10·8/);
   assert.doesNotMatch(card, /<details|<button|onclick=/, 'The screenshot card needs no click or expansion');
-  assert.ok(html.indexOf(card) < html.indexOf('class="home-hero'));
+  assert.ok(html.indexOf('class="home-hero') < html.indexOf(card), 'Start/Resume comes first');
   assert.equal(h.html(), html, 'Rerendering home keeps the recap visible');
 });
 

@@ -85,7 +85,7 @@ const api = {
     store.delete(docPath(id));
   },
 };
-const { autoSavePayload, abandonSession } = load("../lib/legacy/session-persistence.js", {
+const { autoSavePayload, abandonSession, getSaveStatus } = load("../lib/legacy/session-persistence.js", {
   "@/lib/db/api": { api },
   "./shared": { TEST_MODE: false, localDate: () => "2026-07-09" },
   "./session-utils": { safeJSON: (s) => { try { return JSON.parse(s); } catch { return []; } } },
@@ -275,4 +275,20 @@ test("a failed abandon lets later autosaves through", async () => {
   }
   const id = await clientAutosave(payload("Squat", "2026-07-22"), { scope: "Squat:2026-07-22", sessionId: "s3" });
   assert.ok(store.has(docPath(id)));
+});
+
+test("save status reports saved after a save and error after a failed one", async () => {
+  reset();
+  await clientAutosave(payload("Squat", "2026-07-23"), { scope: "Squat:2026-07-23", sessionId: null });
+  assert.equal(getSaveStatus(), "saved");
+  const original = api.save;
+  api.save = async () => { throw new Error("offline"); };
+  try {
+    autoSavePayload(payload("Squat", "2026-07-23"), () => {});
+    assert.equal(getSaveStatus(), "saving");
+    await new Promise((r) => setTimeout(r, 0));
+  } finally {
+    api.save = original;
+  }
+  assert.equal(getSaveStatus(), "error");
 });

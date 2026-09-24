@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { primeRestAlert, playRestAlert } from "@/lib/rest-alert";
 import { LS_PREFIX } from "@/lib/legacy/shared";
 
 // ─── file: workout-session-hooks.js ───
@@ -69,6 +70,22 @@ function useWorkoutTimers(workoutId, exercises) {
     rest && rest.sIdx,
     rest === null
   ]);
+
+  // Buzz/beep once when a running countdown reaches zero (not when a timer is
+  // skipped, cleared, or restored already finished).
+  const prevRestLeftRef = useRef(rest ? rest.left : null);
+  useEffect(() => {
+    const prev = prevRestLeftRef.current;
+    const left = rest ? rest.left : null;
+    prevRestLeftRef.current = left;
+    if (left === 0 && prev > 0) playRestAlert();
+  }, [rest]);
+
+  // Audio needs a user gesture to start; any tap in the session unlocks it.
+  useEffect(() => {
+    document.addEventListener("pointerdown", primeRestAlert, { passive: true });
+    return () => document.removeEventListener("pointerdown", primeRestAlert);
+  }, []);
 
   // Immediately re-sync the rest timer when tab gains focus or screen turns on
   useEffect(() => {

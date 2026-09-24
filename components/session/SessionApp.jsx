@@ -331,6 +331,10 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
   const totalSets = exercises.reduce((n, e) => n + e.sets.length, 0);
   const doneSets = exercises.reduce((n, e) => e.skipped ? n + e.sets.length : n + e.sets.filter(s => s.completed || s.userSkipped).length, 0);
   const isFinished = totalSets > 0 && doneSets === totalSets;
+  const abandonSummary = {
+    loggedSets: exercises.reduce((n, e) => n + e.sets.filter(s => s.completed).length, 0),
+    exercises: exercises.filter(e => e.sets.some(s => s.completed)).length,
+  };
   const completion = useWorkoutCompletion({ isFinished, elapsedSec: elapsed, scope: `${workoutId}:${sessionDate}` });
   const durationHistory = useMemo(
     () => buildExerciseDurationHistory(history, { excludeSessionId: sessionId }),
@@ -424,6 +428,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
             workouts={programWorkouts}
             onPickWorkout={onPickWorkout}
             onAbandon={isFinished ? undefined : actions.onAbandonWorkout}
+            abandonSummary={abandonSummary}
             done={doneSets}
             total={totalSets}
             elapsedSec={completion.elapsedSec}

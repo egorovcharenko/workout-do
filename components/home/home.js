@@ -92,8 +92,8 @@ function renderWorkoutCard(w, isSuggested, isOngoing, logged, expected, pct) {
       <h2>${escapeHtml(workoutDisplayName(w.name))}</h2><span class="home-meta">${sets} sets · ~${minutes} min</span>
       ${isOngoing ? `<div class="home-progress" role="progressbar" aria-label="Workout sets" aria-valuemin="0" aria-valuemax="${expected}" aria-valuenow="${logged}"><span style="width:${pct}%"></span></div><span class="home-meta">${logged}/${expected} sets</span>` : ''}
     </div>${renderWorkoutMuscleMap(w)}</div>
-    <div class="home-exercises">${rows}</div>
     <a class="home-start" href="/session?w=${encodeURIComponent(w.id)}">${isOngoing ? 'Resume' : 'Start'} ${escapeHtml(workoutDisplayName(w.name))}</a>
+    <div class="home-exercises">${rows}</div>
   </section>`;
 }
 
@@ -449,8 +449,8 @@ function renderHome() {
   return `<main class="home-page" style="${homeTokens()}">
     <header class="home-header"><div><div class="home-date">${getSessionDateStr()}</div><h1>Workouts</h1></div></header>
     ${state.loadError ? '<p role="alert" class="home-note">Your workout data could not be loaded. Reload to try again.</p>' : ''}
-    ${renderLatestWorkoutRecap(state.history || [], state._activeSessions || [], undefined, { bodyweightLb: window.USER_SETTINGS?.bodyweight })}
     ${hero}
+    ${renderLatestWorkoutRecap(state.history || [], state._activeSessions || [], undefined, { bodyweightLb: window.USER_SETTINGS?.bodyweight })}
     ${renderProgramUpcoming(schedule, program)}<section><h2 class="home-label">Workouts</h2><div class="home-rotation">${remaining}</div></section>
     ${renderActivity()}${renderOverview()}
     <section class="home-tests"><h2 class="home-label">Test mode · nothing saved</h2><div>${program.filter(w => w.kind !== 'optional').map(w => `<a class="home-chip" href="/session?w=${w.id}&test=1">${escapeHtml(workoutDisplayName(w.name))}</a>`).join('')}</div></section>
