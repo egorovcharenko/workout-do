@@ -1,6 +1,7 @@
 "use client";
 import { T, localDate } from "@/lib/legacy/shared";
 import { isAssistExercise } from "@/lib/legacy/standards";
+import { recapDate } from "@/lib/legacy/workout-recap";
 import { sparklineDomain, trainingPoints } from "@/lib/deload-progress";
 
 // ─── file: workout-session-sparkline.js ───
@@ -42,7 +43,7 @@ function Sparkline({ exerciseName, data, valueKey, color, label, fmt, showTip, h
   if (allTime) days.push(...[...allDates.values()].sort((a, b) => a.date.localeCompare(b.date)));
   const startDate = days[0]?.date || today;
   const startMs = Date.parse(startDate + 'T00:00:00Z');
-  const dateLabel = allTime ? startDate : startDate.slice(5);
+  const dateLabel = recapDate(startDate);
 
   const presentDays = days.filter(d => isValidVal(d.value));
   const comparisonDays = trainingPoints(presentDays);

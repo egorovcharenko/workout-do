@@ -1,6 +1,7 @@
 "use client";
 import React, { useCallback, useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
+import { flushSync } from "react-dom";
 import { CABLE_CHEST_FLY, restoreChestFlyPrescription } from "@/lib/cable-chest-fly";
 import { api } from "@/lib/db/api";
 import { canApplyResolvedSessionId, selectScopedSaveTiming } from "@/lib/session-save-scope";
@@ -340,7 +341,15 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
     () => buildExerciseDurationHistory(history, { excludeSessionId: sessionId }),
     [history, sessionId],
   );
-  const onSelectExercise = (idx) => { setFocused(idx == null ? null : { idx, currentIdx });
+  // Crossfade the exercise card when jumping between exercises (skipped when
+  // unsupported or when the user prefers reduced motion).
+  const withViewTransition = (update) => {
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (!document.startViewTransition || reduce) return update();
+    document.startViewTransition(() => flushSync(update));
+  };
+  const onSelectExercise = (idx) => withViewTransition(() => selectExercise(idx));
+  const selectExercise = (idx) => { setFocused(idx == null ? null : { idx, currentIdx });
     const ex = exercises[idx]; if (!ex || ex.skipped) return;
     const hasActiveHere = ex.sets.some(s => s.active);
     const firstIncomplete = firstPendingSetIndex(ex);

@@ -49,7 +49,7 @@ function Header({ workout, workouts, onPickWorkout, onAbandon, abandonSummary, d
   }, [open, hasMenu]);
 
   return (
-    <div className="session-header" style={{ background: T.page, padding: "14px 18px 14px", position: "sticky", top: 0, zIndex: 5 }}>
+    <div className="session-header glass-bar" style={{ padding: "14px 18px 14px", position: "sticky", top: 0, zIndex: 5 }}>
       <div className="session-header-top" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
           <Link href={homeHref} style={{ color: T.accent, fontSize: 16, fontWeight: 600, textDecoration: "none", flexShrink: 0 }} title="Home">← Back</Link>
@@ -198,7 +198,7 @@ function AbandonDialog({ workoutName, summary, elapsedSec, abandoning, error, on
     <div
       onClick={onCancel}
       style={{
-        position: "fixed", inset: 0, zIndex: 50, background: "rgba(0,0,0,0.6)",
+        position: "fixed", inset: 0, zIndex: 50, background: "rgba(0,0,0,0.45)",
         display: "flex", alignItems: "flex-end", justifyContent: "center", padding: 16,
       }}
     >
@@ -207,10 +207,10 @@ function AbandonDialog({ workoutName, summary, elapsedSec, abandoning, error, on
         aria-modal="true"
         aria-labelledby="abandon-title"
         aria-describedby="abandon-body"
+        className="glass-sheet"
         onClick={(e) => e.stopPropagation()}
         style={{
-          width: "100%", maxWidth: 420, background: "#0f1722", border: `1px solid ${T.cardBorder}`,
-          borderRadius: 16, padding: 20, boxShadow: "0 20px 50px -10px rgba(0,0,0,0.7)",
+          width: "100%", maxWidth: 420, borderRadius: 20, padding: 20,
         }}
       >
         <h2 id="abandon-title" style={{ margin: 0, color: T.strong, fontSize: 18, fontWeight: 700 }}>Abandon {workoutName}?</h2>

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import * as workoutRecap from '../lib/legacy/workout-recap.js';
 import ts from 'typescript';
 import React from 'react';
 import * as jsxRuntime from 'react/jsx-runtime';
@@ -25,6 +26,7 @@ function load(path, dependencies = {}) {
       '@/lib/legacy/standards': standards, '@/lib/deload-progress': deload,
       '@/lib/legacy/cable-stack': cable, '@/lib/legacy/belt-load': belt,
       '@/lib/legacy/history-set-display': display, '@/lib/legacy/exercise-session-history': history,
+      '@/lib/legacy/workout-recap': workoutRecap,
       ...dependencies };
     assert.ok(id in deps, id);
     return deps[id];
@@ -41,12 +43,12 @@ test('all-time 1RM includes older years with a chronological axis while recent 1
   const data = [{ date: '2025-01-10', orm: 10 }, { date: '2026-08-15', orm: 20 }, { date: '2026-09-10', orm: 22 }];
   const all = renderChart(data, true);
   const recent = renderChart(data);
-  assert.match(all, /2025-01-10/);
+  assert.match(all, /Jan 10, 2025/);
   assert.match(all, /all time/);
   assert.equal((all.match(/fill="transparent"/g) || []).length, 3);
   assert.equal((recent.match(/fill="transparent"/g) || []).length, 2);
-  assert.doesNotMatch(recent, /2025-01-10/);
-  assert.match(recent, /08-12/);
+  assert.doesNotMatch(recent, /Jan 10/);
+  assert.match(recent, /Aug 12/);
   assert.doesNotMatch(all, /NaN|Infinity/);
   const xs = [...all.matchAll(/<circle cx="([\d.]+)"[^>]*fill="transparent"/g)].map(m => Number(m[1]));
   assert.equal(xs[0], 8);

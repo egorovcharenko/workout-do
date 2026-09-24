@@ -136,6 +136,8 @@ function useWorkoutActions({
   };
 
   const onLogReps = (eIdx, sIdx, r) => {
+    // A short tick confirms the set was logged without looking at the screen.
+    try { navigator.vibrate?.(12); } catch { /* unsupported */ }
     startTimer();
     const current = exercisesRef.current;
     const set = current[eIdx]?.sets[sIdx];

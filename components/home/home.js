@@ -347,7 +347,7 @@ function renderHomeSkeleton() {
 
 function renderActivity() {
   const { days, count } = recentActivity(state.history || []);
-  return `<section><div class="home-section-heading"><h2 class="home-label">Last 14 days</h2><span class="home-meta">${count} ${count === 1 ? 'session' : 'sessions'}</span></div>
+  return `<section class="home-tile home-tile-activity"><div class="home-section-heading"><h2 class="home-label">Last 14 days</h2><span class="home-meta">${count} ${count === 1 ? 'session' : 'sessions'}</span></div>
     <div class="home-activity">${days.map(d => `<div class="home-day ${d.count ? 'trained' : ''} ${d.today ? 'today' : ''}" role="img" aria-label="${d.date}: ${d.count} sessions${d.today ? ', today' : ''}" title="${d.date}: ${d.count} sessions"></div>`).join('')}</div>
     <details class="home-details" ${state.calendarOpen ? 'open' : ''} ontoggle="state.calendarOpen=this.open"><summary>View calendar</summary>${renderCalendar()}</details>
   </section>`;
@@ -373,11 +373,12 @@ function renderOverview() {
   const measurements = state.measurements || [];
   const metrics = [['Weight', 'weight_kg', 'kg'], ['Waist', 'waist_cm', 'cm'], ['Chest', 'chest_cm', 'cm']].map(([label, key, unit]) => ({ label, unit, metric: latestBody(measurements, key) })).filter(x => x.metric);
   const date = metrics.map(x => x.metric.date || '').sort().at(-1);
-  return `<section class="home-quiet"><h2 class="home-label">Estimated 1RM</h2>
-    <div class="home-stats home-stats-4">${lifts.map(([label, key]) => metricHTML(label, latestLift(state.ormHistory?.orm, key), 'lb')).join('')}</div>
-    ${state.ormError ? '<p class="home-note">Strength history could not be loaded. Reload to try again.</p>' : ''}
-  </section>
-  ${metrics.length ? `<section class="home-quiet"><div class="home-section-heading"><h2 class="home-label">Body</h2><span class="home-meta">${escapeHtml(shortDate(date))}</span></div><div class="home-stats">${metrics.map(x => metricHTML(x.label, x.metric, x.unit, true)).join('')}</div></section>` : ''}`;
+  // Bento snapshot: one tile per lift (2×2), body metrics in a wide tile.
+  return `<section class="home-bento" aria-label="Snapshot">
+    ${lifts.map(([label, key]) => `<div class="home-tile home-tile-lift">${metricHTML(label, latestLift(state.ormHistory?.orm, key), 'lb est. 1RM')}</div>`).join('')}
+    ${state.ormError ? '<p class="home-note home-tile-wide">Strength history could not be loaded. Reload to try again.</p>' : ''}
+    ${metrics.length ? `<div class="home-tile home-tile-wide"><div class="home-section-heading"><h2 class="home-label">Body</h2><span class="home-meta">${escapeHtml(shortDate(date))}</span></div><div class="home-stats">${metrics.map(x => metricHTML(x.label, x.metric, x.unit, true)).join('')}</div></div>` : ''}
+  </section>`;
 }
 
 function renderHome() {

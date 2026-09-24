@@ -24,3 +24,12 @@ body {
   color: var(--foreground);
   font-family: var(--suite-font-sans);
 }
+
+
+/* Native page transitions between home and a workout (progressive enhancement). */
+@view-transition { navigation: auto; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 220ms; }
+@media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}
