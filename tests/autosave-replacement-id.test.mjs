@@ -20,6 +20,7 @@ function load(path, dependencies = {}) {
   vm.runInNewContext(code, {
     exports,
     console,
+    setTimeout,
     require: (id) => dependencies[id] || {},
   });
   return exports;
@@ -78,8 +79,13 @@ const api = {
     seenSessionIds.push(body.session_id ?? null);
     return sessionsApi.saveSession("test-uid", body);
   },
+  // Stands in for the authenticated DELETE /api/workout-sessions/:id route.
+  deleteSession: async (id) => {
+    if (api.failDelete) throw new Error("offline");
+    store.delete(docPath(id));
+  },
 };
-const { autoSavePayload } = load("../lib/legacy/session-persistence.js", {
+const { autoSavePayload, abandonSession } = load("../lib/legacy/session-persistence.js", {
   "@/lib/db/api": { api },
   "./shared": { TEST_MODE: false, localDate: () => "2026-07-09" },
   "./session-utils": { safeJSON: (s) => { try { return JSON.parse(s); } catch { return []; } } },
@@ -207,4 +213,66 @@ test("cross-workout path: a workout-name conflict creates a replacement, leaves 
   const newDoc = (await firestore.getDoc({ path: docPath(first), id: first })).data();
   assert.equal(newDoc.workout_name, "Deadlift");
   assert.equal(seenDocs().length, 2);
+});
+
+// Hold api.save's server round-trip until release() so tests can order it
+// against an abandon.
+function gateSaves() {
+  const original = api.save;
+  let release;
+  const gate = new Promise((r) => { release = r; });
+  api.save = async (body) => {
+    await gate;
+    return original(body);
+  };
+  return { release, restore: () => { api.save = original; } };
+}
+
+test("abandoning a loaded session waits out an in-flight autosave instead of racing it", async () => {
+  reset();
+  await firestore.setDoc({ path: docPath("s1"), id: "s1" }, { workout_name: "Squat", date: "2026-07-20", sets: [] });
+  const gate = gateSaves();
+  try {
+    const save = clientAutosave(payload("Squat", "2026-07-20"), { scope: "Squat:2026-07-20", sessionId: "s1" });
+    const abandon = abandonSession("Squat", "2026-07-20", "s1");
+    setTimeout(gate.release, 100);
+    await Promise.all([save, abandon]);
+  } finally {
+    gate.restore();
+  }
+  assert.equal(seenDocs().length, 0);
+});
+
+test("an autosave landing after the abandon delete does not resurrect the workout", async () => {
+  reset();
+  await firestore.setDoc({ path: docPath("s2"), id: "s2" }, { workout_name: "Squat", date: "2026-07-21", sets: [] });
+  const gate = gateSaves();
+  let saveSettled;
+  try {
+    // Not awaited: an abandoned save never reports its id back.
+    autoSavePayload({ ...payload("Squat", "2026-07-21"), session_id: "s2" }, () => {});
+    await abandonSession("Squat", "2026-07-21", "s2"); // times out waiting, then deletes s2
+    assert.equal(seenDocs().length, 0);
+    const recreated = new Promise((r) => { saveSettled = r; });
+    const deleteSession = api.deleteSession;
+    api.deleteSession = async (id) => { await deleteSession(id); saveSettled(); };
+    gate.release(); // saveSession now finds no doc and creates a new one
+    await recreated;
+    api.deleteSession = deleteSession;
+  } finally {
+    gate.restore();
+  }
+  assert.equal(seenDocs().length, 0);
+});
+
+test("a failed abandon lets later autosaves through", async () => {
+  reset();
+  api.failDelete = true;
+  try {
+    await assert.rejects(abandonSession("Squat", "2026-07-22", "s3"), /offline/);
+  } finally {
+    api.failDelete = false;
+  }
+  const id = await clientAutosave(payload("Squat", "2026-07-22"), { scope: "Squat:2026-07-22", sessionId: "s3" });
+  assert.ok(store.has(docPath(id)));
 });

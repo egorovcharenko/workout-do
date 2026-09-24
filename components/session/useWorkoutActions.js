@@ -240,6 +240,21 @@ function useWorkoutActions({
     startTimer();
     const ex = current[eIdx];
     if (!ex) return;
+    if (ex.customAdded) {
+      // Custom and plan-added exercises aren't in workout.exercises, so the
+      // template swap map can't express them: replace the exercise in place.
+      const replaced = { ...buildCustomExercise(newName, ex.templateExIdx),
+        ...(ex.deferred ? { deferred: true } : {}), ...(ex.skipped ? { skipped: true } : {}) };
+      const renameIn = names => names.map(name => name === ex.name ? newName : name);
+      if (ex.deferred) saveDeferred(workout.name, sessionDate, renameIn(loadDeferred(workout.name, sessionDate)));
+      if (ex.skipped) {
+        saveSkippedExercises(workout.name, sessionDate, new Set(renameIn([...loadSkippedExercises(workout.name, sessionDate)])));
+      }
+      const next = current.map((e, i) => i === eIdx ? replaced : { ...e, sets: e.sets.map(s => ({ ...s })) });
+      activateNextSet(next);
+      updateAndSave(next);
+      return;
+    }
     const tIdx = ex.templateExIdx;
     const isSub = ex.subIdx != null;
     const swapKey = isSub ? `${tIdx}-${ex.subIdx}` : `${tIdx}`;
@@ -377,25 +392,28 @@ function useWorkoutActions({
     if (finishInFlightRef.current) return finishInFlightRef.current;
     if (abandonInFlightRef.current) return abandonInFlightRef.current;
     cancelQueuedSave();
-    setRest(null);
-    localStorage.removeItem(`${LS_PREFIX}v2-rest-timer:${workout.id}`);
 
     const abandonTask = abandonAndExit({
-      discard: TEST_MODE
-        ? () => clearSessionState(workout.name, sessionDate)
-        : () => abandonSession(workout.name, sessionDate, sessionId),
+      discard: async () => {
+        if (TEST_MODE) clearSessionState(workout.name, sessionDate);
+        else await abandonSession(workout.name, sessionDate, sessionId);
+        setRest(null);
+        localStorage.removeItem(`${LS_PREFIX}v2-rest-timer:${workout.id}`);
+      },
       exit: () => window.location.replace("/"),
     }).finally(() => {
       abandonInFlightRef.current = null;
+    }).catch(error => {
+      // The user stays in the workout: re-queue the edits whose pending save
+      // was dropped above so "your progress is still saved" holds.
+      queueSave(exercisesRef.current, sessionId, startedAt, elapsed);
+      throw error;
     });
     abandonInFlightRef.current = abandonTask;
     return abandonTask;
   };
 
-  const onAddExercise = (name) => {
-    const current = exercisesRef.current;
-    if (exerciseNameExists(current, name)) return;
-    startTimer();
+  const buildCustomExercise = (name, templateExIdx) => {
     let official = null;
     if (typeof SWAP_GROUPS !== "undefined" && typeof WORKOUTS !== "undefined") {
       for (const g of SWAP_GROUPS) {
@@ -413,12 +431,19 @@ function useWorkoutActions({
     const base = buildLibraryExerciseTemplate(name, official);
     let flatAdded = flattenTemplate({ exercises: [base] }, {}, dataRef.current.hints || {});
     if (window.SESSION_DELOAD) flatAdded = applyDeloadPrescription(flatAdded);
-    const newEx = {
+    return {
       ...flatAdded[0],
-      id: `${current.length}-${Date.now()}`,
-      templateExIdx: current.length,
+      id: `${templateExIdx}-${Date.now()}`,
+      templateExIdx,
       customAdded: true,
     };
+  };
+
+  const onAddExercise = (name) => {
+    const current = exercisesRef.current;
+    if (exerciseNameExists(current, name)) return;
+    startTimer();
+    const newEx = buildCustomExercise(name, current.length);
     if (newEx.sets.length) newEx.sets[0].active = true;
     const next = [...current.map(ex => ({ ...ex, sets: ex.sets.map(s => ({ ...s, active: false })) })), newEx];
     updateAndSave(next);
