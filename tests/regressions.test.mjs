@@ -25,10 +25,19 @@ test("a stale workout save keeps its captured clock values", () => {
   assert.deepEqual(selectScopedSaveTiming("Squat:2026-07-09", "Squat:2026-07-09", captured, latest), latest);
 });
 
-test("a resolved session id only applies to the scope that created it", () => {
+test("a resolved session id applies when the server replaced the sent id for the same scope", () => {
+  // A different workout scope must never pick up another scope's id.
   assert.equal(canApplyResolvedSessionId("Squat:2026-07-09", "Deadlift:2026-07-09", null, "old-id"), false);
+  assert.equal(canApplyResolvedSessionId("Squat:2026-07-09", "Deadlift:2026-07-09", "existing", "new-id"), false);
+  // A fresh save resolves its first id.
   assert.equal(canApplyResolvedSessionId("Squat:2026-07-09", "Squat:2026-07-09", null, "new-id"), true);
-  assert.equal(canApplyResolvedSessionId("Squat:2026-07-09", "Squat:2026-07-09", "existing", "new-id"), false);
+  // The server minted a replacement doc (sent id missing or rejected as
+  // stale): the client must adopt it or every later autosave duplicates.
+  assert.equal(canApplyResolvedSessionId("Squat:2026-07-09", "Squat:2026-07-09", "existing", "new-id"), true);
+  // A normal update echoes the same id back: nothing to change.
+  assert.equal(canApplyResolvedSessionId("Squat:2026-07-09", "Squat:2026-07-09", "same-id", "same-id"), false);
+  // No id returned: nothing to adopt.
+  assert.equal(canApplyResolvedSessionId("Squat:2026-07-09", "Squat:2026-07-09", "existing", null), false);
 });
 
 test("session updates reject cross-date and cross-workout ids", () => {
