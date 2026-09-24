@@ -129,9 +129,8 @@ function Header({ workout, workouts, onPickWorkout, onAbandon, abandonSummary, d
             }}>DELOAD</span>
           )}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 1, minWidth: 0 }}>
-          <SaveStatus />
-          <span style={{ color: T.faint, fontFamily: T.mono, fontSize: 12, fontWeight: 600, flexShrink: 0 }}>{done}/{total}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+          <span style={{ color: T.faint, fontFamily: T.mono, fontSize: 12, fontWeight: 600 }}>{done}/{total}</span>
           {elapsedSec > 0 ? (
             <div
               style={{
@@ -167,11 +166,10 @@ function Header({ workout, workouts, onPickWorkout, onAbandon, abandonSummary, d
           )}
         </div>
       </div>
-      {durationMeta && (
-        <div className="session-header-plan" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
-          <DurationReadout meta={durationMeta} variant="header" showActual={false} />
-        </div>
-      )}
+      <div className="session-header-plan" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 8, minHeight: 20 }}>
+        {durationMeta ? <DurationReadout meta={durationMeta} variant="header" showActual={false} /> : <span />}
+        <SaveStatus />
+      </div>
       <div style={{ height: 3, background: "rgba(255,255,255,0.05)", borderRadius: 99, overflow: "hidden" }}>
         <div style={{ height: "100%", width: `${pct}%`, background: T.accent, borderRadius: 99, transition: "width 240ms ease" }} />
       </div>
@@ -207,8 +205,7 @@ function AbandonDialog({ workoutName, summary, elapsedSec, abandoning, error, on
   const exercises = summary?.exercises ?? 0;
   const minutes = Math.round((elapsedSec || 0) / 60);
   const parts = [
-    `${sets} logged ${sets === 1 ? "set" : "sets"}`,
-    exercises ? `across ${exercises} ${exercises === 1 ? "exercise" : "exercises"}` : null,
+    `${sets} logged ${sets === 1 ? "set" : "sets"}${exercises ? ` across ${exercises} ${exercises === 1 ? "exercise" : "exercises"}` : ""}`,
     minutes ? `${minutes} min` : null,
   ].filter(Boolean);
   const button = {
