@@ -36,7 +36,7 @@ export function buildProgress(history = [], measurements = [], { activeSessions 
   const trends = Object.fromEntries(Object.entries(buildAllTime1rmTrends(sessions, { bodyweightLb }))
     .filter(([name]) => latest.has(name)));
   const metricRows = metrics.map(metric => ({ ...metric, points: measurements.flatMap(entry => {
-    const date = String(entry.taken_at || entry.date || '').slice(0, 10);
+    const date = String(entry.date || entry.taken_at || '').slice(0, 10);
     const value = Number(entry[metric.id]);
     return validDate(date) && date <= today && entry[metric.id] != null && Number.isFinite(value) && value > 0
       ? [{ date, value }] : [];

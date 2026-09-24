@@ -64,3 +64,9 @@ test('empty and measurement-only histories render without invented strength data
   assert.doesNotMatch(html, /1RM EST/);
   assert.match(renderProgress([session('x', '2026-09-19', [set('<img src=x>', 10, 5)])], [], options), /&lt;img src=x&gt;/);
 });
+
+test('evening measurements use their local date, not the UTC day of taken_at', () => {
+  // 18:30 PDT on 2026-09-20 is 01:30Z on 2026-09-21.
+  const data = buildProgress([], [{ taken_at: '2026-09-21T01:30:00Z', date: '2026-09-20', chest_cm: 101 }], options);
+  assert.deepEqual(data.groups.find(g => g.id === 'chest').metrics[0].points, [{ date: '2026-09-20', value: 101 }]);
+});

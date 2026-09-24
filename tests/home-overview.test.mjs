@@ -35,3 +35,8 @@ test('body summaries use the previous recorded value for each metric, without tr
   assert.deepEqual(latestBody(rows, 'weight_kg'), { value: 80, date: '2026-09-02', delta: null });
   assert.equal(latestBody(rows, 'chest_cm'), null);
 });
+
+test('body summary date is the local measurement date, not the UTC day of taken_at', () => {
+  const rows = [{ taken_at: '2026-09-25T01:30:00Z', date: '2026-09-24', weight_kg: 80 }];
+  assert.equal(latestBody(rows, 'weight_kg').date, '2026-09-24');
+});

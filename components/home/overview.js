@@ -27,6 +27,6 @@ export function latestBody(measurements, key) {
     .sort((a, b) => (a.taken_at || a.date || '').localeCompare(b.taken_at || b.date || ''));
   const latest = points.at(-1), previous = points.at(-2);
   if (!latest) return null;
-  return { value: Number(latest[key]), date: latest.taken_at || latest.date,
+  return { value: Number(latest[key]), date: latest.date || latest.taken_at,
     delta: previous ? Number(latest[key]) - Number(previous[key]) : null };
 }
