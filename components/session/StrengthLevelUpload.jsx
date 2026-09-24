@@ -173,10 +173,10 @@ function StrengthLevelUpload({ exercises, workoutName, sessionDate }) {
       <button
         onClick={() => { setOpen(true); copy(); }}
         style={{
-          width: "100%", maxWidth: 320, background: "transparent",
-          border: `1px solid ${T.cardBorder}`, color: T.text,
-          fontFamily: "inherit", fontSize: 14, fontWeight: 700,
-          padding: "11px 0", borderRadius: 11, cursor: "pointer",
+          width: "100%", minHeight: 44, marginTop: 10, background: "transparent",
+          border: "1px solid #34445A", color: T.muted,
+          fontFamily: "inherit", fontSize: 13, fontWeight: 650,
+          padding: "10px 14px", borderRadius: 12, cursor: "pointer",
         }}>
         ⬆ Upload to Strength Level
       </button>

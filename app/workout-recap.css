@@ -27,8 +27,8 @@
 .workout-recap-footer { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin: 0 16px; padding: 8px 0 10px; border-top: 1px solid #304052; color: #A9BCD2; font-size: 11px; }
 .workout-recap-brand { color: #93C5FD; font-size: 13px; font-weight: 750; letter-spacing: -.3px; }
 .workout-recap-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
-.workout-recap-actions button, .workout-recap-return button { min-height: 44px; padding: 10px 14px; border: 1px solid #34445A; border-radius: 10px; background: #182333; color: #E5E7EB; font: 650 13px var(--suite-font-sans); cursor: pointer; touch-action: manipulation; }
-.workout-recap-actions .workout-recap-finish { background: #60A5FA; color: #0B1729; border-color: #60A5FA; }
+.workout-recap-actions button, .workout-recap-return button { min-height: 48px; padding: 10px 14px; border: 1px solid #34445A; border-radius: 12px; background: #182333; color: #E5E7EB; font: 650 13px var(--suite-font-sans); cursor: pointer; touch-action: manipulation; }
+.workout-recap-actions .workout-recap-finish { background: #3B82F6; color: #FFFFFF; border-color: #3B82F6; box-shadow: 0 10px 26px -12px rgba(59,130,246,.95); }
 .workout-recap-actions button:hover, .workout-recap-return button:hover { filter: brightness(1.12); }
 .workout-recap-actions button:disabled { opacity: .65; cursor: wait; }
 .workout-recap-actions button:focus-visible, .workout-recap-return button:focus-visible { outline: 2px solid #93C5FD; outline-offset: 3px; }

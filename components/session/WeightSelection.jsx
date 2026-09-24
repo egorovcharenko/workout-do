@@ -3,7 +3,7 @@
 import { T } from "@/lib/legacy/shared";
 import { WeightStepper } from "./Stepper";
 
-function WeightSelectionFrame({ visual, controls, children, compact = false, visualExpanded = false, stacked = false }) {
+function WeightSelectionFrame({ visual, controls, children, compact = false, visualExpanded = false, stacked = false, stackOnNarrow = false }) {
   return (
     <div style={{
       width: "100%",
@@ -13,7 +13,7 @@ function WeightSelectionFrame({ visual, controls, children, compact = false, vis
       gap: stacked ? 6 : compact ? 8 : 12,
       margin: `${stacked ? 0 : compact ? 9 : 12}px auto 0`,
     }}>
-      <div className={stacked ? "barbell-weight-layout" : undefined} style={{
+      <div className={stacked ? "barbell-weight-layout" : stackOnNarrow ? "weight-frame-stack-narrow" : undefined} style={{
         display: "grid",
         gridTemplateColumns: stacked || !visual ? "minmax(0, 1fr)" : compact ? "minmax(92px, .8fr) minmax(0, 1.2fr)" : "minmax(180px, 1fr) minmax(220px, 1fr)",
         gap: stacked ? 4 : compact ? 10 : 14,

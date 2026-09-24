@@ -4,7 +4,7 @@ export function LoadProgression({ offer, onApply }) {
   const condition = offer.practice ? "3 reps left and main squat steady?" : `${reserve} reps left${offer.required === 1 ? "" : " both times"}?`;
   return (
     <div className="load-guidance" data-load-progression={offer.ready ? "ready" : "building"}>
-      <span>Next <strong>{offer.weight} lb × {offer.reps}</strong> <small>{offer.groupLabel}</small></span>
+      <span>Next step <strong>{offer.weight} lb × {offer.reps}</strong> <small>for {offer.groupLabel}</small></span>
       {offer.canApply && onApply ? <>
         <span>{condition}</span>
         <button type="button" onClick={onApply}
@@ -12,7 +12,9 @@ export function LoadProgression({ offer, onApply }) {
           Yes · use {offer.weight} lb
         </button>
       </> : <span className="load-guidance-status">
-        {offer.ready ? 'Next workout · ' : ''}{offer.qualifying}/{offer.required} {offer.workoutLabel} {offer.required === 1 ? "workout" : "workouts"} at {offer.upper} reps{offer.setNumbers.length > 1 ? ' on every set' : ''}
+        {offer.ready
+          ? "Unlocked · use it next workout"
+          : `Hit ${offer.upper} reps${offer.setNumbers.length > 1 ? " on every set" : ""} in ${offer.required} ${offer.workoutLabel} ${offer.required === 1 ? "workout" : "workouts"} to unlock · ${offer.qualifying}/${offer.required}`}
       </span>}
     </div>
   );

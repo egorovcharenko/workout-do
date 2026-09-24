@@ -21,11 +21,11 @@ function renderMeasurementsCard() {
 
   const actionSectionHTML = `
   <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:12px;margin-top:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-    <button onclick="state.showMeasHistory=!state.showMeasHistory;render()" style="font-size:13px;font-weight:700;color:#6b7280;background:none;border:1px solid #293445;border-radius:7px;padding:4px 10px;cursor:pointer">
-      ${histOpen ? '✕ Close History' : `History · ${measurements.length} entries`}
+    <button onclick="state.showMeasHistory=!state.showMeasHistory;render()" style="min-height:40px;font-size:13px;font-weight:650;color:#9CA3AF;background:none;border:1px solid #293445;border-radius:10px;padding:8px 14px;cursor:pointer">
+      ${histOpen ? 'Close history' : `History · ${measurements.length} ${measurements.length === 1 ? 'entry' : 'entries'}`}
     </button>
-    <button onclick="state.showMeasForm=!state.showMeasForm;render()" style="font-size:13px;font-weight:700;color:${formOpen ? '#6b7280' : '#60A5FA'};background:none;border:1px solid ${formOpen ? '#293445' : '#274972'};border-radius:7px;padding:4px 10px;cursor:pointer">
-      ${formOpen ? '✕ Close Form' : '＋ Add Measurement'}
+    <button onclick="state.showMeasForm=!state.showMeasForm;render()" style="min-height:40px;font-size:13px;font-weight:650;color:${formOpen ? '#9CA3AF' : '#60A5FA'};background:none;border:1px solid ${formOpen ? '#293445' : '#274972'};border-radius:10px;padding:8px 14px;cursor:pointer">
+      ${formOpen ? 'Close form' : 'Add measurement'}
     </button>
   </div>
   ${histOpen ? `<div style="margin-top:10px;max-height:200px;overflow-y:auto;border:1px solid #243040;border-radius:8px;background:#111722">${historyRows}</div>` : ''}

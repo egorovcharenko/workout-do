@@ -291,3 +291,9 @@ button { font-family: inherit; }
 @media (prefers-reduced-motion: reduce) {
   .glass-sheet { animation: none; }
 }
+
+/* Belt loading: the stepper and plate row need the full card width on phones. */
+@media (max-width: 460px) {
+  .weight-frame-stack-narrow { grid-template-columns: minmax(0, 1fr) !important; }
+  .weight-frame-stack-narrow > div:first-child { min-height: 72px !important; }
+}

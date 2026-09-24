@@ -436,7 +436,7 @@ test('the weight offer makes the reserve confirmation explicit and changes weigh
   const offer = guided[0].sets[0].repGuidance.loadProgression;
   const onApply = () => { next = applySuggestedLoad(guided, 0, 0); };
   const html = renderToStaticMarkup(React.createElement(ActiveSetBlock, { exercise: guided[0], set: guided[0].sets[0], onApplyLoadProgression: onApply }));
-  assert.match(html, /Next <strong>140 lb × 5<\/strong>/);
+  assert.match(html, /Next step <strong>140 lb × 5<\/strong>/);
   assert.match(html, /1–2 reps left both times\?/);
   assert.match(html, /Confirm 1–2 reps in reserve in both workouts; use 140 lb for S1/);
   assert.match(html, /Suggested <strong>8<\/strong>/);
@@ -446,7 +446,7 @@ test('the weight offer makes the reserve confirmation explicit and changes weigh
   assert.equal(next[0].sets[0].weight, 140);
   assert.equal(next[0].sets[0].reps, null);
   const building = renderToStaticMarkup(React.createElement(loadProgression.LoadProgression, { offer: { ...offer, qualifying: 1, ready: false, canApply: false }, onApply }));
-  assert.match(building, /1\/2 A workouts at 8 reps/);
+  assert.match(building, /Hit 8 reps in 2 A workouts to unlock · 1\/2/);
   assert.doesNotMatch(building, /<button/);
 });
 

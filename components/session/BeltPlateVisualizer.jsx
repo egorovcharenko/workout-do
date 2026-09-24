@@ -57,6 +57,7 @@ function BeltPlateVisualizer({ weight, last, onWeightChange, compact = false }) 
     <WeightSelectionFrame
       compact={compact}
       visualExpanded
+      stackOnNarrow
       visual={(
         <div style={{ width: "100%", height: "100%", minHeight: 80, position: "relative", display: "flex", justifyContent: "center" }}>
           <div style={{ position: "absolute", top: 2, width: "72%", height: 26, border: "6px solid #64748B", borderBottom: 0, borderRadius: "50% 50% 0 0" }} />
