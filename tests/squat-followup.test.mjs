@@ -76,3 +76,10 @@ test('one top set of eight offers 140 and carries it to S2; failure does not qua
   assert.equal(withLoadGuidance(raw, config, past, workout.name).sets[1].repGuidance.loadProgression.canApply, true,
     'Unset RIR leaves the existing explicit reserve-confirmation button available');
 });
+
+test('activating a following set at its current load keeps it tracking S1', () => {
+  const next = withFollowupLoads(fixture(), workout);
+  Object.assign(next[0].sets[2], followupWeightPatch(next[0].sets[2], next[0].sets[2].weight));
+  next[0].sets[1].weight = 145;
+  assert.equal(withFollowupLoads(next, workout)[0].sets[2].weight, 145);
+});

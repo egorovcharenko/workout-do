@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { SWAP_GROUPS, WORKOUTS, TEST_MODE, LS_PREFIX } from "@/lib/legacy/shared";
 import { applySwaps } from "@/lib/legacy/standards";
-import { saveSwaps, loadSkippedExercises, saveSkippedExercises, saveDeferred, saveBodyweight, saveSessionSets, serializeForSave, finishSavePayload, abandonSession, clearSessionState, activateNextSet } from "@/lib/legacy/session-persistence";
+import { saveSwaps, loadSkippedExercises, saveSkippedExercises, saveDeferred, loadDeferred, applyDeferredOrder, saveBodyweight, saveSessionSets, serializeForSave, finishSavePayload, abandonSession, clearSessionState, activateNextSet } from "@/lib/legacy/session-persistence";
 import { flattenTemplate, applyDeloadPrescription } from "@/lib/legacy/session-utils";
 import { logSetAndTransition } from "@/lib/legacy/set-logging";
 import { platesForExerciseSet } from "@/lib/legacy/bar-stack";
@@ -255,13 +255,13 @@ function useWorkoutActions({
     const { hints } = dataRef.current;
     let exs = flattenTemplate(applySwaps(workout, nextSwaps), {}, hints);
     if (window.SESSION_DELOAD) exs = applyDeloadPrescription(exs);
-    exs = exs.map((item, i) => {
-      if (i === eIdx) return item;
-      const prevEx = current[i];
-      if (prevEx && prevEx.name === item.name) {
-        return { ...item, sets: prevEx.sets.map(s => ({ ...s })) };
-      }
-      return item;
+    // Carry logged sets over by name: deferring reorders `current`, so array
+    // positions no longer line up with the template order flattenTemplate returns.
+    const prevByName = new Map(current.map(e => [e.name, e]));
+    exs = exs.map(item => {
+      if (item.templateExIdx === tIdx && (item.subIdx ?? null) === (ex.subIdx ?? null)) return item;
+      const prevEx = prevByName.get(item.name);
+      return prevEx ? { ...item, sets: prevEx.sets.map(s => ({ ...s })) } : item;
     });
     // flattenTemplate only knows the template — re-append custom-added
     // exercises so a swap doesn't erase them (and their logged sets).
@@ -271,6 +271,14 @@ function useWorkoutActions({
     if (customs.length) exs = [...exs, ...customs];
     const skippedNames = loadSkippedExercises(workout.name, sessionDate);
     if (skippedNames.size) exs = exs.map(e => skippedNames.has(e.name) ? { ...e, skipped: true } : e);
+    const deferred = loadDeferred(workout.name, sessionDate);
+    if (deferred.includes(ex.name)) {
+      const renamed = deferred.map(name => name === ex.name ? newName : name);
+      saveDeferred(workout.name, sessionDate, renamed);
+      exs = applyDeferredOrder(exs, renamed);
+    } else {
+      exs = applyDeferredOrder(exs, deferred);
+    }
     activateNextSet(exs);
     updateAndSave(exs);
   };
