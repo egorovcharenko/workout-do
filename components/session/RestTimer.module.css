@@ -65,7 +65,7 @@
   padding: 6px 4px;
   border-radius: 7px;
   cursor: pointer;
-  font: 700 10px/1.2 ui-monospace, Menlo, monospace;
+  font: 700 13px/1.2 var(--suite-font-sans, system-ui, sans-serif);
   touch-action: manipulation;
 }
 

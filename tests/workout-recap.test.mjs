@@ -59,7 +59,8 @@ test('load labels distinguish bodyweight, belt, cable stacks, bands and progress
 });
 
 test('recap date stays on the workout calendar date and duration handles hours', () => {
-  assert.equal(recap.recapDate('2026-09-06'), 'Sep 6, 2026');
+  assert.equal(recap.recapDate('2026-09-06', new Date(2026, 0, 1)), 'Sep 6');
+  assert.equal(recap.recapDate('2026-09-06', new Date(2027, 0, 1)), 'Sep 6, 2026');
   assert.equal(recap.recapDuration(58), '58 sec');
   assert.equal(recap.recapDuration(59 * 60 + 58), '59 min');
   assert.equal(recap.recapDuration(65 * 60), '1h 5m');
@@ -145,7 +146,7 @@ test('screenshot card shows the workout and actual sets with controls outside it
   const card = html.match(/<article\b[\s\S]*?<\/article>/)?.[0];
   assert.ok(card);
   assert.match(card, /Squat Focus/);
-  assert.match(card, /Sep 6, 2026/);
+  assert.match(card, /Sep 6\b/);
   assert.match(card, /54 min/);
   assert.match(card, /Working sets<\/dt><dd>4<\/dd>/);
   assert.match(card, /Reps<\/dt><dd>28<\/dd>/);

@@ -74,6 +74,7 @@ function BarbellVisualizer({ weight, onWeightChange, compact = false, sets = [],
 
   const loadedPlateControls = (
     <div className="loaded-plate-controls" role="group" aria-label="Loaded plates per side, inside to outside">
+      {loadedPlates.length > 0 && <span className="loaded-plate-label">per side</span>}
       {loadedPlates.map((p, idx) => (
         <button
           type="button"

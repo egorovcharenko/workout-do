@@ -4,14 +4,14 @@ import { T } from "@/lib/legacy/shared";
 import styles from "./RestTimer.module.css";
 
 function RestTimer({ rest, onAdd, onSkip, onToggle }) {
-  const { left, total, paused, kind } = rest;
+  const { left, total, paused } = rest;
   const minutes = Math.floor(left / 60);
   const seconds = String(left % 60).padStart(2, "0");
   const progress = total > 0 ? Math.max(0, Math.min(100, (1 - left / total) * 100)) : 100;
   const done = left === 0;
   const urgent = !done && !paused && left <= 10;
-  const accent = urgent ? "#ff4d6d" : done ? T.green : kind === "warmup" ? T.amber : "#22d3ee";
-  const glow = urgent ? "255,77,109" : done ? "52,211,153" : kind === "warmup" ? "251,191,36" : "34,211,238";
+  const accent = urgent ? "#ff4d6d" : done ? T.green : T.amber;
+  const glow = urgent ? "255,77,109" : done ? "52,211,153" : "251,191,36";
   const status = done ? "REST COMPLETE" : paused ? "REST PAUSED" : urgent ? "GET READY" : "RESTING";
 
   return (

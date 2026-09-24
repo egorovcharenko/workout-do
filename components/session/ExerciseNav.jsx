@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { T, SWAP_GROUPS } from "@/lib/legacy/shared";
 import { ExerciseNavRow } from "./ExerciseNavRow";
-import { DurationReadout } from "./DurationReadout";
 import { isResolvedSet } from "@/lib/legacy/session-mutations";
 
 // ─── file: workout-session-exercise-nav.js ───
@@ -181,7 +180,6 @@ function ExerciseNav({ exercises, durationMeta, shownIdx, currentIdx, onSelect, 
                   textDecoration: m.status === "skipped" ? "line-through" : "none",
                   minHeight: 30,
                 }}>{e.name}</div>
-                <DurationReadout meta={durationMeta?.[i]} variant="nav" />
               </button>
             );
           })}

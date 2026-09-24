@@ -77,15 +77,16 @@ function ExerciseCardContent({ exercise, sessionTimes, durationMeta, supersetTag
             <button
               onClick={() => setShowVariants(v => !v)}
               title="Swap variant"
+              aria-expanded={showVariants}
               style={{
-                flexShrink: 0, width: 30, height: 28, padding: 0, borderRadius: 7,
+                flexShrink: 0, height: 30, padding: "0 10px", gap: 5, borderRadius: 7, fontWeight: 600,
                 display: "inline-flex", alignItems: "center", justifyContent: "center",
                 fontFamily: "inherit", fontSize: 13, cursor: "pointer",
                 border: `1px solid ${showVariants ? "rgba(96,165,250,0.6)" : T.cardBorder}`,
                 background: showVariants ? "rgba(96,165,250,0.15)" : "rgba(255,255,255,0.03)",
                 color: showVariants ? T.accentLight : T.faint,
               }}
-            >⇄</button>
+            ><span aria-hidden>⇄</span>Swap</button>
           )}
         </div>
       )}
@@ -275,13 +276,13 @@ function ExerciseCardContent({ exercise, sessionTimes, durationMeta, supersetTag
       )}
 
       <div className="ex-footer" style={{ display: "flex", gap: 6, marginTop: 10, paddingTop: 10, borderTop: `1px solid ${T.cardBorder}`, flexWrap: "wrap" }}>
-        {embedded && hasVariants && footerBtn(showVariants ? "▾ hide variants" : "⇄ variant", () => setShowVariants(!showVariants))}
-        {footerBtn("+ set", onAddSet)}
-        {footerBtn("− set", onRemoveSet, !canRemove)}
-        {footerBtn("× skip exercise", onSkipExercise)}
+        {embedded && hasVariants && footerBtn(showVariants ? "Hide variants" : "Swap variant", () => setShowVariants(!showVariants))}
+        {footerBtn("Add set", onAddSet)}
+        {footerBtn("Remove set", onRemoveSet, !canRemove)}
+        {footerBtn("Skip exercise", onSkipExercise)}
         <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
           {/* Offer removing the warm-up ramp once past it. */}
-          {hasWarmup && !warmupActive && footerBtn("× warmup", onRemoveWarmup)}
+          {hasWarmup && !warmupActive && footerBtn("Skip warm-up", onRemoveWarmup)}
         </div>
       </div>
     </div>

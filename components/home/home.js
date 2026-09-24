@@ -360,16 +360,24 @@ function metricHTML(name, metric, unit, neutral = false) {
   return `<div class="home-stat"><span class="home-stat-name">${name}</span><div class="home-stat-value"><strong>${metric ? (neutral ? metric.value.toFixed(1) : metric.value) : '—'}</strong><span style="color:${color}">${text}</span></div><span class="home-stat-unit">${unit}${metric?.deload ? ' · deload' : ''}</span></div>`;
 }
 
+// Same short date as the recap cards: "Sep 6", plus the year if not this year.
+function shortDate(value) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value || '');
+  if (!match) return '';
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 12);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', ...(date.getFullYear() !== new Date().getFullYear() ? { year: 'numeric' } : {}) });
+}
+
 function renderOverview() {
   const lifts = [['Squat', 'Barbell Back Squat'], ['Bench', 'Barbell Bench Press'], ['RDL', 'Barbell RDL'], ['OHP', 'Standing Overhead Press']];
   const measurements = state.measurements || [];
   const metrics = [['Weight', 'weight_kg', 'kg'], ['Waist', 'waist_cm', 'cm'], ['Chest', 'chest_cm', 'cm']].map(([label, key, unit]) => ({ label, unit, metric: latestBody(measurements, key) })).filter(x => x.metric);
   const date = metrics.map(x => x.metric.date || '').sort().at(-1);
   return `<section class="home-quiet"><h2 class="home-label">Estimated 1RM</h2>
-    <div class="home-stats">${lifts.map(([label, key]) => metricHTML(label, latestLift(state.ormHistory?.orm, key), 'lb')).join('')}</div>
+    <div class="home-stats home-stats-4">${lifts.map(([label, key]) => metricHTML(label, latestLift(state.ormHistory?.orm, key), 'lb')).join('')}</div>
     ${state.ormError ? '<p class="home-note">Strength history could not be loaded. Reload to try again.</p>' : ''}
   </section>
-  ${metrics.length ? `<section class="home-quiet"><div class="home-section-heading"><h2 class="home-label">Body</h2><span class="home-meta">${escapeHtml(date?.slice(0, 10) || '')}</span></div><div class="home-stats">${metrics.map(x => metricHTML(x.label, x.metric, x.unit, true)).join('')}</div></section>` : ''}`;
+  ${metrics.length ? `<section class="home-quiet"><div class="home-section-heading"><h2 class="home-label">Body</h2><span class="home-meta">${escapeHtml(shortDate(date))}</span></div><div class="home-stats">${metrics.map(x => metricHTML(x.label, x.metric, x.unit, true)).join('')}</div></section>` : ''}`;
 }
 
 function renderHome() {
@@ -453,10 +461,12 @@ function renderHome() {
     ${renderLatestWorkoutRecap(state.history || [], state._activeSessions || [], undefined, { bodyweightLb: window.USER_SETTINGS?.bodyweight })}
     ${renderProgramUpcoming(schedule, program)}<section><h2 class="home-label">Workouts</h2><div class="home-rotation">${remaining}</div></section>
     ${renderActivity()}${renderOverview()}
-    <section class="home-tests"><h2 class="home-label">Test mode · nothing saved</h2><div>${program.filter(w => w.kind !== 'optional').map(w => `<a class="home-chip" href="/session?w=${w.id}&test=1">${escapeHtml(workoutDisplayName(w.name))}</a>`).join('')}</div></section>
-    <button class="home-chip home-sync" onclick="window.openSLHistorySync()">Upload missing workouts to Strength Level</button>
     ${state.planEditorOpen ? renderPlanEditor() : ''}
     ${renderMeasurementsCard()}
+    <details class="home-details home-tools" ${state.toolsOpen ? 'open' : ''} ontoggle="state.toolsOpen=this.open"><summary>Tools</summary>
+      <section class="home-tests"><h2 class="home-label">Test mode · nothing saved</h2><div>${program.filter(w => w.kind !== 'optional').map(w => `<a class="home-chip" href="/session?w=${w.id}&test=1">${escapeHtml(workoutDisplayName(w.name))}</a>`).join('')}</div></section>
+      <button class="home-chip home-sync" onclick="window.openSLHistorySync()">Upload missing workouts to Strength Level</button>
+    </details>
   </main>`;
 }
 

@@ -172,5 +172,5 @@ test('old paused or ended settings cannot reactivate the previous program', () =
   const html = homeHarness().html();
   assert.match(html, /aria-label="All-time progress"/);
   assert.doesNotMatch(html, /<summary>History & measurements<\/summary>/);
-  assert.ok(html.indexOf('aria-label="All-time progress"') > html.indexOf('Upload missing workouts'));
+  assert.ok(html.indexOf('aria-label="All-time progress"') < html.indexOf('<summary>Tools</summary>'), 'Tools stay collapsed below progress');
 });

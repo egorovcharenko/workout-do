@@ -112,24 +112,28 @@ function RepStrip({ min = 1, max = 20, range, last, suggested, logged, onLog, co
           );
         })}
       </div>
-      <div aria-hidden style={{
+      <button type="button" aria-label="Show fewer reps" tabIndex={edges.left ? 0 : -1}
+        onClick={() => ref.current?.scrollBy({ left: -ref.current.clientWidth * 0.6, behavior: "smooth" })}
+        style={{
         position: "absolute", left: 2, top: "50%", transform: "translateY(-50%)",
-        width: 22, height: 22, borderRadius: 11,
+        width: 28, height: 28, borderRadius: 14, padding: 0, cursor: "pointer",
         background: "rgba(17,24,39,0.92)", border: "1px solid #374151",
         display: "flex", alignItems: "center", justifyContent: "center",
         color: "#D1D5DB", fontSize: 14, fontWeight: 800, fontFamily: T.mono, lineHeight: 1,
         opacity: edges.left ? 1 : 0, transition: "opacity 160ms ease",
-        pointerEvents: "none", animation: edges.left ? "repNudgeL 2.4s ease-in-out infinite" : "none",
-      }}>‹</div>
-      <div aria-hidden style={{
+        pointerEvents: edges.left ? "auto" : "none", animation: edges.left ? "repNudgeL 2.4s ease-in-out infinite" : "none",
+      }}>‹</button>
+      <button type="button" aria-label="Show more reps" tabIndex={edges.right ? 0 : -1}
+        onClick={() => ref.current?.scrollBy({ left: ref.current.clientWidth * 0.6, behavior: "smooth" })}
+        style={{
         position: "absolute", right: 2, top: "50%", transform: "translateY(-50%)",
-        width: 22, height: 22, borderRadius: 11,
+        width: 28, height: 28, borderRadius: 14, padding: 0, cursor: "pointer",
         background: "rgba(17,24,39,0.92)", border: "1px solid #374151",
         display: "flex", alignItems: "center", justifyContent: "center",
         color: "#D1D5DB", fontSize: 14, fontWeight: 800, fontFamily: T.mono, lineHeight: 1,
         opacity: edges.right ? 1 : 0, transition: "opacity 160ms ease",
-        pointerEvents: "none", animation: edges.right ? "repNudgeR 2.4s ease-in-out infinite" : "none",
-      }}>›</div>
+        pointerEvents: edges.right ? "auto" : "none", animation: edges.right ? "repNudgeR 2.4s ease-in-out infinite" : "none",
+      }}>›</button>
     </div>
   );
 }

@@ -131,39 +131,20 @@ function Header({ workout, workouts, onPickWorkout, onAbandon, abandonSummary, d
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
           <span style={{ color: T.faint, fontFamily: T.mono, fontSize: 12, fontWeight: 600 }}>{done}/{total}</span>
-          {elapsedSec > 0 ? (
-            <div
-              style={{
-                background: "rgba(52,211,153,0.12)",
-                border: `1px solid rgba(52,211,153,0.45)`,
-                color: T.green,
-                fontFamily: T.mono, fontWeight: 700, fontSize: 13,
-                display: "flex", alignItems: "center", gap: 6,
-                padding: "6px 11px", borderRadius: 8,
-              }}
-            >
-              <span style={{ fontSize: 11 }}>⏱</span>
-              <span>Actual</span>
-              <span style={{ opacity: 0.45 }}>·</span>
-              <span style={{ letterSpacing: -0.3 }}>{m}:{s}</span>
-            </div>
-          ) : (
-            <div
-              style={{
-                background: "rgba(255,255,255,0.03)",
-                border: `1px solid ${T.cardBorder}`,
-                color: T.faint,
-                fontFamily: T.mono, fontWeight: 700, fontSize: 13,
-                display: "flex", alignItems: "center", gap: 6,
-                padding: "6px 11px", borderRadius: 8,
-              }}
-            >
-              <span style={{ fontSize: 11 }}>▶</span>
-              <span>Actual</span>
-              <span style={{ opacity: 0.45 }}>·</span>
-              <span style={{ letterSpacing: -0.3 }}>0:00</span>
-            </div>
-          )}
+          <div
+            aria-label={`Elapsed ${m} minutes ${s} seconds`}
+            style={{
+              background: elapsedSec > 0 ? "rgba(52,211,153,0.12)" : "rgba(255,255,255,0.03)",
+              border: `1px solid ${elapsedSec > 0 ? "rgba(52,211,153,0.45)" : T.cardBorder}`,
+              color: elapsedSec > 0 ? T.green : T.faint,
+              fontFamily: T.mono, fontWeight: 700, fontSize: 13, fontVariantNumeric: "tabular-nums",
+              display: "flex", alignItems: "center", gap: 5,
+              padding: "6px 9px", borderRadius: 8,
+            }}
+          >
+            <span aria-hidden style={{ fontSize: 11 }}>{elapsedSec > 0 ? "⏱" : "▶"}</span>
+            <span style={{ letterSpacing: -0.3 }}>{m}:{s}</span>
+          </div>
         </div>
       </div>
       <div className="session-header-plan" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 8, minHeight: 20 }}>
