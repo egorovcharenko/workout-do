@@ -36,6 +36,7 @@ function renderMeasurementsCard() {
     activeSessions: state._activeSessions || [],
     bodyweightLb: window.USER_SETTINGS?.bodyweight,
     metrics: MEASUREMENT_METRICS,
+    insights: true,
     headerControls: `<button class="progress-share-button" onclick="shareProgress()" ${state.progressShareBusy ? 'disabled' : ''}>${state.progressShareBusy ? 'Sharing…' : 'Share'}</button>`,
     controls: `${renderProgressShareControls()}<div class="progress-controls">${actionSectionHTML}</div>`,
   });

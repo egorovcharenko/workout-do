@@ -4,12 +4,14 @@ import { localDate } from '../../lib/legacy/shared.js';
 import { buildStoredWorkoutRecap, latestCompletedWorkout, recapDate } from '../../lib/legacy/workout-recap.js';
 import { buildAllTime1rmTrends, recapTimeDomain, renderRecap1rm, renderRecapMonthlyChanges, renderRecapTimeHeader, renderRecapTrendMetrics } from '../../lib/legacy/recap-1rm.js';
 import { MUSCLE_TO_UNIFIED_GROUP, METRIC_TO_UNIFIED_GROUP, UNIFIED_GROUPS } from './sparklines.js';
+import { buildInsights } from '../../lib/progress-insights.js';
+import { renderInsights } from './insights.js';
 
 const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 const validDate = date => /^\d{4}-\d{2}-\d{2}$/.test(date || '') && Number.isFinite(Date.parse(date))
   && new Date(date).toISOString().slice(0, 10) === date;
 
-export function buildProgress(history = [], measurements = [], { activeSessions = [], today = localDate(), metrics = [], bodyweightLb, minWorkouts = 1 } = {}) {
+export function buildProgress(history = [], measurements = [], { activeSessions = [], today = localDate(), metrics = [], bodyweightLb, minWorkouts = 1, insights = false } = {}) {
   const seen = new Set();
   const sessions = history.filter(session => {
     if (session.is_deload === true || Number(session.is_deload) === 1 || !validDate(session.date) || session.date > today || (session.id && seen.has(session.id))
@@ -33,7 +35,8 @@ export function buildProgress(history = [], measurements = [], { activeSessions 
     for (const name of performed) workoutCounts.set(name, (workoutCounts.get(name) || 0) + 1);
   }
   for (const name of latest.keys()) if (workoutCounts.get(name) < minWorkouts) latest.delete(name);
-  const trends = Object.fromEntries(Object.entries(buildAllTime1rmTrends(sessions, { bodyweightLb }))
+  const allTrends = buildAllTime1rmTrends(sessions, { bodyweightLb });
+  const trends = Object.fromEntries(Object.entries(allTrends)
     .filter(([name]) => latest.has(name)));
   const metricRows = metrics.map(metric => ({ ...metric, points: measurements.flatMap(entry => {
     const date = String(entry.date || entry.taken_at || '').slice(0, 10);
@@ -48,7 +51,9 @@ export function buildProgress(history = [], measurements = [], { activeSessions 
     }).sort((a, b) => b.date.localeCompare(a.date) || a.name.localeCompare(b.name)),
     metrics: metricRows.filter(metric => (METRIC_TO_UNIFIED_GROUP[metric.id] || 'other') === group.id),
   })).filter(group => group.exercises.length || group.metrics.length);
-  return { groups, trends, timeDomain: recapTimeDomain({ ...trends, measurements: metricRows.flatMap(metric => metric.points) }) };
+  return { groups, trends, timeDomain: recapTimeDomain({ ...trends, measurements: metricRows.flatMap(metric => metric.points) }),
+    // Only the owner's home page asks for insights; the public snapshot never carries them.
+    ...(insights ? { insights: buildInsights(sessions, allTrends, { today }) } : {}) };
 }
 
 // Use the same calendar axis and fixed-size dots as the workout sparklines.
@@ -88,9 +93,10 @@ export function renderProgress(history, measurements, options = {}) {
   return renderProgressModel(buildProgress(history, measurements, options), options);
 }
 
-export function renderProgressModel({ groups, trends, timeDomain }, options = {}) {
+export function renderProgressModel({ groups, trends, timeDomain, insights }, options = {}) {
   return `<section class="workout-recap home-history-progress" aria-label="All-time progress">
     <header class="workout-recap-header"><div class="workout-recap-heading-row"><h2 class="workout-recap-title">All-time progress</h2>${options.headerControls || ''}</div></header>
+    ${renderInsights(insights)}
     ${timeDomain ? `<div class="workout-recap-chart-header"><span class="progress-caption">Latest sets & measurements</span>${renderRecapTimeHeader(timeDomain)}</div>` : ''}
     ${groups.map(group => `<section class="progress-group" aria-label="${esc(group.label)}"><h2 class="progress-group-title">${esc(group.label)}</h2>
       <ol class="workout-recap-exercises">${group.exercises.map(exercise => {
