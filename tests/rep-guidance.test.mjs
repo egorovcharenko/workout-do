@@ -158,6 +158,11 @@ test('block pull-ups use an effort target on every set, including resumed sets w
   assert.equal(shared.parseRepTargetRange('1–2 RIR'), null, 'RIR is never a one-to-two rep range');
   assert.equal(shared.parseRepTargetRange('RIR 1–2'), null);
   assert.deepEqual(shared.parseRepTargetRange('6–8 reps @ 1–2 RIR'), [6, 8], 'A combined rep and effort prescription keeps its rep range');
+  assert.deepEqual(shared.parseRepTargetRange('1x5-8, 2x8-10', 0), [5, 8], 'Per-set prescriptions resolve by set');
+  assert.deepEqual(shared.parseRepTargetRange('1x5-8, 2x8-10', 2), [8, 10]);
+  assert.equal(shared.parseRepTargetRange('1x5-8, 2x8-10'), null, 'Without a set there is no single range');
+  assert.equal(shared.parseRepTargetRange('3–5 / 5–10 / 8–12'), null);
+  assert.deepEqual(shared.parseRepTargetRange('3x8-12'), [8, 12], 'A set count is not part of the range');
   assert.equal(withRepGuidance(raw, [past], { ...options, block: null })[0].sets[0].repGuidance.rirLabel, null, 'The original program is unchanged');
   raw[0].sets[0].planTargetReps = 5;
   const planned = withRepGuidance(raw, [past], options)[0].sets[0].repGuidance;

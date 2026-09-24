@@ -9,6 +9,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import * as shared from '../lib/legacy/shared.js';
 import * as belt from '../lib/legacy/belt-load.js';
 import * as history from '../lib/legacy/exercise-history.js';
+import * as cableStack from '../lib/legacy/cable-stack.js';
 import { buildLibraryExerciseTemplate } from '../lib/legacy/session-mutations.js';
 
 function load(path, dependencies = {}) {
@@ -33,7 +34,7 @@ const { ActiveSetBlock } = load('../components/session/ActiveSetBlock.jsx', {
 });
 const utils = load('../lib/legacy/session-utils.js', {
   './shared': shared, './session-persistence': { loadBodyweight: () => 165 },
-  './belt-load': belt, './exercise-history': history,
+  './belt-load': belt, './exercise-history': history, './cable-stack': cableStack,
 });
 const render = exercise => renderToStaticMarkup(React.createElement(ActiveSetBlock, {
   exercise, set: exercise.sets[0],
@@ -76,4 +77,16 @@ test('Reverse Flyes uses its assigned dumbbells when added or resumed, preservin
   exercise.sets[0] = history.mergeTemplateAndSavedSet(exercise.name, exercise.sets[0], saved);
   assert.deepEqual(exercise.sets[0], saved);
   assert.match(render(exercise), /viewBox="0 0 72 34"/);
+});
+
+test('deload always lightens light loads, using stack loads for cables', () => {
+  const deload = (weight, extra = {}) => utils.applyDeloadPrescription([{ name: 'X', ...extra,
+    sets: [1, 2].map(setNumber => ({ kind: 'work', setNumber, weight })) }])[0].sets.at(-1).weight;
+  assert.equal(deload(15), 10);
+  assert.equal(deload(20), 15);
+  assert.equal(deload(17.5), 15);
+  assert.equal(deload(135, { isBarbell: true }), 110);
+  assert.equal(deload(50, { isBarbell: true }), 45);
+  assert.equal(deload(15, { equipment: 'cable' }), 12.5);
+  assert.equal(deload(20, { equipment: 'cable' }), 16.25);
 });

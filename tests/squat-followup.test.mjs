@@ -83,3 +83,18 @@ test('activating a following set at its current load keeps it tracking S1', () =
   next[0].sets[1].weight = 145;
   assert.equal(withFollowupLoads(next, workout)[0].sets[2].weight, 145);
 });
+
+test('cable offers land on a load the stack can show instead of snapping back down', () => {
+  const block = buildTrainingBlockWorkouts(WORKOUTS).find(w => w.id === 'strength-accessories-1');
+  const curl = block.exercises.find(e => e.name === 'Bayesian Cable Curl');
+  const offerFrom = weight => {
+    const exercise = { name: curl.name, equipment: curl.equipment, sets: [1, 2, 3].map(setNumber => ({
+      kind: 'work', setNumber, weight, reps: null, completed: false, repGuidance: { range: curl.workRepRanges[0] } })) };
+    const session = { cable_weight_mode: 'per_stack', date: '2026-09-01', sets: [{ exercise: curl.name, set_type: 'working', set_number: 1, weight_lb: weight, reps: '15' }] };
+    const offer = withLoadGuidance(exercise, curl, [session, session], block.name).sets[0].repGuidance.loadProgression;
+    assert.equal(offer.ready, true);
+    return offer.weight;
+  };
+  assert.equal(offerFrom(21.25), 22.5);
+  assert.equal(offerFrom(22.5), 25);
+});

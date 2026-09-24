@@ -12,6 +12,7 @@ import * as squat from '../lib/legacy/squat-progression.js';
 import * as belt from '../lib/legacy/belt-load.js';
 import * as logging from '../lib/legacy/set-logging.js';
 import * as history from '../lib/legacy/exercise-history.js';
+import * as cableStackModule from '../lib/legacy/cable-stack.js';
 import { exerciseHintsWithDeloadBootstrap } from '../lib/legacy/exercise-hints.js';
 import { withRepGuidance } from '../lib/legacy/rep-guidance.js';
 import { applySuggestedLoad } from '../lib/legacy/load-guidance.js';
@@ -36,7 +37,7 @@ function loadModule(path, dependencies, globals = {}) {
 const utils = loadModule('../lib/legacy/session-utils.js', {
   './shared': shared, './session-persistence': { loadBodyweight: () => 165 },
   './duration-estimates': duration, './bench-progression': bench, './squat-progression': squat,
-  './belt-load': belt, './set-logging': logging, './exercise-history': history,
+  './belt-load': belt, './set-logging': logging, './exercise-history': history, './cable-stack': cableStackModule,
 });
 const plain = value => JSON.parse(JSON.stringify(value));
 const workSets = (exercises, name) => exercises.find(ex => ex.name === name).sets.filter(s => s.kind === 'work');

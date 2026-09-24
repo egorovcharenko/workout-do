@@ -25,7 +25,7 @@ function ActiveSetBlock({ exercise, set, totalWork, onPickWeight, onApplyLoadPro
   const stages = exercise.stages || null;
   const guidance = set.repGuidance;
   const previous = guidance?.previous;
-  const range = guidance ? guidance.range : set.targetRepRange || parseRepTargetRange(exercise.repRange);
+  const range = guidance ? guidance.range : set.targetRepRange || parseRepTargetRange(exercise.repRange, set.kind === "work" ? set.setNumber - 1 : null);
   const lastReps = guidance ? previous?.reps : set.lastReps;
   const weightVisualKind = isBW
     ? "bodyweight"

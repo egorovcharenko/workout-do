@@ -30,7 +30,7 @@ function loadModule(path, dependencies) {
 const utils = loadModule('../lib/legacy/session-utils.js', {
   './shared': shared, './session-persistence': { loadBodyweight: () => 165 },
   './duration-estimates': duration, './bench-progression': bench, './squat-progression': squat,
-  './belt-load': belt, './set-logging': logging, './exercise-history': history,
+  './belt-load': belt, './set-logging': logging, './exercise-history': history, './cable-stack': cable,
 });
 const plain = value => JSON.parse(JSON.stringify(value));
 const getWorkout = id => shared.BLOCK_WORKOUTS.find(w => w.id === id);
