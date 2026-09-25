@@ -87,3 +87,24 @@ test('several low muscles collapse into one action and imbalance outranks them',
   assert.match(actions.find(a => a.kind === 'low').text, /muscles are below their weekly target/);
   assert.ok(actions.findIndex(a => a.kind === 'balance') < actions.findIndex(a => a.kind === 'low'));
 });
+
+test('time per set and exercise comes from gaps between logged sets', () => {
+  const at = (n, min) => `${daysAgo(n)}T18:${String(min).padStart(2, '0')}:00Z`;
+  const timed = (n, rows) => ({ ...session(n, rows.map(([ex, min]) => ({ ...set(ex), logged_at: at(n, min) }))),
+    started_at: at(n, 0), finished_at: at(n, 30) });
+  const sessions = [
+    timed(3, [['Barbell Back Squat', 3], ['Barbell Back Squat', 6], ['Barbell Back Squat', 9], ['Lat Pulldown', 11], ['Lat Pulldown', 13]]),
+    timed(40, [['Barbell Back Squat', 4], ['Barbell Back Squat', 8]]),
+  ];
+  const { pace } = buildInsights(sessions, {}, { today });
+  const squat = pace.exercises.find(ex => ex.name === 'Barbell Back Squat');
+  assert.equal(squat.perSet, 180);
+  assert.equal(squat.perSetBefore, 240);
+  assert.equal(squat.perWorkout, 540);
+  assert.equal(pace.exercises.find(ex => ex.name === 'Lat Pulldown').perSet, 120);
+  assert.deepEqual(pace.workouts.map(w => w.minutes), [30, 30]);
+  const html = renderInsights(buildInsights(sessions, {}, { today }));
+  assert.match(html, /Time per set and exercise/);
+  assert.match(html, /3:00/);
+  assert.match(html, /−60s/);
+});

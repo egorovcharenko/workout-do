@@ -87,6 +87,28 @@ function renderRhythm(rhythm) {
   </div>`;
 }
 
+const clock = sec => sec >= 60 ? `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}` : `0:${String(sec).padStart(2, '0')}`;
+
+function renderPace(pace) {
+  if (!pace?.exercises.length) return '<p class="insights-note">No timed sets in the last 4 weeks.</p>';
+  const max = Math.max(1, ...pace.workouts.map(w => w.minutes));
+  return `<div class="insights-lifts" role="table" aria-label="Time per set and exercise">
+    <div class="insights-lift insights-lift-head" role="row"><span role="columnheader">Exercise</span><span role="columnheader">Per set</span><span role="columnheader">Change</span><span role="columnheader">Per workout</span></div>
+    ${pace.exercises.map(ex => {
+      const delta = ex.perSetBefore == null ? null : ex.perSet - ex.perSetBefore;
+      return `<div class="insights-lift" role="row" title="${esc(`${ex.sets} sets in the last 4 weeks`)}">
+        <span role="cell" class="insights-lift-name">${esc(ex.name)}</span>
+        <span role="cell" class="insights-num">${clock(ex.perSet)}</span>
+        <span role="cell" class="insights-num ${delta < 0 ? 'gain' : delta > 0 ? 'loss' : ''}">${delta == null ? '—' : `${delta > 0 ? '+' : delta < 0 ? '−' : ''}${Math.abs(delta)}s`}</span>
+        <span role="cell" class="insights-num">${Math.round(ex.perWorkout / 60)} min</span>
+      </div>`;
+    }).join('')}
+  </div>
+  ${pace.workouts.length ? `<div class="insights-rhythm"><div class="insights-weeks" aria-label="Recent workout durations">${pace.workouts.map(w =>
+    `<span title="${esc(`${w.date} · ${w.minutes} min · ${clock(w.perSet)} per set`)}"><i style="height:${Math.max(4, w.minutes / max * 100)}%"></i><b>${w.minutes}</b></span>`).join('')}</div>
+    <p class="insights-note">Recent workouts, minutes · per set = time from one logged set to the next, rest included</p></div>` : ''}`;
+}
+
 export function renderInsights(insights) {
   if (!insights) return '';
   return `<section class="insights" aria-label="Training insights">
@@ -95,6 +117,8 @@ export function renderInsights(insights) {
     <h2 class="progress-group-title">Muscle focus <span class="insights-sub">hard sets per week · last 4 weeks · shaded = target</span></h2>
     ${renderMuscles(insights.muscles)}
     ${renderBalance(insights.balance)}
+    <h2 class="progress-group-title">Time <span class="insights-sub">last 4 weeks vs 4 before</span></h2>
+    ${renderPace(insights.pace)}
     <h2 class="progress-group-title">Lifts</h2>
     ${renderLifts(insights.lifts)}
     <div class="insights-pair">
