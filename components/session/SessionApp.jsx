@@ -3,6 +3,7 @@ import React, { useCallback, useState, useEffect, useRef, useMemo } from "react"
 import Link from "next/link";
 import { flushSync } from "react-dom";
 import { CABLE_CHEST_FLY, restoreChestFlyPrescription } from "@/lib/cable-chest-fly";
+import { SQUAT_EXERCISE, dropRetiredSquatWarmup } from "@/lib/squat-warmups";
 import { api } from "@/lib/db/api";
 import { canApplyResolvedSessionId, selectScopedSaveTiming } from "@/lib/session-save-scope";
 import {
@@ -145,7 +146,9 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
           exs = exs.map(ex => {
             const saved = ex.name === CABLE_CHEST_FLY.name
               ? restoreChestFlyPrescription(ex.sets, savedSetsMap[ex.name])
-              : savedSetsMap[ex.name];
+              : ex.name === SQUAT_EXERCISE && workout.trainingBlockId
+                ? dropRetiredSquatWarmup(savedSetsMap[ex.name], ex.sets)
+                : savedSetsMap[ex.name];
             if (saved && saved.length) {
               const savedWarmups = saved.filter(s => s.kind === "warmup");
               const savedWorking = saved.filter(s => s.kind === "work");
