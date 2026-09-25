@@ -7,7 +7,7 @@ import * as overview from '../components/home/overview.js';
 import { EXERCISE_MUSCLES } from '../lib/legacy/standards.js';
 import { cableStackMultiplier } from '../lib/legacy/cable-stack.js';
 import * as trainingBlock from '../lib/training-block.js';
-import { mainProgramSchedule } from '../lib/main-program.js';
+import { mainProgramSchedule, missedScheduledWorkout, catchUpSettings, dismissMissedSettings } from '../lib/main-program.js';
 import { storedSessionProgress } from '../lib/legacy/session-status.js';
 import { renderLatestWorkoutRecap } from '../components/home/recap.js';
 
@@ -15,7 +15,7 @@ function homeHarness(settings = {}, today = '2026-09-18') {
   const state = { loaded: true, history: [], lastSession: {}, measurements: [] };
   const elements = { planEditorText: { value: '' }, planEditorError: { style: {} } };
   const saves = [];
-  const context = vm.createContext({ ...shared, ...overview, ...trainingBlock, mainProgramSchedule, storedSessionProgress, EXERCISE_MUSCLES, cableStackMultiplier, state,
+  const context = vm.createContext({ ...shared, ...overview, ...trainingBlock, mainProgramSchedule, missedScheduledWorkout, catchUpSettings, dismissMissedSettings, storedSessionProgress, EXERCISE_MUSCLES, cableStackMultiplier, state,
     renderLatestWorkoutRecap: (history, active) => renderLatestWorkoutRecap(history, active, today),
     localDate: () => today,
     trainingBlockStatus: settings => trainingBlock.trainingBlockStatus(settings, today),
@@ -173,4 +173,19 @@ test('old paused or ended settings cannot reactivate the previous program', () =
   assert.match(html, /aria-label="All-time progress"/);
   assert.doesNotMatch(html, /<summary>History & measurements<\/summary>/);
   assert.ok(html.indexOf('aria-label="All-time progress"') < html.indexOf('<summary>Tools</summary>'), 'Tools stay collapsed below progress');
+});
+
+test('a skipped workout day offers to do it today or skip it, and disappears once done', () => {
+  // 2026-09-24 is scheduled Strength A (Squat Focus); today is Accessories 1.
+  const h = homeHarness({}, '2026-09-25');
+  const html = h.html();
+  const card = html.match(/<section class="home-missed"[\s\S]*?<\/section>/)?.[0];
+  assert.ok(card, 'Missed workout card is shown');
+  assert.match(card, /Missed yesterday/);
+  assert.match(card, /Do Squat Focus today/);
+  assert.match(card, /catchUpWorkout\('strength-a','2026-09-24'\)/);
+  assert.match(card, /Skip it/);
+  assert.ok(html.indexOf('home-missed') < html.indexOf('class="home-hero'), 'Shown above today\'s workout');
+  h.state.history = [{ id: 'a', workout_name: 'Strength A', date: '2026-09-24', finished_at: '2026-09-24T19:00:00Z', sets: [] }];
+  assert.doesNotMatch(h.html(), /home-missed/);
 });
