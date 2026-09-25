@@ -180,3 +180,11 @@ test('main-program squat warms up with three sets: bar, 95 and a 115 single', ()
   assert.deepEqual(squat.defaultWarmup, [45, 95, 115]);
   assert.deepEqual(squat.defaultWarmupReps, [8, 3, 1]);
 });
+
+test('main-program rests: 150 s heavy compounds, 90 s pulldowns and shrugs, 75 s isolation', () => {
+  const rests = Object.fromEntries(block.buildTrainingBlockWorkouts(sharedModule.WORKOUTS)
+    .flatMap(w => w.exercises).map(ex => [ex.name, ex.rest]));
+  for (const name of ['Barbell Back Squat', 'Barbell Bench Press', 'Barbell RDL', 'Pull-Ups', 'Dips', 'Low Row']) assert.equal(rests[name], 150, name);
+  for (const name of ['Lat Pulldown', 'Neutral-Grip Lat Pulldown', 'Barbell Shrugs']) assert.equal(rests[name], 90, name);
+  for (const name of ['Bayesian Cable Curl', 'Incline DB Curls', 'Calf Raises', 'Dragon Fly Progression']) assert.equal(rests[name], 75, name);
+});
