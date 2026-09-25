@@ -172,3 +172,11 @@ test('saved block sessions retain their identity and edited sets through resume 
   const normal = resumed.serializeForSave([], 'Squat Focus', null, null, 0, '2026-10-04');
   assert.equal(JSON.parse(normal.state_json).trainingBlock, undefined);
 });
+
+test('main-program squat warms up with three sets: bar, 95 and a 115 single', () => {
+  const squat = block.buildTrainingBlockWorkouts(sharedModule.WORKOUTS).find(w => w.id === 'strength-a')
+    .exercises.find(ex => ex.name === 'Barbell Back Squat');
+  assert.equal(squat.warmups, 3);
+  assert.deepEqual(squat.defaultWarmup, [45, 95, 115]);
+  assert.deepEqual(squat.defaultWarmupReps, [8, 3, 1]);
+});
