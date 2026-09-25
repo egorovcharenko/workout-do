@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildRecap1rmTrends, recapTrendSession, recapMonthlyChanges, renderRecapMonthlyChanges, renderRecap1rm, recapTimeDomain, renderRecapTrendMetrics, renderRecapTimeHeader } from '../lib/legacy/recap-1rm.js';
+import { buildRecap1rmTrends, limitTrendsToRecentMonths, recapTrendSession, recapMonthlyChanges, renderRecapMonthlyChanges, renderRecap1rm, recapTimeDomain, renderRecapTrendMetrics, renderRecapTimeHeader } from '../lib/legacy/recap-1rm.js';
 import { renderLatestWorkoutRecap } from '../components/home/recap.js';
 const name = 'Barbell Bench Press';
 const row = (weight, reps, extra = {}) => ({ exercise: name, weight_lb: weight, reps, set_type: 'working', ...extra });
@@ -67,7 +67,7 @@ test('all-time recap trend uses the best working set per workout and replaces cu
   assert.deepEqual(points.map(p=>p.date),['2025-01-01','2026-09-12','2026-09-18']);
   assert.equal(JSON.stringify({history,current}),before);
   const html = renderLatestWorkoutRecap([old,previous,current],[],'2026-09-18');
-  assert.match(html,/Estimated 1RM across 3 workouts, latest 180 lb/);
+  assert.match(html,/Estimated 1RM across 2 workouts, latest 180 lb/,'The recap chart shows only the last 3 months');
   assert.match(html,/1RM EST/);
 });
 
@@ -227,4 +227,13 @@ test('dips trends use total load and share live/stored semantics without countin
   assert.match(html,/workout-recap-details[\s\S]*recap-trend-metrics[\s\S]*workout-recap-trend/);
   assert.doesNotMatch(renderRecap1rm(points),/recap-1rm-label/);
   assert.doesNotMatch(renderRecapMonthlyChanges(points),/recap-month-name/);
+});
+
+test('recap charts keep the last three calendar months, or the last point when nothing is that recent', () => {
+  const trends = limitTrendsToRecentMonths({
+    Squat: [{ date: '2026-05-30', value: 150 }, { date: '2026-07-01', value: 160 }, { date: '2026-09-18', value: 170 }],
+    Old: [{ date: '2025-01-01', value: 100 }, { date: '2025-02-01', value: 110 }],
+  });
+  assert.deepEqual(trends.Squat.map(p => p.date), ['2026-07-01', '2026-09-18']);
+  assert.deepEqual(trends.Old.map(p => p.date), ['2025-02-01']);
 });

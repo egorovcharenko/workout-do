@@ -1,5 +1,5 @@
 import { workoutDisplayName } from "../../lib/legacy/shared.js";
-import { buildRecap1rmTrends, renderRecap1rm, renderRecapMonthlyChanges, recapTimeDomain, renderRecapTrendMetrics, renderRecapTimeHeader } from "../../lib/legacy/recap-1rm.js";
+import { buildRecap1rmTrends, limitTrendsToRecentMonths, renderRecap1rm, renderRecapMonthlyChanges, recapTimeDomain, renderRecapTrendMetrics, renderRecapTimeHeader } from "../../lib/legacy/recap-1rm.js";
 import { buildStoredWorkoutRecap, latestCompletedWorkout, recapDate, recapDuration } from '../../lib/legacy/workout-recap.js';
 import { localDate } from '../../lib/legacy/shared.js';
 
@@ -9,7 +9,7 @@ export function renderLatestWorkoutRecap(history, activeSessions = [], today = l
   const session = latestCompletedWorkout(history, activeSessions, today);
   if (!session) return '';
   const recap = buildStoredWorkoutRecap(session);
-  const trends = buildRecap1rmTrends(history.filter(item => !activeSessions.some(active => active.id === item.id)), session, options);
+  const trends = limitTrendsToRecentMonths(buildRecap1rmTrends(history.filter(item => !activeSessions.some(active => active.id === item.id)), session, options));
   const timeDomain = recapTimeDomain(trends);
   return `<article class="workout-recap home-workout-recap" aria-label="Latest workout recap">
     <header class="workout-recap-header">
