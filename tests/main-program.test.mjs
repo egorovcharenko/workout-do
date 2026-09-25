@@ -61,3 +61,13 @@ test('active legacy and revised sessions retain their prescription and stored se
     assert.equal(JSON.stringify(active),original);
   }
 });
+
+test('pull-ups load comes from the last time pull-ups were done, in A or B',()=>{
+  const a=MAIN_WORKOUTS.find(w=>w.id==='strength-a'), b=MAIN_WORKOUTS.find(w=>w.id==='strength-b');
+  const pull=(weight,number)=>({exercise:'Pull-Ups',set_type:'working',set_number:number,weight_lb:weight,load_type:'belt',reps:'6',grip:'pullup'});
+  const done=(id,w,date,rows)=>({id,date,workout_name:w.name,started_at:date+'T10:00:00Z',finished_at:date+'T12:00:00Z',state_json:JSON.stringify({trainingBlock:mainProgramContext({})}),sets:rows});
+  const context=mainProgramContext({});
+  const hints=trainingBlockHints(resolveTrainingBlockSession(a,context,null,WORKOUTS).workout,
+    [done('b1',b,'2026-09-21',[pull(10,1),pull(10,2)]),done('a1',a,'2026-09-18',[pull(5,1),pull(5,2)])],context);
+  assert.equal(hints['Pull-Ups|working|1'].weight_lb,10);
+});

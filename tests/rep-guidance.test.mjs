@@ -102,7 +102,7 @@ test('lighter-load guidance respects exact prescriptions, warm-ups, deloads, var
   assert.equal(withRepGuidance(raw, [past], options)[0].sets[0].repGuidance.suggested, 6);
 });
 
-test('current, unfinished and future sessions are excluded; repeat A does not inherit B or an older block run', () => {
+test('current, unfinished, future and older-run sessions are excluded; the latest program session with the lift wins, even from B', () => {
   const rows = [
     session('old', 'Squat Focus', '2026-09-05', [row(squat, 1, 135, 8)]),
     session('a', 'Strength A', '2026-09-06', [row(squat, 1, 135, 6)], { state_json: JSON.stringify({ trainingBlock: block }) }),
@@ -115,7 +115,8 @@ test('current, unfinished and future sessions are excluded; repeat A does not in
   const raw = [ex(squat, [set(1, 135, { reps: 5, completed: true, logged_at: '2026-09-12T12:10:00Z', targetRepRange: [5, 8] })])];
   const guided = withRepGuidance(raw, rows, { ...options, date: '2026-09-12', startedAt: Date.parse('2026-09-12T12:00:00Z') })[0].sets[0];
   assert.equal(guided.repGuidance.previous.reps, 6);
-  assert.equal(guided.repGuidance.suggested, 7);
+  assert.match(guided.repGuidance.previous.label, /115/, 'Last comes from the newer B session');
+  assert.equal(guided.repGuidance.suggested, 5, 'Heavier than last time, so fewer reps are suggested');
   assert.equal(guided.reps, 5);
   assert.equal(guided.completed, true);
   assert.equal(guided.logged_at, raw[0].sets[0].logged_at);
@@ -350,10 +351,9 @@ test('a consecutive two-workout streak requires every matching set, load and var
   }
 });
 
-test('weight offers compare the same block and A/B workout, never old-program, future, current or unfinished logs', () => {
+test('weight offers count the lift in any program workout, never old-program, future, current or unfinished logs', () => {
   const excluded = [
     appearance('regular', '2026-09-05', cappedSquat(), { workout_name: 'Squat Focus', state_json: '{}' }),
-    appearance('b', '2026-09-09', cappedSquat(), { workout_name: 'Strength B' }),
     appearance('old-block', '2026-09-10', cappedSquat(), { state_json: JSON.stringify({ trainingBlock: { ...block, instanceId: 'old' } }) }),
     appearance('future', '2026-09-19', cappedSquat()), appearance('today', '2026-09-18', cappedSquat()),
     appearance('unfinished', '2026-09-17', cappedSquat(), { finished_at: null }),
@@ -361,6 +361,9 @@ test('weight offers compare the same block and A/B workout, never old-program, f
   const guided = withRepGuidance([blockExercise()], [...excluded, twoAppearances()[0]], nextOptions)[0];
   assert.equal(guided.sets[0].repGuidance.loadProgression.qualifying, 1);
   assert.equal(guided.sets[0].repGuidance.loadProgression.ready, false);
+  const inB = appearance('b', '2026-09-09', cappedSquat(), { workout_name: 'Strength B' });
+  const withB = withRepGuidance([blockExercise()], [...excluded, inB, twoAppearances()[0]], nextOptions)[0];
+  assert.equal(withB.sets[0].repGuidance.loadProgression.qualifying, 2, 'The same lift done in B counts toward the streak');
 });
 
 test('accepting a load updates the entire pending group without logging, changing other groups or repeating the increase', () => {
@@ -446,7 +449,7 @@ test('the weight offer makes the reserve confirmation explicit and changes weigh
   assert.equal(next[0].sets[0].weight, 140);
   assert.equal(next[0].sets[0].reps, null);
   const building = renderToStaticMarkup(React.createElement(loadProgression.LoadProgression, { offer: { ...offer, qualifying: 1, ready: false, canApply: false }, onApply }));
-  assert.match(building, /Hit 8 reps in 2 A workouts to unlock · 1\/2/);
+  assert.match(building, /Hit 8 reps in 2 workouts to unlock · 1\/2/);
   assert.doesNotMatch(building, /<button/);
 });
 

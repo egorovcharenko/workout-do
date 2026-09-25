@@ -199,8 +199,11 @@ test('replacement cable fly keeps three sets and seeds its actual cable history 
     { state_json: JSON.stringify({ trainingBlock: run }), cable_weight_mode: 'per_stack' });
   const laterSource = { ...source, date: '2026-09-16', sets: [row(name, 1, 20, 15)] };
   exercises = guide(w, [...sessions, own, laterSource]);
-  assert.deepEqual(plain(work(exercises, name).map(s => s.weight)), [17.5,17.5,17.5]);
-  assert.ok(work(exercises, name).every(s => s.repGuidance.previous.workout === w.name), 'After the first A accessory appearance, its own history owns progression');
+  const sets = work(exercises, name);
+  assert.equal(sets[0].weight, 20, 'The later Accessories 2 appearance is the latest time the lift was done');
+  assert.equal(sets[0].repGuidance.previous.workout, 'Strength Accessories 2');
+  const ownOnly = guide(w, [...sessions, own]);
+  assert.deepEqual(plain(work(ownOnly, name).map(s => s.weight)), [17.5,17.5,17.5]);
 });
 
 

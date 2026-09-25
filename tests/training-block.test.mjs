@@ -91,7 +91,7 @@ test('A and B use their agreed loads and set counts without importing regular pr
   assert.equal(JSON.stringify(shared.WORKOUTS), regularBefore);
 });
 
-test('block hints isolate A from B, unfinished sessions, previous runs and the regular program', () => {
+test('block hints use the latest program session with the lift (A or B), never unfinished sessions, previous runs or the regular program', () => {
   const rows = [
     session('Squat Focus', '2026-09-18', [benchRow(160)], { state_json: '{}' }),
     session('Strength B', '2026-09-17', [benchRow(150)]),
@@ -100,9 +100,11 @@ test('block hints isolate A from B, unfinished sessions, previous runs and the r
     session('Strength A', '2026-09-12', [benchRow(137.5, 1, '7'), benchRow(135, 2, '6')]),
   ];
   const hints = block.trainingBlockHints(workout('strength-a'), rows, run);
-  assert.equal(hints['Barbell Bench Press|working|1'].weight_lb, 137.5);
-  assert.equal(hints['Barbell Bench Press|working|1'].reps, '7');
-  const next = workSets(utils.flattenTemplate(workout('strength-a'), {}, hints), 'Barbell Bench Press');
+  assert.equal(hints['Barbell Bench Press|working|1'].weight_lb, 150, 'Bench done later in B carries over');
+  const withoutB = block.trainingBlockHints(workout('strength-a'), rows.filter(r => r.workout_name !== 'Strength B'), run);
+  assert.equal(withoutB['Barbell Bench Press|working|1'].weight_lb, 137.5);
+  assert.equal(withoutB['Barbell Bench Press|working|1'].reps, '7');
+  const next = workSets(utils.flattenTemplate(workout('strength-a'), {}, withoutB), 'Barbell Bench Press');
   assert.deepEqual(plain(next.map(s => s.weight)), [137.5, 135, 135]);
   assert.equal(next[2].lastReps, 6, 'An unperformed set uses the block target instead of borrowing another role');
   const regular = exerciseHintsWithDeloadBootstrap(block.regularProgramSessions(rows));

@@ -14,7 +14,7 @@ export function LoadProgression({ offer, onApply }) {
       </> : <span className="load-guidance-status">
         {offer.ready
           ? "Unlocked · use it next workout"
-          : `Hit ${offer.upper} reps${offer.setNumbers.length > 1 ? " on every set" : ""} in ${offer.required} ${offer.workoutLabel} ${offer.required === 1 ? "workout" : "workouts"} to unlock · ${offer.qualifying}/${offer.required}`}
+          : `Hit ${offer.upper} reps${offer.setNumbers.length > 1 ? " on every set" : ""} in ${offer.required} ${offer.required === 1 ? "workout" : "workouts"} to unlock · ${offer.qualifying}/${offer.required}`}
       </span>}
     </div>
   );
