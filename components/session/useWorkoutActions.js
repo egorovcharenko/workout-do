@@ -20,6 +20,9 @@ import {
 
 // ─── file: workout-session-actions.js ───
 
+// No rest timer runs longer than 2 minutes.
+const MAX_REST_SEC = 120;
+
 function useWorkoutActions({
   workout,
   exercises,
@@ -178,7 +181,7 @@ function useWorkoutActions({
 
     if (shouldRest && nextActive) {
       const restKind = nextActive.s.kind === "warmup" ? "warmup" : "work";
-      const total = restKind === "warmup" ? 30 : (ex.rest || 90);
+      const total = restKind === "warmup" ? 30 : Math.min(ex.rest || 90, MAX_REST_SEC);
       setRest({ total, left: total, endAt: Date.now() + total * 1000, eIdx, sIdx, kind: restKind, paused: false });
     } else {
       setRest(null);
