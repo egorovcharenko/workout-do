@@ -96,7 +96,7 @@ test('stats replaces volume with all-time 1RM and retains saved same-day best wh
   assert.equal(charts[1].data.at(-1).orm, 35, 'A stronger live set updates the graph immediately');
 });
 
-test('reps-only belt lifts like Dips also get all-time top reps and added load charts', () => {
+test('Dips stats look like every other lift: one 30-day chart and one all-time chart', () => {
   const charts = [];
   const { StatsPane } = load('../components/session/StatsPane.jsx', { './Sparkline': { Sparkline: props => {
     charts.push(props); return React.createElement('div', null, props.label);
@@ -106,5 +106,6 @@ test('reps-only belt lifts like Dips also get all-time top reps and added load c
   const markup = renderToStaticMarkup(React.createElement(StatsPane, { exercise, history: [], statHistory }));
   assert.match(markup, /All time/);
   const allTime = charts.filter(chart => chart.allTime).map(chart => chart.label);
-  assert.deepEqual(allTime, ['Top reps', 'Added load']);
+  assert.deepEqual(allTime, ['Top reps']);
+  assert.deepEqual(charts.map(chart => chart.label), ['Top reps', 'Top reps']);
 });

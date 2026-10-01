@@ -193,10 +193,8 @@ function StatsPane({ exercise, history, statHistory, sessionId }) {
       .sort((a, b) => a.date.localeCompare(b.date));
   };
   const ormHistRaw = mergeMetric((stat.orm || {})[exercise.name], "orm");
-  const wtHist     = mergeMetric((stat.wt  || {})[exercise.name], "wt");
-  const volHistRaw = mergeMetric((stat.vol || {})[exercise.name], "vol");
 
-  let todayOrm = -Infinity, todayVol = 0;
+  let todayOrm = -Infinity;
   (exercise.sets || []).forEach(s => {
     if (!s.completed || s.kind !== 'work') return;
     const bs = (s.bands || []).reduce((a, b) => a + b, 0);
@@ -210,7 +208,6 @@ function StatsPane({ exercise, history, statHistory, sessionId }) {
       const belt = exercise.beltLoad ? Math.max(0, Number(s.weight) || 0) : 0;
       const score = belt > 0 ? beltAdjustedRepScore(r, belt) : r;
       if (r > 0 && score > todayOrm) todayOrm = score;
-      if (exercise.beltLoad && r > 0 && w > 0) todayVol += w * r;
       return;
     }
     if (r > 0 && w > 0) {
@@ -226,7 +223,6 @@ function StatsPane({ exercise, history, statHistory, sessionId }) {
         o = r > 1 ? w * (1 + r / 30) : w;
       }
       if (o > todayOrm) todayOrm = o;
-      todayVol += w * r;
     }
   });
   const chartTodayDateStr = new Date(todayMs).toISOString().slice(0, 10);
@@ -235,9 +231,6 @@ function StatsPane({ exercise, history, statHistory, sessionId }) {
   const ormHist = (todayOrm !== -Infinity)
     ? [...ormHistRaw.filter(d => d.date !== chartTodayDateStr), { date: chartTodayDateStr, orm: Math.max(todayOrm, savedToday?.orm ?? -Infinity), isDeload: savedToday ? savedToday.isDeload && !!window.SESSION_DELOAD : !!window.SESSION_DELOAD }]
     : ormHistRaw;
-  const volHist = (todayVol > 0)
-    ? [...volHistRaw.filter(d => d.date !== chartTodayDateStr), { date: chartTodayDateStr, vol: todayVol, isDeload: !!window.SESSION_DELOAD }]
-    : volHistRaw;
 
   return (
     <div
@@ -262,8 +255,6 @@ function StatsPane({ exercise, history, statHistory, sessionId }) {
             : isRepsOnly ? (v => `${Math.round(v)} reps`)
             : (v => `${Math.round(v)} lb`)}
           showTip={showTip} hideTip={hideTip} />
-        {exercise.beltLoad && <Sparkline exerciseName={exercise.name} data={wtHist} valueKey="wt" color="#C084FC" label="Added load" fmt={v => `+${Math.round(v)} lb`} showTip={showTip} hideTip={hideTip} />}
-        {exercise.beltLoad && <Sparkline exerciseName={exercise.name} data={volHist} valueKey="vol" color="#34D399" label="Plate volume" fmt={v => `${Math.round(v).toLocaleString()} lb`} showTip={showTip} hideTip={hideTip} />}
       </Section>
 
       <Section label="All time">
@@ -274,7 +265,6 @@ function StatsPane({ exercise, history, statHistory, sessionId }) {
             : isRepsOnly ? (v => `${Math.round(v)} reps`)
             : (v => `${Math.round(v)} lb`)}
           showTip={showTip} hideTip={hideTip} />
-        {exercise.beltLoad && <Sparkline exerciseName={exercise.name} data={wtHist} valueKey="wt" color="#C084FC" allTime label="Added load" fmt={v => `+${Math.round(v)} lb`} showTip={showTip} hideTip={hideTip} />}
       </Section>
 
       <PreviousSessions history={history} exercise={exercise} sessionId={sessionId} />

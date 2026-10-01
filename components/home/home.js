@@ -23,10 +23,8 @@ import { renderCalendar } from "./calendar";
 import { renderMeasurementsCard } from "./measurementsCard";
 import { render } from "./shell";
 import { recentActivity, latestLift, latestBody } from "./overview";
-import { blockWorkoutCompleted } from "@/lib/training-block";
 import { storedSessionProgress } from "@/lib/legacy/session-status";
-import { mainProgramSchedule, missedScheduledWorkout, catchUpSettings, dismissMissedSettings } from "@/lib/main-program";
-import { renderProgramRestDay, renderProgramUpcoming } from "./program";
+import { nextProgramWorkout } from "@/lib/main-program";
 import { renderLatestWorkoutRecap } from "./recap";
 
 function renderWorkoutMuscleMap(w) {
@@ -383,7 +381,6 @@ function renderOverview() {
 
 function renderHome() {
   if (!state.loaded) return renderHomeSkeleton();
-  const schedule = mainProgramSchedule(window.USER_SETTINGS, localDate());
   const deloadOn = false;
   const getExpectedSets = (w) => {
     let count = 0;
@@ -417,7 +414,7 @@ function renderHome() {
 
   const activeSess = state._activeSessions && state._activeSessions[0];
   const program = MAIN_WORKOUTS;
-  const nextWorkoutId = schedule.workoutId || schedule.upcoming.find(day => day.workoutId)?.workoutId;
+  const nextWorkoutId = nextProgramWorkout(state.history || [], programWorkoutNames);
   const nextW = program.find(w => w.id === nextWorkoutId) || program[0];
 
   let activeWorkout = nextW;
@@ -450,21 +447,14 @@ function renderHome() {
     orderedProgram.push(...program);
   }
 
-  const completedToday = blockWorkoutCompleted(state.history, schedule.context, nextW.name, localDate());
-  const hero = !isOngoing && (!schedule.workoutId || completedToday)
-    ? renderProgramRestDay(completedToday, nextW)
-    : renderWorkoutCard(activeWorkout, true, isOngoing, logged, expected, pct);
-  const remaining = orderedProgram.filter(w => (!isOngoing && !schedule.workoutId) || w.id !== activeWorkout.id).map(w => renderWorkoutCard(w, false)).join('');
-  const missed = isOngoing ? null : missedScheduledWorkout({
-    sessions: state.history || [], settings: window.USER_SETTINGS || {}, today: localDate(), nameFor: programWorkoutNames,
-  });
+  const hero = renderWorkoutCard(activeWorkout, true, isOngoing, logged, expected, pct);
+  const remaining = orderedProgram.filter(w => w.id !== activeWorkout.id).map(w => renderWorkoutCard(w, false)).join('');
   return `<main class="home-page" style="${homeTokens()}">
     <header class="home-header"><div><div class="home-date">${getSessionDateStr()}</div><h1>Workouts</h1></div></header>
     ${state.loadError ? '<p role="alert" class="home-note">Your workout data could not be loaded. Reload to try again.</p>' : ''}
-    ${missed ? renderMissedWorkout(missed) : ''}
     ${hero}
     ${renderLatestWorkoutRecap(state.history || [], state._activeSessions || [], undefined, { bodyweightLb: window.USER_SETTINGS?.bodyweight })}
-    ${renderProgramUpcoming(schedule, program)}<section><h2 class="home-label">Workouts</h2><div class="home-rotation">${remaining}</div></section>
+    <section><h2 class="home-label">Workouts</h2><div class="home-rotation">${remaining}</div></section>
     ${renderActivity()}${renderOverview()}
     ${state.planEditorOpen ? renderPlanEditor() : ''}
     ${renderMeasurementsCard()}
@@ -480,51 +470,6 @@ function programWorkoutNames(id) {
   const workout = ALL_WORKOUTS.find(w => w.id === id);
   if (!workout) return [];
   return [workout.name, ...Object.keys(LEGACY_WORKOUT_NAMES).filter(name => LEGACY_WORKOUT_NAMES[name] === workout.name)];
-}
-
-function renderMissedWorkout(missed) {
-  const workout = ALL_WORKOUTS.find(w => w.id === missed.workoutId);
-  if (!workout) return '';
-  const after = missed.afterId && ALL_WORKOUTS.find(w => w.id === missed.afterId);
-  const label = missed.daysLate === 1 ? 'Missed yesterday' : 'Behind schedule';
-  const name = escapeHtml(workoutDisplayName(workout.name));
-  return `<section class="home-missed" aria-label="Missed workout">
-    <div><span class="home-label home-accent">${label}</span><h2>${name}</h2>
-    <p class="home-note">${after ? `Next after ${escapeHtml(workoutDisplayName(after.name))}. ` : ''}Do it today and the plan shifts so nothing gets skipped. Or skip it and stay on today's schedule.</p></div>
-    <div class="home-missed-actions">
-      <button type="button" class="home-start home-missed-go" onclick="catchUpWorkout('${escapeHtml(missed.workoutId)}')" ${state.catchUpBusy ? 'disabled' : ''}>${state.catchUpBusy ? 'Shifting plan…' : `Do ${name} today`}</button>
-      <button type="button" class="home-missed-skip" onclick="dismissMissedWorkout()" ${state.catchUpBusy ? 'disabled' : ''}>Skip it</button>
-    </div>
-  </section>`;
-}
-
-async function saveScheduleSettings(body) {
-  window.USER_SETTINGS = Object.assign(window.USER_SETTINGS || {}, body);
-  await api.saveSettings(body);
-}
-
-async function catchUpWorkout(workoutId) {
-  if (state.catchUpBusy) return;
-  state.catchUpBusy = true;
-  render();
-  try {
-    await saveScheduleSettings(catchUpSettings(window.USER_SETTINGS || {}, workoutId, localDate()));
-    window.location.href = `/session?w=${encodeURIComponent(workoutId)}`;
-  } catch (e) {
-    console.error("[SCHEDULE] catch-up failed:", e);
-    state.catchUpBusy = false;
-    render();
-    alert("Couldn't shift the plan. Check your connection and try again.");
-  }
-}
-
-async function dismissMissedWorkout() {
-  try {
-    await saveScheduleSettings(dismissMissedSettings(localDate()));
-  } catch (e) {
-    console.error("[SCHEDULE] dismiss failed:", e);
-  }
-  render();
 }
 
 async function toggleDeload() {
@@ -547,8 +492,6 @@ export {
   renderHomeSkeleton,
   renderHome,
   toggleDeload,
-  catchUpWorkout,
-  dismissMissedWorkout,
   reconcileWorkoutPlan,
   openPlanEditor,
   closePlanEditor,
