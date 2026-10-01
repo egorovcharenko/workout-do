@@ -266,14 +266,16 @@ function StatsPane({ exercise, history, statHistory, sessionId }) {
         {exercise.beltLoad && <Sparkline exerciseName={exercise.name} data={volHist} valueKey="vol" color="#34D399" label="Plate volume" fmt={v => `${Math.round(v).toLocaleString()} lb`} showTip={showTip} hideTip={hideTip} />}
       </Section>
 
-      {!isRepsOnly && <Section label="All time">
+      <Section label="All time">
         <Sparkline exerciseName={exercise.name} data={ormHist} valueKey="orm" color="#34D399" allTime
-          label={exercise.stages ? "Stage" : "Est. 1RM"}
+          label={exercise.stages ? "Stage" : isRepsOnly ? "Top reps" : "Est. 1RM"}
           fmt={exercise.stages
             ? (v => { const d = decodeStageScore(v); return `S${d.stage} · ${d.reps} reps`; })
+            : isRepsOnly ? (v => `${Math.round(v)} reps`)
             : (v => `${Math.round(v)} lb`)}
           showTip={showTip} hideTip={hideTip} />
-      </Section>}
+        {exercise.beltLoad && <Sparkline exerciseName={exercise.name} data={wtHist} valueKey="wt" color="#C084FC" allTime label="Added load" fmt={v => `+${Math.round(v)} lb`} showTip={showTip} hideTip={hideTip} />}
+      </Section>
 
       <PreviousSessions history={history} exercise={exercise} sessionId={sessionId} />
 
