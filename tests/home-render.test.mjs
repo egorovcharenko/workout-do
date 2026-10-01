@@ -183,7 +183,7 @@ test('a skipped workout day offers to do it today or skip it, and disappears onc
   assert.ok(card, 'Missed workout card is shown');
   assert.match(card, /Missed yesterday/);
   assert.match(card, /Do Squat Focus today/);
-  assert.match(card, /catchUpWorkout\('strength-a','2026-09-24'\)/);
+  assert.match(card, /catchUpWorkout\('strength-a'\)/);
   assert.match(card, /Skip it/);
   assert.ok(html.indexOf('home-missed') < html.indexOf('class="home-hero'), 'Shown above today\'s workout');
   h.state.history = [{ id: 'a', workout_name: 'Strength A', date: '2026-09-24', finished_at: '2026-09-24T19:00:00Z', sets: [] }];

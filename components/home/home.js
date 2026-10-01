@@ -485,13 +485,14 @@ function programWorkoutNames(id) {
 function renderMissedWorkout(missed) {
   const workout = ALL_WORKOUTS.find(w => w.id === missed.workoutId);
   if (!workout) return '';
-  const when = missed.daysLate === 1 ? 'yesterday' : `${missed.daysLate} days ago`;
+  const after = missed.afterId && ALL_WORKOUTS.find(w => w.id === missed.afterId);
+  const label = missed.daysLate === 1 ? 'Missed yesterday' : 'Behind schedule';
   const name = escapeHtml(workoutDisplayName(workout.name));
   return `<section class="home-missed" aria-label="Missed workout">
-    <div><span class="home-label home-accent">Missed ${when}</span><h2>${name}</h2>
-    <p class="home-note">Do it today and the plan shifts ${missed.daysLate === 1 ? 'one day' : `${missed.daysLate} days`}, so nothing gets skipped. Or skip it and stay on today's schedule.</p></div>
+    <div><span class="home-label home-accent">${label}</span><h2>${name}</h2>
+    <p class="home-note">${after ? `Next after ${escapeHtml(workoutDisplayName(after.name))}. ` : ''}Do it today and the plan shifts so nothing gets skipped. Or skip it and stay on today's schedule.</p></div>
     <div class="home-missed-actions">
-      <button type="button" class="home-start home-missed-go" onclick="catchUpWorkout('${escapeHtml(missed.workoutId)}','${escapeHtml(missed.date)}')" ${state.catchUpBusy ? 'disabled' : ''}>${state.catchUpBusy ? 'Shifting plan…' : `Do ${name} today`}</button>
+      <button type="button" class="home-start home-missed-go" onclick="catchUpWorkout('${escapeHtml(missed.workoutId)}')" ${state.catchUpBusy ? 'disabled' : ''}>${state.catchUpBusy ? 'Shifting plan…' : `Do ${name} today`}</button>
       <button type="button" class="home-missed-skip" onclick="dismissMissedWorkout()" ${state.catchUpBusy ? 'disabled' : ''}>Skip it</button>
     </div>
   </section>`;
@@ -502,12 +503,12 @@ async function saveScheduleSettings(body) {
   await api.saveSettings(body);
 }
 
-async function catchUpWorkout(workoutId, missedDate) {
+async function catchUpWorkout(workoutId) {
   if (state.catchUpBusy) return;
   state.catchUpBusy = true;
   render();
   try {
-    await saveScheduleSettings(catchUpSettings(window.USER_SETTINGS || {}, missedDate, localDate()));
+    await saveScheduleSettings(catchUpSettings(window.USER_SETTINGS || {}, workoutId, localDate()));
     window.location.href = `/session?w=${encodeURIComponent(workoutId)}`;
   } catch (e) {
     console.error("[SCHEDULE] catch-up failed:", e);
