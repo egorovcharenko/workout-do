@@ -30,6 +30,7 @@ import { buildExerciseDurationHistory, estimateExerciseDurationMeta } from "@/li
 import { mergeTemplateAndSavedSet, shouldKeepRemovedWarmup } from "@/lib/legacy/exercise-history";
 import { isBeltLoadExercise } from "@/lib/legacy/belt-load";
 import { regularToBlockWorkoutId, trainingBlockHints, resolveTrainingBlockSession } from "@/lib/training-block";
+import { applyProgramBuilder, parseProgramBuilder, programWorkouts as builderProgram } from "@/lib/program-builder";
 import { mainProgramContext } from "@/lib/main-program";
 import { withFollowupLoads } from "@/lib/legacy/followup-load";
 import { withRepGuidance } from "@/lib/legacy/rep-guidance";
@@ -97,11 +98,14 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
           }
           blockContext = mainProgramContext(settings, today);
           ({ workout, block: blockContext } = resolveTrainingBlockSession(workout, blockContext, today, WORKOUTS));
+          // Builder edits (sets, reps, rest, warm-ups, supersets, exercises) apply
+          // to program workouts, including one already in progress.
+          if (workout.permanent) workout = applyProgramBuilder([workout], parseProgramBuilder(settings))[0];
           hints = trainingBlockHints(workout, allHistory, blockContext, today?.id);
         }
         setSessionWorkout(workout);
         setSessionBlock(blockContext);
-        const menu = MAIN_WORKOUTS;
+        const menu = builderProgram(settings);
         setProgramWorkouts(menu.some(w => w.id === workout.id) ? menu : [workout, ...menu]);
         // Deload status is frozen per session: an existing today-session's
         // saved state wins over the current toggle, so flipping the toggle at

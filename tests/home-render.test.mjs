@@ -10,12 +10,13 @@ import * as trainingBlock from '../lib/training-block.js';
 import { mainProgramSchedule, nextProgramWorkout } from '../lib/main-program.js';
 import { storedSessionProgress } from '../lib/legacy/session-status.js';
 import { renderLatestWorkoutRecap } from '../components/home/recap.js';
+import { programWorkouts } from '../lib/program-builder.js';
 
 function homeHarness(settings = {}, today = '2026-09-18') {
   const state = { loaded: true, history: [], lastSession: {}, measurements: [] };
   const elements = { planEditorText: { value: '' }, planEditorError: { style: {} } };
   const saves = [];
-  const context = vm.createContext({ ...shared, ...overview, ...trainingBlock, mainProgramSchedule, nextProgramWorkout, storedSessionProgress, EXERCISE_MUSCLES, cableStackMultiplier, state,
+  const context = vm.createContext({ ...shared, ...overview, ...trainingBlock, mainProgramSchedule, nextProgramWorkout, programWorkouts, storedSessionProgress, EXERCISE_MUSCLES, cableStackMultiplier, state,
     renderLatestWorkoutRecap: (history, active) => renderLatestWorkoutRecap(history, active, today),
     localDate: () => today,
     trainingBlockStatus: settings => trainingBlock.trainingBlockStatus(settings, today),

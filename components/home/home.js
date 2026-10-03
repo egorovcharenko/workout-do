@@ -6,7 +6,6 @@ import {
   workoutDisplayName,
   WORKOUTS,
   ALL_WORKOUTS,
-  MAIN_WORKOUTS,
   T,
   LEGACY_WORKOUT_NAMES,
   localDate,
@@ -26,6 +25,7 @@ import { recentActivity, latestLift, latestBody } from "./overview";
 import { storedSessionProgress } from "@/lib/legacy/session-status";
 import { nextProgramWorkout } from "@/lib/main-program";
 import { renderLatestWorkoutRecap } from "./recap";
+import { programWorkouts } from "@/lib/program-builder";
 
 function renderWorkoutMuscleMap(w) {
   const muscles = {};
@@ -413,7 +413,7 @@ function renderHome() {
   };
 
   const activeSess = state._activeSessions && state._activeSessions[0];
-  const program = MAIN_WORKOUTS;
+  const program = programWorkouts(window.USER_SETTINGS);
   const nextWorkoutId = nextProgramWorkout(state.history || [], programWorkoutNames);
   const nextW = program.find(w => w.id === nextWorkoutId) || program[0];
 
@@ -424,7 +424,8 @@ function renderHome() {
   let pct = 0;
 
   if (activeSess) {
-    const w = ALL_WORKOUTS.find(x => x.name === (LEGACY_WORKOUT_NAMES[activeSess.workout_name] || activeSess.workout_name));
+    const activeName = LEGACY_WORKOUT_NAMES[activeSess.workout_name] || activeSess.workout_name;
+    const w = program.find(x => x.name === activeName) || ALL_WORKOUTS.find(x => x.name === activeName);
     if (w) {
       const progress = storedSessionProgress(activeSess);
       expected = progress?.total ?? getExpectedSets(w);
@@ -450,7 +451,7 @@ function renderHome() {
   const hero = renderWorkoutCard(activeWorkout, true, isOngoing, logged, expected, pct);
   const remaining = orderedProgram.filter(w => w.id !== activeWorkout.id).map(w => renderWorkoutCard(w, false)).join('');
   return `<main class="home-page" style="${homeTokens()}">
-    <header class="home-header"><div><div class="home-date">${getSessionDateStr()}</div><h1>Workouts</h1></div></header>
+    <header class="home-header"><div><div class="home-date">${getSessionDateStr()}</div><h1>Workouts</h1></div><a class="home-chip" href="/builder">Edit workouts</a></header>
     ${state.loadError ? '<p role="alert" class="home-note">Your workout data could not be loaded. Reload to try again.</p>' : ''}
     ${hero}
     ${renderLatestWorkoutRecap(state.history || [], state._activeSessions || [], undefined, { bodyweightLb: window.USER_SETTINGS?.bodyweight })}
