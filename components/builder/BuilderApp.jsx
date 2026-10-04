@@ -156,23 +156,25 @@ function AddExercise({ library, existing, onPick, onClose }) {
 // Distinct hues for stacked segments, assigned by rank within each row.
 const PART_COLORS = ["#60A5FA", "#34D399", "#F472B6", "#FBBF24", "#A78BFA", "#22D3EE", "#FB923C", "#A3E635", "#F87171", "#2DD4BF", "#E879F9", "#94A3B8"];
 
-function MusclePanel({ workouts }) {
+function MusclePanel({ workouts, metric }) {
   const [open, setOpen] = useState(null);
-  const muscles = plannedWeeklyMuscleSets(workouts);
+  const reps = metric === "reps";
+  const unit = reps ? "reps" : "sets";
+  const muscles = plannedWeeklyMuscleSets(workouts, metric);
   const color = i => PART_COLORS[i % PART_COLORS.length];
-  const scale = Math.max(24, ...muscles.map(m => m.perWeek));
+  const scale = Math.max(reps ? 1 : 24, ...muscles.map(m => m.perWeek));
   const pct = v => `${Math.min(100, v / scale * 100).toFixed(2)}%`;
   return (
-    <section className="bld-card bld-muscle-card" aria-label="Weekly sets per muscle">
-      <h2 className="bld-h2">Sets per muscle · week <span className="bld-sub">by exercise · shaded = target · tap a row</span></h2>
+    <section className="bld-card bld-muscle-card" aria-label={`Weekly ${unit} per muscle`}>
+      <h2 className="bld-h2">{reps ? "Reps" : "Sets"} per muscle · week <span className="bld-sub">by exercise{reps ? "" : " · shaded = target"} · tap a row</span></h2>
       <ul className="bld-muscles">
         {muscles.map(m => (
-          <li key={m.id} className={`bld-muscle-wrap bld-${m.status}`}>
+          <li key={m.id} className={`bld-muscle-wrap${reps ? "" : ` bld-${m.status}`}`}>
             <button className="bld-muscle" aria-expanded={open === m.id} onClick={() => setOpen(open === m.id ? null : m.id)}
-              title={`${m.label}: ${m.perWeek} sets/week (target ${m.target[0]}–${m.target[1]})`}>
+              title={`${m.label}: ${m.perWeek} ${unit}/week${reps ? "" : ` (target ${m.target[0]}–${m.target[1]})`}`}>
               <span className="bld-muscle-name">{m.label}</span>
               <span className="bld-bar" aria-hidden="true">
-                <span className="bld-band" style={{ left: pct(m.target[0]), width: `calc(${pct(m.target[1])} - ${pct(m.target[0])})` }} />
+                {!reps && <span className="bld-band" style={{ left: pct(m.target[0]), width: `calc(${pct(m.target[1])} - ${pct(m.target[0])})` }} />}
                 <span className="bld-stack">
                   {m.parts.map((part, i) => (
                     <span key={part.name} title={`${part.name}: ${part.sets}`} style={{ width: pct(part.sets), background: color(i) }} />
@@ -192,7 +194,9 @@ function MusclePanel({ workouts }) {
           </li>
         ))}
       </ul>
-      <p className="bld-muted">Rotation of {MAIN_WORKOUTS.length} workouts every 6 days. Secondary muscles count partially. Number colour: amber below target, red above.</p>
+      <p className="bld-muted">{reps
+        ? "Middle of each set's rep range; sets without a range (RIR) count as 8. Secondary muscles count partially."
+        : `Rotation of ${MAIN_WORKOUTS.length} workouts every 6 days. Secondary muscles count partially. Number colour: amber below target, red above.`}</p>
     </section>
   );
 }
@@ -403,7 +407,10 @@ export default function BuilderApp() {
       })}
       </div>
 
-      <MusclePanel workouts={applied} />
+      <div className="bld-muscle-grid">
+        <MusclePanel workouts={applied} metric="sets" />
+        <MusclePanel workouts={applied} metric="reps" />
+      </div>
 
       <div className="bld-savebar">
         <span className="bld-status" role="status">{status || (dirty ? "Unsaved changes" : "All changes saved")}</span>
