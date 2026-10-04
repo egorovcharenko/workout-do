@@ -7,7 +7,7 @@ import Link from "next/link";
 import { api } from "@/lib/db/api";
 import { MAIN_WORKOUTS, estimateTemplateWorkoutDuration, workoutDisplayName } from "@/lib/legacy/shared";
 import {
-  PROGRAM_BUILDER_KEY, applyProgramBuilder, exerciseLibrary, normalizeSupersets, registerExerciseAliases,
+  PROGRAM_BUILDER_KEY, applyProgramBuilder, exerciseLibrary, normalizeEntry, normalizeSupersets, registerExerciseAliases,
   parseProgramBuilder, plannedWeeklyMuscleSets, workoutEntries,
 } from "@/lib/program-builder";
 import { baseExerciseName, variantName } from "@/lib/exercise-aliases";
@@ -22,7 +22,7 @@ function initialDraft(settings) {
   const base = defaults();
   for (const id of Object.keys(base)) {
     if (saved[id]?.name) base[id].name = saved[id].name;
-    if (Array.isArray(saved[id]?.exercises)) base[id].exercises = normalizeSupersets(saved[id].exercises);
+    if (Array.isArray(saved[id]?.exercises)) base[id].exercises = normalizeSupersets(saved[id].exercises.map(normalizeEntry));
   }
   return base;
 }
@@ -72,23 +72,25 @@ function ExerciseEditor({ entry, onChange, onRemove, onMove, onVariant, moveTarg
   })()) });
   return (
     <div className="bld-editor">
-      <div className="bld-editor-head"><span>Sets · reps</span></div>
+      <div className="bld-editor-head"><span>Sets · reps @ RIR (RIR optional)</span></div>
       {entry.sets.map((range, i) => (
-        <div className="bld-line" key={i}>
+        <div className="bld-line bld-set-line" key={i}>
           <span className="bld-idx">{i + 1}</span>
           {range ? (<>
-            <NumberField label={`Set ${i + 1} minimum reps`} value={range[0]} min={1} onChange={v => setRange(i, 0, v)} />
+            <NumberField label={`Set ${i + 1} minimum reps`} value={range[0]} min={1} width={46} onChange={v => setRange(i, 0, v)} />
             <span className="bld-dash">–</span>
-            <NumberField label={`Set ${i + 1} maximum reps`} value={range[1]} min={1} onChange={v => setRange(i, 1, v)} />
-            <span className="bld-unit">reps</span>
+            <NumberField label={`Set ${i + 1} maximum reps`} value={range[1]} min={1} width={46} onChange={v => setRange(i, 1, v)} />
           </>) : (
-            <button className="bld-text-btn" onClick={() => onChange({ ...entry, sets: entry.sets.map((r, j) => j === i ? [8, 12] : r) })}>1–2 RIR · set reps</button>
+            <button className="bld-text-btn" onClick={() => onChange({ ...entry, sets: entry.sets.map((r, j) => j === i ? [8, 12] : r) })}>Set reps</button>
           )}
+          <span className="bld-unit bld-rir-label">@</span>
+          <NumberField label={`Set ${i + 1} reps in reserve`} value={entry.rir?.[i]} min={0} width={50} placeholder="RIR"
+            onChange={v => onChange({ ...entry, rir: entry.sets.map((_, j) => j === i ? (v == null ? null : Math.min(10, Math.round(v))) : entry.rir?.[j] ?? null) })} />
           <button className="bld-x" aria-label={`Remove set ${i + 1}`} disabled={entry.sets.length <= 1}
-            onClick={() => onChange({ ...entry, sets: entry.sets.filter((_, j) => j !== i) })}>×</button>
+            onClick={() => onChange({ ...entry, sets: entry.sets.filter((_, j) => j !== i), rir: entry.sets.map((_, j) => entry.rir?.[j] ?? null).filter((_, j) => j !== i) })}>×</button>
         </div>
       ))}
-      <button className="bld-add-line" onClick={() => onChange({ ...entry, sets: [...entry.sets, entry.sets[entry.sets.length - 1]] })}>+ Set</button>
+      <button className="bld-add-line" onClick={() => onChange({ ...entry, sets: [...entry.sets, entry.sets[entry.sets.length - 1]], rir: [...entry.sets.map((_, j) => entry.rir?.[j] ?? null), entry.rir?.[entry.sets.length - 1] ?? null] })}>+ Set</button>
 
       <div className="bld-editor-head"><span>Rest between sets</span></div>
       <div className="bld-line">
@@ -126,7 +128,7 @@ function ExerciseEditor({ entry, onChange, onRemove, onMove, onVariant, moveTarg
 }
 
 function summary(entry) {
-  const ranges = entry.sets.map(r => r ? (r[0] === r[1] ? `${r[0]}` : `${r[0]}–${r[1]}`) : "RIR");
+  const ranges = entry.sets.map((r, i) => `${r ? (r[0] === r[1] ? `${r[0]}` : `${r[0]}–${r[1]}`) : "RIR"}${entry.rir?.[i] != null ? ` @${entry.rir[i]}` : ""}`);
   const unique = ranges.filter((r, i) => ranges.indexOf(r) === i);
   const warm = entry.warmups.length ? ` · ${entry.warmups.length} warm-up${entry.warmups.length > 1 ? "s" : ""}` : "";
   return `${entry.sets.length} × ${unique.join(" / ")} · ${clock(entry.rest)} rest${warm}`;
@@ -423,7 +425,7 @@ export default function BuilderApp() {
           onPick={name => {
             const base = library.get(name);
             const entry = MAIN_WORKOUTS.flatMap(w => workoutEntries(w)).find(e => e.name === name)
-              || { name, sets: [[8, 12], [8, 12], [8, 12]], rest: Math.min(base?.rest || 75, 120), warmups: [], superset: null };
+              || { name, sets: [[8, 12], [8, 12], [8, 12]], rest: Math.min(base?.rest || 75, 120), warmups: [], superset: null, rir: [null, null, null] };
             update(adding, list => [...list, { ...entry, superset: null }]);
             setAdding(null);
           }} />

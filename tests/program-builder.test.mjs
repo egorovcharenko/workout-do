@@ -80,3 +80,14 @@ test('a variant is its own exercise with the base exercise config and muscles', 
   assert.ok(chest.parts.some(part => part.name === 'Barbell Bench Press · Volume'));
   programWorkouts({});
 });
+
+test('planned RIR is optional per set and overrides the exercise default only when set', () => {
+  const entries = workoutEntries(a);
+  assert.ok(entries.every(e => e.rir.length === e.sets.length && e.rir.every(v => v === null)), 'Blank by default');
+  const legacy = entries.map(({ rir: _rir, ...rest }) => rest);
+  const [same] = applyProgramBuilder([a], { workouts: { [a.id]: { exercises: legacy } } });
+  assert.deepEqual(same.exercises.map(ex => ex.workRir), a.exercises.map(() => undefined), 'Older saves without RIR still match');
+  entries[0] = { ...entries[0], rir: [2, null, 1] };
+  const [w] = applyProgramBuilder([a], { workouts: { [a.id]: { exercises: entries } } });
+  assert.deepEqual(w.exercises[0].workRir, [2, null, 1]);
+});

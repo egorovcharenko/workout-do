@@ -97,3 +97,7 @@ html, body { background: #0B0F14; }
 .bld-variant-input { flex:1; min-width:0; height:38px; border-radius:9px; border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.04); color:var(--bld-strong); padding:0 10px; font-size:15px; outline:none; }
 .bld-variant-input:focus { border-color:var(--bld-accent-light); }
 .bld-step:disabled { opacity:.4; cursor:default; }
+.bld-rir-label { margin-left:6px; }
+.bld-set-line { flex-wrap:nowrap; gap:5px; }
+.bld-set-line .bld-x { width:28px; flex-shrink:0; }
+.bld-set-line .bld-idx { width:18px; flex-shrink:0; }
