@@ -7,9 +7,10 @@ import Link from "next/link";
 import { api } from "@/lib/db/api";
 import { MAIN_WORKOUTS, estimateTemplateWorkoutDuration, workoutDisplayName } from "@/lib/legacy/shared";
 import {
-  PROGRAM_BUILDER_KEY, applyProgramBuilder, exerciseLibrary, normalizeSupersets,
+  PROGRAM_BUILDER_KEY, applyProgramBuilder, exerciseLibrary, normalizeSupersets, registerExerciseAliases,
   parseProgramBuilder, plannedWeeklyMuscleSets, workoutEntries,
 } from "@/lib/program-builder";
+import { baseExerciseName, variantName } from "@/lib/exercise-aliases";
 
 const DEFAULT_NAMES = Object.fromEntries(MAIN_WORKOUTS.map(w => [w.id, workoutDisplayName(w.name)]));
 const defaults = () => Object.fromEntries(MAIN_WORKOUTS.map(w => [w.id, { name: DEFAULT_NAMES[w.id], exercises: workoutEntries(w) }]));
@@ -26,8 +27,9 @@ function initialDraft(settings) {
   return base;
 }
 
-// Only workouts that differ from the code program are stored.
-function toSaved(draft) {
+// Only workouts that differ from the code program are stored, and only
+// variants some workout still uses.
+function toSaved(draft, aliases = {}) {
   const base = defaults();
   const workouts = {};
   for (const [id, w] of Object.entries(draft)) {
@@ -37,7 +39,9 @@ function toSaved(draft) {
     if (JSON.stringify(w.exercises) !== JSON.stringify(base[id].exercises)) edit.exercises = w.exercises;
     if (Object.keys(edit).length) workouts[id] = edit;
   }
-  return { version: 1, workouts };
+  const used = new Set(Object.values(draft).flatMap(w => w.exercises.map(e => e.name)));
+  const kept = Object.fromEntries(Object.entries(aliases).filter(([alias]) => used.has(alias)));
+  return { version: 1, workouts, ...(Object.keys(kept).length ? { aliases: kept } : {}) };
 }
 
 function NumberField({ value, onChange, label, step = 1, min = 0, width = 52, placeholder = "" }) {
@@ -48,7 +52,21 @@ function NumberField({ value, onChange, label, step = 1, min = 0, width = 52, pl
   );
 }
 
-function ExerciseEditor({ entry, onChange, onRemove, onMove, moveTargets }) {
+function VariantField({ entry, onVariant }) {
+  const [label, setLabel] = useState("");
+  const add = () => { if (label.trim() && onVariant(label.trim())) setLabel(""); };
+  return (<>
+    <div className="bld-editor-head"><span>Variant · own history and weights</span></div>
+    <div className="bld-line">
+      <input className="bld-variant-input" aria-label="Variant name" placeholder="e.g. Volume, Heavy" maxLength={24} value={label}
+        onChange={e => setLabel(e.target.value)} onKeyDown={e => e.key === "Enter" && add()} />
+      <button className="bld-step" disabled={!label.trim()} onClick={add}>Add</button>
+    </div>
+    {label.trim() && <p className="bld-muted">Adds “{variantName(entry.name, label)}” below.</p>}
+  </>);
+}
+
+function ExerciseEditor({ entry, onChange, onRemove, onMove, onVariant, moveTargets }) {
   const setRange = (i, k, v) => onChange({ ...entry, sets: entry.sets.map((r, j) => j !== i ? r : (() => {
     const next = [...(r || [8, 12])]; next[k] = v ?? 0; if (k === 0 && next[1] < next[0]) next[1] = next[0]; return next;
   })()) });
@@ -93,6 +111,8 @@ function ExerciseEditor({ entry, onChange, onRemove, onMove, moveTargets }) {
         </div>
       ))}
       <button className="bld-add-line" onClick={() => onChange({ ...entry, warmups: [...entry.warmups, { ...(entry.warmups[entry.warmups.length - 1] || { weight: null, reps: 5 }) }] })}>+ Warm-up</button>
+
+      <VariantField entry={entry} onVariant={onVariant} />
 
       <div className="bld-editor-foot">
         <select className="bld-select" aria-label="Move to workout" value="" onChange={e => e.target.value && onMove(e.target.value)}>
@@ -179,6 +199,7 @@ function MusclePanel({ workouts }) {
 
 export default function BuilderApp() {
   const [draft, setDraft] = useState(null);
+  const [aliases, setAliases] = useState({});
   const [savedJson, setSavedJson] = useState(null);
   const [open, setOpen] = useState(null); // "workoutId:index"
   const [adding, setAdding] = useState(null);
@@ -186,21 +207,24 @@ export default function BuilderApp() {
   const [drag, setDrag] = useState(null); // { from: {w, i}, name, x, y, over: {w, i} }
   const dragRef = useRef(null);
   const columnsRef = useRef(null);
-  const library = useMemo(() => exerciseLibrary(), []);
+  const library = useMemo(() => { registerExerciseAliases(aliases); return exerciseLibrary(); }, [aliases]);
 
   useEffect(() => {
     api.settings().then(settings => {
       window.USER_SETTINGS = settings;
       const d = initialDraft(settings);
+      const savedAliases = parseProgramBuilder(settings)?.aliases || {};
+      registerExerciseAliases(savedAliases);
+      setAliases(savedAliases);
       setDraft(d);
-      setSavedJson(JSON.stringify(toSaved(d)));
+      setSavedJson(JSON.stringify(toSaved(d, savedAliases)));
     }).catch(() => setStatus("Could not load your workouts. Reload to try again."));
   }, []);
 
   const applied = useMemo(() => draft
-    ? applyProgramBuilder(MAIN_WORKOUTS, { workouts: Object.fromEntries(Object.entries(draft).map(([id, w]) => [id, { exercises: w.exercises }])) })
-    : [], [draft]);
-  const dirty = draft && JSON.stringify(toSaved(draft)) !== savedJson;
+    ? applyProgramBuilder(MAIN_WORKOUTS, { aliases, workouts: Object.fromEntries(Object.entries(draft).map(([id, w]) => [id, { exercises: w.exercises }])) })
+    : [], [draft, aliases]);
+  const dirty = draft && JSON.stringify(toSaved(draft, aliases)) !== savedJson;
 
   useEffect(() => {
     if (!dirty) return undefined;
@@ -284,7 +308,7 @@ export default function BuilderApp() {
 
   const save = async () => {
     setStatus("Saving…");
-    const saved = toSaved(draft);
+    const saved = toSaved(draft, aliases);
     const value = JSON.stringify(saved);
     try {
       await api.saveSettings({ [PROGRAM_BUILDER_KEY]: value });
@@ -346,6 +370,18 @@ export default function BuilderApp() {
                       <ExerciseEditor entry={entry} moveTargets={moveTargets}
                         onChange={nextEntry => update(base.id, list => list.map((e, j) => j === i ? nextEntry : e))}
                         onRemove={() => { setOpen(null); update(base.id, list => list.filter((_, j) => j !== i)); }}
+                        onVariant={label => {
+                          const name = variantName(entry.name, label);
+                          if (library.has(name) || Object.values(draft).some(x => x.exercises.some(e => e.name === name))) {
+                            setStatus(`${name} already exists.`);
+                            return false;
+                          }
+                          setAliases(a => ({ ...a, [name]: baseExerciseName(entry.name) }));
+                          update(base.id, list => [...list.slice(0, i + 1), { ...entry, name, superset: null }, ...list.slice(i + 1)]);
+                          setOpen(`${base.id}:${i + 1}`);
+                          setStatus(`Added ${name}. It keeps its own weights and history.`);
+                          return true;
+                        }}
                         onMove={to => { setOpen(null); move({ w: base.id, i }, { w: to, i: draft[to].exercises.length }); }} />
                     )}
                     {next && (

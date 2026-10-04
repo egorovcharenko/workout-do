@@ -8,6 +8,7 @@ import { effectiveExerciseWeight } from "@/lib/legacy/cable-stack";
 // screen's batch history sync (and node tests) can share it without pulling
 // in React. Re-exported below to keep this module's public surface intact.
 import { SL_EXERCISE_MAP } from "@/lib/legacy/strength-level-sync";
+import { baseExerciseName } from "@/lib/exercise-aliases";
 
 // ─── file: workout-session-strengthlevel.js ───
 
@@ -62,7 +63,7 @@ function buildStrengthLevelPayload(exercises, workoutName, sessionDate) {
     if (ex.skipped) return;
     const done = (ex.sets || []).filter(s => s.completed && parseInt(s.reps) > 0);
     if (!done.length) return;
-    const id = SL_EXERCISE_MAP[ex.name];
+    const id = SL_EXERCISE_MAP[baseExerciseName(ex.name)];
     if (!id) {
       if (!unmapped.includes(ex.name)) unmapped.push(ex.name);
       return;

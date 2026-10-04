@@ -57,3 +57,26 @@ test('weekly muscle sets follow the planned sets', () => {
   const after = plannedWeeklyMuscleSets(applyProgramBuilder(MAIN_WORKOUTS, { workouts: { [acc2.id]: { exercises: entries } } })).find(m => m.id === 'calves').perWeek;
   assert.ok(after > before);
 });
+
+test('a variant is its own exercise with the base exercise config and muscles', async () => {
+  const { findExerciseConfig } = await import('../lib/legacy/shared.js');
+  const { EXERCISE_MUSCLES } = await import('../lib/legacy/standards.js');
+  const { isBeltLoadExercise } = await import('../lib/legacy/belt-load.js');
+  const bench = workoutEntries(a).find(e => e.name === 'Barbell Bench Press');
+  const volume = { ...bench, name: 'Barbell Bench Press · Volume', sets: [[10, 12], [10, 12]] };
+  const dips = { ...workoutEntries(acc1).find(e => e.name === 'Dips'), name: 'Dips · Heavy' };
+  const [w] = programWorkouts({ program_builder: JSON.stringify({
+    aliases: { 'Barbell Bench Press · Volume': 'Barbell Bench Press', 'Dips · Heavy': 'Dips' },
+    workouts: { [a.id]: { exercises: [...workoutEntries(a), volume, dips] } } }) });
+  const ex = w.exercises.find(e => e.name === 'Barbell Bench Press · Volume');
+  assert.equal(ex.equipment, 'barbell');
+  assert.equal(ex.warmups, 3);
+  assert.deepEqual(ex.workRepRanges, [[10, 12], [10, 12]]);
+  assert.equal(w.exercises.find(e => e.name === 'Barbell Bench Press').sets, 4, 'The original is unchanged');
+  assert.equal(EXERCISE_MUSCLES['Barbell Bench Press · Volume'], EXERCISE_MUSCLES['Barbell Bench Press']);
+  assert.equal(findExerciseConfig('Dips · Heavy').name, 'Dips · Heavy');
+  assert.ok(isBeltLoadExercise('Dips · Heavy'));
+  const chest = plannedWeeklyMuscleSets([w]).find(m => m.id === 'chest');
+  assert.ok(chest.parts.some(part => part.name === 'Barbell Bench Press · Volume'));
+  programWorkouts({});
+});

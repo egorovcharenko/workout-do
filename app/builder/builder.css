@@ -92,3 +92,6 @@ html, body { background: #0B0F14; }
 .bld-parts span { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .bld-parts b { font:600 13px var(--suite-font-mono),ui-monospace,monospace; color:var(--bld-text); }
 @media (max-width: 520px) { .bld-parts { margin-left:0; } }
+.bld-variant-input { flex:1; min-width:0; height:38px; border-radius:9px; border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.04); color:var(--bld-strong); padding:0 10px; font-size:15px; outline:none; }
+.bld-variant-input:focus { border-color:var(--bld-accent-light); }
+.bld-step:disabled { opacity:.4; cursor:default; }
