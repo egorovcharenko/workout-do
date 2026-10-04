@@ -61,13 +61,13 @@ function displayPrescription(w) {
   return deload ? { ...w, exercises: w.exercises.map(ex => ({ ...ex, sets: 1 })) } : w;
 }
 
-function renderWorkoutCard(w, isSuggested, isOngoing, logged, expected, pct) {
+function renderWorkoutCard(w, isSuggested, isOngoing, logged, expected, pct, badge = '') {
   const prescription = displayPrescription(w);
   const minutes = Math.round(estimateTemplateWorkoutDuration(prescription) / 60);
   if (!isSuggested) {
     const lead = w.exercises.flatMap(ex => ex.supersetExercises || [ex]).slice(0, 2).map(ex => ex.name).join(' · ');
     return `<a class="home-then-row" href="/session?w=${encodeURIComponent(w.id)}">
-      <span class="home-row-copy"><strong>${escapeHtml(workoutDisplayName(w.name))}</strong><span class="home-lead">${escapeHtml(lead)}</span></span>
+      <span class="home-row-copy"><strong>${escapeHtml(workoutDisplayName(w.name))}${badge ? ` <span class="home-row-badge">${escapeHtml(badge)}</span>` : ''}</strong><span class="home-lead">${escapeHtml(lead)}</span></span>
       <span class="home-duration">~${minutes} min</span></a>`;
   }
   const rowHTML = ex => {
@@ -438,18 +438,10 @@ function renderHome() {
     }
   }
 
-  const activeIdx = program.findIndex(w => w.id === activeWorkout.id);
-  const orderedProgram = [];
-  if (activeIdx !== -1) {
-    for (let i = 0; i < program.length; i++) {
-      orderedProgram.push(program[(activeIdx + i) % program.length]);
-    }
-  } else {
-    orderedProgram.push(...program);
-  }
-
   const hero = renderWorkoutCard(activeWorkout, true, isOngoing, logged, expected, pct);
-  const remaining = orderedProgram.filter(w => w.id !== activeWorkout.id).map(w => renderWorkoutCard(w, false)).join('');
+  // Every program workout, in rotation order; the one in the card above is marked.
+  const remaining = program.map(w => renderWorkoutCard(w, false, false, 0, 0, 0,
+    w.id === activeWorkout.id ? (isOngoing ? 'In progress' : 'Up next') : '')).join('');
   return `<main class="home-page" style="${homeTokens()}">
     <header class="home-header"><div><div class="home-date">${getSessionDateStr()}</div><h1>Workouts</h1></div><a class="home-chip" href="/builder">Edit workouts</a></header>
     ${state.loadError ? '<p role="alert" class="home-note">Your workout data could not be loaded. Reload to try again.</p>' : ''}

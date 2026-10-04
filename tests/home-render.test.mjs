@@ -40,7 +40,8 @@ test('home keeps one primary workout, renders the remaining rotation, and suppor
   assert.equal((html.match(/class="home-start"/g) || []).length, 1);
   assert.match(html, /Start Squat Focus/);
   assert.ok(html.indexOf('class="home-start"') < html.indexOf('class="home-exercises"'), 'The start button is above the exercise list');
-  assert.equal((html.match(/<a class="home-then-row"/g) || []).length, shared.MAIN_WORKOUTS.length - 1);
+  assert.equal((html.match(/<a class="home-then-row"/g) || []).length, shared.MAIN_WORKOUTS.length, 'All workouts are listed');
+  assert.equal((html.match(/home-row-badge">Up next/g) || []).length, 1);
   assert.match(html, /0 sessions/);
   assert.doesNotMatch(html, /undefined|NaN/);
 });
@@ -112,7 +113,7 @@ test('permanent program has no block controls, expiry or rest-day cards', () => 
     const html = homeHarness(blockSettings,date).html();
     assert.match(html,/Start Squat Focus/);
     assert.doesNotMatch(html,/4-week|Day .* of 28|Regular program|Schedule block|End block|Start date|Cancel block|Rest recommended|DONE FOR TODAY/);
-    assert.equal((html.match(/<a class="home-then-row"/g)||[]).length,3,'The other workouts stay available');
+    assert.equal((html.match(/<a class="home-then-row"/g)||[]).length,4,'All workouts stay available');
   }
 });
 

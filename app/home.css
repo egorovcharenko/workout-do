@@ -128,3 +128,4 @@ html, body { background: #0B0F14; }
 body:has(.home-scrim) { overflow:hidden; }
 #app .home-details button { min-width:44px; min-height:44px; }
 #app .home-details input { min-height:44px; }
+.home-row-badge { font:600 11.5px var(--suite-font-sans); color:var(--home-accentLight); background:rgba(59,130,246,.14); padding:2px 7px; border-radius:99px; vertical-align:2px; margin-left:4px; }
