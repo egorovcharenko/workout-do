@@ -133,26 +133,46 @@ function AddExercise({ library, existing, onPick, onClose }) {
   );
 }
 
+// Distinct hues for stacked segments, assigned by rank within each row.
+const PART_COLORS = ["#60A5FA", "#34D399", "#F472B6", "#FBBF24", "#A78BFA", "#22D3EE", "#FB923C", "#A3E635", "#F87171", "#2DD4BF", "#E879F9", "#94A3B8"];
+
 function MusclePanel({ workouts }) {
+  const [open, setOpen] = useState(null);
   const muscles = plannedWeeklyMuscleSets(workouts);
+  const color = i => PART_COLORS[i % PART_COLORS.length];
   const scale = Math.max(24, ...muscles.map(m => m.perWeek));
-  const pct = v => `${Math.min(100, v / scale * 100).toFixed(1)}%`;
+  const pct = v => `${Math.min(100, v / scale * 100).toFixed(2)}%`;
   return (
-    <section className="bld-card" aria-label="Weekly sets per muscle">
-      <h2 className="bld-h2">Sets per muscle · week <span className="bld-sub">planned · shaded = target</span></h2>
+    <section className="bld-card bld-muscle-card" aria-label="Weekly sets per muscle">
+      <h2 className="bld-h2">Sets per muscle · week <span className="bld-sub">by exercise · shaded = target · tap a row</span></h2>
       <ul className="bld-muscles">
         {muscles.map(m => (
-          <li key={m.id} className={`bld-muscle bld-${m.status}`} title={`${m.label}: ${m.perWeek} sets/week (target ${m.target[0]}–${m.target[1]})`}>
-            <span className="bld-muscle-name">{m.label}</span>
-            <span className="bld-bar" aria-hidden="true">
-              <span className="bld-band" style={{ left: pct(m.target[0]), width: `calc(${pct(m.target[1])} - ${pct(m.target[0])})` }} />
-              <span className="bld-fill" style={{ width: pct(m.perWeek) }} />
-            </span>
-            <span className="bld-muscle-value">{m.perWeek}</span>
+          <li key={m.id} className={`bld-muscle-wrap bld-${m.status}`}>
+            <button className="bld-muscle" aria-expanded={open === m.id} onClick={() => setOpen(open === m.id ? null : m.id)}
+              title={`${m.label}: ${m.perWeek} sets/week (target ${m.target[0]}–${m.target[1]})`}>
+              <span className="bld-muscle-name">{m.label}</span>
+              <span className="bld-bar" aria-hidden="true">
+                <span className="bld-band" style={{ left: pct(m.target[0]), width: `calc(${pct(m.target[1])} - ${pct(m.target[0])})` }} />
+                <span className="bld-stack">
+                  {m.parts.map((part, i) => (
+                    <span key={part.name} title={`${part.name}: ${part.sets}`} style={{ width: pct(part.sets), background: color(i) }} />
+                  ))}
+                </span>
+              </span>
+              <span className="bld-muscle-value">{m.perWeek}</span>
+            </button>
+            {open === m.id && (
+              <ul className="bld-parts">
+                {m.parts.map((part, i) => (
+                  <li key={part.name}><i style={{ background: color(i) }} /><span>{part.name}</span><b>{part.sets}</b></li>
+                ))}
+                {!m.parts.length && <li className="bld-muted">No exercises hit this muscle.</li>}
+              </ul>
+            )}
           </li>
         ))}
       </ul>
-      <p className="bld-muted">Rotation of {MAIN_WORKOUTS.length} workouts every 6 days. Secondary muscles count partially.</p>
+      <p className="bld-muted">Rotation of {MAIN_WORKOUTS.length} workouts every 6 days. Secondary muscles count partially. Number colour: amber below target, red above.</p>
     </section>
   );
 }
@@ -165,6 +185,7 @@ export default function BuilderApp() {
   const [status, setStatus] = useState("");
   const [drag, setDrag] = useState(null); // { from: {w, i}, name, x, y, over: {w, i} }
   const dragRef = useRef(null);
+  const columnsRef = useRef(null);
   const library = useMemo(() => exerciseLibrary(), []);
 
   useEffect(() => {
@@ -234,6 +255,9 @@ export default function BuilderApp() {
     dragRef.current = { ...dragRef.current, x: e.clientX, y: e.clientY, over };
     setDrag(dragRef.current);
     if (e.clientY < 60) window.scrollBy(0, -12); else if (e.clientY > window.innerHeight - 60) window.scrollBy(0, 12);
+    // Columns scroll sideways on narrow screens: drag to an edge to reach the next one.
+    const cols = columnsRef.current;
+    if (cols) { const r = cols.getBoundingClientRect(); if (e.clientX < r.left + 40) cols.scrollBy(-14, 0); else if (e.clientX > r.right - 40) cols.scrollBy(14, 0); }
   };
   const endDrag = () => {
     const state = dragRef.current;
@@ -281,6 +305,7 @@ export default function BuilderApp() {
         <h1>Workout builder</h1>
       </header>
 
+      <div className="bld-columns" ref={columnsRef}>
       {MAIN_WORKOUTS.map((base, wIdx) => {
         const w = draft[base.id];
         const minutes = Math.round(estimateTemplateWorkoutDuration(applied[wIdx]) / 60);
@@ -340,6 +365,7 @@ export default function BuilderApp() {
           </section>
         );
       })}
+      </div>
 
       <MusclePanel workouts={applied} />
 

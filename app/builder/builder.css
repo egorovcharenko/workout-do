@@ -1,7 +1,7 @@
 :root { color-scheme: dark; }
 html, body { background: #0B0F14; }
 .bld-page { --bld-text:#E5E7EB; --bld-strong:#F3F4F6; --bld-muted:#9CA3AF; --bld-faint:#6B7280; --bld-accent:#3B82F6; --bld-accent-light:#60A5FA; --bld-bands:#C084FC; --bld-red:#F87171; --bld-amber:#FBBF24; --bld-green:#34D399;
-  max-width:640px; margin:0 auto; padding:18px 16px 110px; display:flex; flex-direction:column; gap:18px; color:var(--bld-text); font-family:var(--suite-font-sans),system-ui,sans-serif; min-height:100vh; }
+  max-width:1680px; margin:0 auto; padding:18px 16px 110px; display:flex; flex-direction:column; gap:18px; color:var(--bld-text); font-family:var(--suite-font-sans),system-ui,sans-serif; min-height:100vh; }
 .bld-page * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 .bld-page button, .bld-page input, .bld-page select { font-family:inherit; }
 .bld-page h1, .bld-page h2, .bld-page p { margin:0; }
@@ -54,17 +54,14 @@ html, body { background: #0B0F14; }
 .bld-select { height:40px; border-radius:9px; border:1px solid rgba(255,255,255,.1); background:#111827; color:var(--bld-text); padding:0 10px; font-size:14px; }
 .bld-danger { height:40px; border:0; border-radius:9px; background:rgba(248,113,113,.1); color:var(--bld-red); padding:0 12px; font-size:14px; font-weight:650; cursor:pointer; }
 .bld-muscles { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:7px; }
-.bld-muscle { display:grid; grid-template-columns:118px 1fr 40px; align-items:center; gap:10px; font-size:13.5px; }
+.bld-muscle { display:grid; grid-template-columns:118px 1fr 40px; align-items:center; gap:10px; font-size:13.5px; width:100%; min-height:30px; border:0; background:transparent; color:inherit; padding:0; text-align:left; cursor:pointer; font-family:inherit; }
 .bld-muscle-name { color:var(--bld-text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.bld-bar { position:relative; height:10px; border-radius:99px; background:rgba(255,255,255,.05); overflow:hidden; }
+.bld-bar { position:relative; height:14px; border-radius:99px; background:rgba(255,255,255,.05); overflow:hidden; }
 .bld-band { position:absolute; top:0; bottom:0; background:rgba(52,211,153,.16); }
-.bld-fill { position:absolute; left:0; top:3px; bottom:3px; border-radius:99px; background:var(--bld-accent); }
-.bld-low .bld-fill { background:var(--bld-amber); }
-.bld-high .bld-fill { background:var(--bld-red); }
 .bld-muscle-value { text-align:right; font:600 13.5px var(--suite-font-mono),ui-monospace,monospace; color:var(--bld-muted); }
 .bld-low .bld-muscle-value { color:var(--bld-amber); }
 .bld-high .bld-muscle-value { color:var(--bld-red); }
-.bld-savebar { position:fixed; left:0; right:0; bottom:0; z-index:20; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px max(16px, calc((100vw - 640px) / 2 + 16px)) calc(12px + env(safe-area-inset-bottom)); background:rgba(11,15,20,.78); backdrop-filter:blur(18px) saturate(1.4); -webkit-backdrop-filter:blur(18px) saturate(1.4); border-top:1px solid rgba(255,255,255,.07); }
+.bld-savebar { position:fixed; left:0; right:0; bottom:0; z-index:20; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px max(16px, calc((100vw - 1680px) / 2 + 16px)) calc(12px + env(safe-area-inset-bottom)); background:rgba(11,15,20,.78); backdrop-filter:blur(18px) saturate(1.4); -webkit-backdrop-filter:blur(18px) saturate(1.4); border-top:1px solid rgba(255,255,255,.07); }
 .bld-status { font-size:13.5px; color:var(--bld-muted); min-width:0; }
 .bld-save { min-height:46px; min-width:110px; border:0; border-radius:12px; background:var(--bld-accent); color:white; font-size:16px; font-weight:700; cursor:pointer; box-shadow:0 10px 26px -12px rgba(59,130,246,.95); }
 .bld-save:disabled { background:rgba(255,255,255,.07); color:var(--bld-faint); box-shadow:none; cursor:default; }
@@ -76,3 +73,22 @@ html, body { background: #0B0F14; }
 .bld-sheet-list { overflow-y:auto; display:flex; flex-direction:column; }
 .bld-pick { text-align:left; min-height:48px; border:0; border-bottom:1px solid rgba(255,255,255,.05); background:transparent; color:var(--bld-text); font-size:15px; padding:0 4px; cursor:pointer; }
 .bld-pick:disabled { color:var(--bld-faint); cursor:default; }
+
+/* One column per workout: side by side on wide screens, swipeable on phones. */
+.bld-columns { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(320px, 1fr); gap:12px; align-items:start; overflow-x:auto; scroll-snap-type:x mandatory; scroll-padding:0 16px; margin:0 -16px; padding:0 16px 6px; overscroll-behavior-x:contain; }
+.bld-columns > .bld-workout { scroll-snap-align:start; min-width:0; }
+.bld-columns .bld-editor { margin-left:0; }
+.bld-columns .bld-link { margin-left:36px; }
+.bld-muscle-card { width:100%; max-width:900px; }
+@media (max-width: 720px) { .bld-columns { grid-auto-columns:86%; } }
+.bld-stack { position:absolute; left:0; top:3px; bottom:3px; right:0; display:flex; gap:1px; }
+.bld-stack > span { height:100%; flex-shrink:0; }
+.bld-stack > span:first-child { border-radius:99px 0 0 99px; }
+.bld-stack > span:last-child { border-radius:0 99px 99px 0; }
+.bld-stack > span:only-child { border-radius:99px; }
+.bld-parts { list-style:none; margin:6px 0 10px 128px; padding:0; display:flex; flex-direction:column; gap:4px; }
+.bld-parts li { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--bld-muted); }
+.bld-parts i { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
+.bld-parts span { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.bld-parts b { font:600 13px var(--suite-font-mono),ui-monospace,monospace; color:var(--bld-text); }
+@media (max-width: 520px) { .bld-parts { margin-left:0; } }
