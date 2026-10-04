@@ -183,6 +183,10 @@ function useWorkoutActions({
       const restKind = nextActive.s.kind === "warmup" ? "warmup" : "work";
       const total = restKind === "warmup" ? 30 : Math.min(ex.rest || 90, MAX_REST_SEC);
       setRest({ total, left: total, endAt: Date.now() + total * 1000, eIdx, sIdx, kind: restKind, paused: false });
+    } else if (ex.superset && ex.supersetTransition > 0 && nextActive && nextActive.e.superset === ex.superset) {
+      // Builder supersets: a short transition to the partner, full rest after the round.
+      const total = ex.supersetTransition;
+      setRest({ total, left: total, endAt: Date.now() + total * 1000, eIdx, sIdx, kind: "work", paused: false });
     } else {
       setRest(null);
     }

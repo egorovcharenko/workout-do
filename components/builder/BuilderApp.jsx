@@ -7,7 +7,7 @@ import Link from "next/link";
 import { api } from "@/lib/db/api";
 import { MAIN_WORKOUTS, estimateTemplateWorkoutDuration, workoutDisplayName } from "@/lib/legacy/shared";
 import {
-  PROGRAM_BUILDER_KEY, applyProgramBuilder, exerciseLibrary, normalizeEntry, normalizeSupersets, registerExerciseAliases,
+  DEFAULT_SUPERSET_TRANSITION, PROGRAM_BUILDER_KEY, applyProgramBuilder, exerciseLibrary, normalizeEntry, normalizeSupersets, registerExerciseAliases,
   parseProgramBuilder, plannedWeeklyMuscleSets, workoutEntries,
 } from "@/lib/program-builder";
 import { baseExerciseName, variantName } from "@/lib/exercise-aliases";
@@ -92,12 +92,20 @@ function ExerciseEditor({ entry, onChange, onRemove, onMove, onVariant, moveTarg
       ))}
       <button className="bld-add-line" onClick={() => onChange({ ...entry, sets: [...entry.sets, entry.sets[entry.sets.length - 1]], rir: [...entry.sets.map((_, j) => entry.rir?.[j] ?? null), entry.rir?.[entry.sets.length - 1] ?? null] })}>+ Set</button>
 
-      <div className="bld-editor-head"><span>Rest between sets</span></div>
+      <div className="bld-editor-head"><span>{entry.superset ? "Rest after each round · whole superset" : "Rest between sets"}</span></div>
       <div className="bld-line">
         <button className="bld-step" aria-label="Less rest" onClick={() => onChange({ ...entry, rest: Math.max(15, entry.rest - 15) })}>−15s</button>
         <span className="bld-rest">{clock(entry.rest)}</span>
         <button className="bld-step" aria-label="More rest" onClick={() => onChange({ ...entry, rest: Math.min(600, entry.rest + 15) })}>+15s</button>
       </div>
+      {entry.superset && (<>
+        <div className="bld-editor-head"><span>Between exercises in the superset</span></div>
+        <div className="bld-line">
+          <button className="bld-step" aria-label="Shorter transition" onClick={() => onChange({ ...entry, transition: Math.max(0, transitionOf(entry) - 5) })}>−5s</button>
+          <span className="bld-rest">{clock(transitionOf(entry))}</span>
+          <button className="bld-step" aria-label="Longer transition" onClick={() => onChange({ ...entry, transition: Math.min(180, transitionOf(entry) + 5) })}>+5s</button>
+        </div>
+      </>)}
 
       <div className="bld-editor-head"><span>Warm-ups</span></div>
       {entry.warmups.map((w, i) => (
@@ -127,11 +135,17 @@ function ExerciseEditor({ entry, onChange, onRemove, onMove, onVariant, moveTarg
   );
 }
 
-function summary(entry) {
+const transitionOf = entry => entry.transition ?? DEFAULT_SUPERSET_TRANSITION;
+
+// In a superset only the last exercise of a round rests; the others hand
+// straight over to the next exercise after a short transition.
+function summary(entry, next) {
   const ranges = entry.sets.map((r, i) => `${r ? (r[0] === r[1] ? `${r[0]}` : `${r[0]}–${r[1]}`) : "RIR"}${entry.rir?.[i] != null ? ` @${entry.rir[i]}` : ""}`);
   const unique = ranges.filter((r, i) => ranges.indexOf(r) === i);
   const warm = entry.warmups.length ? ` · ${entry.warmups.length} warm-up${entry.warmups.length > 1 ? "s" : ""}` : "";
-  return `${entry.sets.length} × ${unique.join(" / ")} · ${clock(entry.rest)} rest${warm}`;
+  const rest = !entry.superset ? `${clock(entry.rest)} rest`
+    : next?.superset === entry.superset ? `${clock(transitionOf(entry))} → next` : `${clock(entry.rest)} rest after round`;
+  return `${entry.sets.length} × ${unique.join(" / ")} · ${rest}${warm}`;
 }
 
 function AddExercise({ library, existing, onPick, onClose }) {
@@ -308,8 +322,12 @@ export default function BuilderApp() {
       return list.map((e, j) => j > i && e.superset === a.superset ? { ...e, superset: tail } : e);
     }
     const group = a.superset || b.superset || newGroupId();
-    return list.map((e, j) => (j === i || j === i + 1 || (e.superset && (e.superset === a.superset || e.superset === b.superset)))
-      ? { ...e, superset: group } : e);
+    const joins = (e, j) => j === i || j === i + 1 || (e.superset && (e.superset === a.superset || e.superset === b.superset));
+    const members = list.filter(joins);
+    // One rest after each round (the longest of the two) and a short transition.
+    const rest = Math.max(...members.map(e => e.rest));
+    const transition = members.find(e => e.transition != null)?.transition ?? DEFAULT_SUPERSET_TRANSITION;
+    return list.map((e, j) => joins(e, j) ? { ...e, superset: group, rest, transition } : e);
   });
 
   const save = async () => {
@@ -365,7 +383,7 @@ export default function BuilderApp() {
                       <button className="bld-handle" aria-label={`Drag ${entry.name}`} onPointerDown={e => startDrag(e, base.id, i)}>⋮⋮</button>
                       <button className="bld-row-main" aria-expanded={open === key} onClick={() => setOpen(open === key ? null : key)}>
                         <span className="bld-ex-name">{entry.name}</span>
-                        <span className="bld-ex-meta">{summary(entry)}</span>
+                        <span className="bld-ex-meta">{summary(entry, next)}</span>
                       </button>
                       <span className="bld-order">
                         <button aria-label="Move up" disabled={i === 0} onClick={() => move({ w: base.id, i }, { w: base.id, i: i - 1 })}>↑</button>
@@ -374,7 +392,9 @@ export default function BuilderApp() {
                     </div>
                     {open === key && (
                       <ExerciseEditor entry={entry} moveTargets={moveTargets}
-                        onChange={nextEntry => update(base.id, list => list.map((e, j) => j === i ? nextEntry : e))}
+                        onChange={nextEntry => update(base.id, list => list.map((e, j) => j === i ? nextEntry
+                          // Round rest and transition belong to the whole superset.
+                          : nextEntry.superset && e.superset === nextEntry.superset ? { ...e, rest: nextEntry.rest, transition: nextEntry.transition } : e))}
                         onRemove={() => { setOpen(null); update(base.id, list => list.filter((_, j) => j !== i)); }}
                         onVariant={label => {
                           const name = variantName(entry.name, label);

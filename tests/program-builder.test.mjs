@@ -91,3 +91,17 @@ test('planned RIR is optional per set and overrides the exercise default only wh
   const [w] = applyProgramBuilder([a], { workouts: { [a.id]: { exercises: entries } } });
   assert.deepEqual(w.exercises[0].workRir, [2, null, 1]);
 });
+
+test('a superset rests once per round with a short transition between partners', () => {
+  const entries = workoutEntries(a);
+  const plain = applyProgramBuilder([a], { workouts: { [a.id]: { exercises: entries } } })[0];
+  const linked = entries.map((e, i) => i === 3 || i === 4 ? { ...e, superset: 'x', rest: 120 } : e);
+  const [w] = applyProgramBuilder([a], { workouts: { [a.id]: { exercises: linked } } });
+  assert.deepEqual(w.exercises.slice(3).map(ex => ex.supersetTransition), [20, 20]);
+  assert.equal(w.exercises[0].supersetTransition, undefined);
+  // 3 rounds: 2 round rests of 120 s + 3 transitions of 20 s instead of 5 full rests.
+  assert.ok(estimateTemplateWorkoutDuration(w) < estimateTemplateWorkoutDuration(plain));
+  const [slow] = applyProgramBuilder([a], { workouts: { [a.id]: { exercises: linked.map((e, i) => i > 2 ? { ...e, transition: 60 } : e) } } });
+  assert.equal(estimateTemplateWorkoutDuration(slow) - estimateTemplateWorkoutDuration(w), 3 * 40);
+  assert.equal(normalizeSupersets([{ name: 'a', superset: 'x', transition: 20 }])[0].transition, undefined);
+});
