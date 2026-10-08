@@ -1,3 +1,5 @@
+import * as volume from '../lib/exercise-volume.js';
+import * as volumeChart from '../lib/volume-sparkline.js';
 import * as shared from "../lib/legacy/shared.js";
 import * as recap1rm from "../lib/legacy/recap-1rm.js";
 import test from 'node:test';
@@ -127,7 +129,7 @@ function loadComponent(path, react = React) {
     jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true,
   } }).outputText;
   const dependencies = { '@/lib/legacy/shared': shared, react, 'react/jsx-runtime': jsxRuntime,
-    '@/lib/legacy/workout-recap': recap, '@/lib/legacy/recap-1rm': recap1rm, './StrengthLevelUpload': { StrengthLevelUpload: () => null } };
+    '@/lib/exercise-volume': volume, '@/lib/volume-sparkline': volumeChart, '@/lib/legacy/workout-recap': recap, '@/lib/legacy/recap-1rm': recap1rm, './StrengthLevelUpload': { StrengthLevelUpload: () => null } };
   vm.runInNewContext(compiled, { exports, console: { error() {} }, require(id) {
     assert.ok(id in dependencies, `Unexpected dependency: ${id}`);
     return dependencies[id];

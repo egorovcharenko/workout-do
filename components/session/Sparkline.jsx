@@ -6,7 +6,7 @@ import { sparklineDomain, trainingPoints } from "@/lib/deload-progress";
 
 // ─── file: workout-session-sparkline.js ───
 
-function Sparkline({ exerciseName, data, valueKey, color, label, fmt, showTip, hideTip, allTime = false }) {
+function Sparkline({ exerciseName, data, valueKey, color, label, fmt, showTip, hideTip, allTime = false, perWorkout = false }) {
   const DAY_MS = 86400000;
   
   const today = localDate();
@@ -45,7 +45,9 @@ function Sparkline({ exerciseName, data, valueKey, color, label, fmt, showTip, h
   const startMs = Date.parse(startDate + 'T00:00:00Z');
   const dateLabel = recapDate(startDate);
 
-  const presentDays = days.filter(d => isValidVal(d.value));
+  const plotDays = perWorkout ? (data || []).filter(d => d.date >= startDate && d.date <= today && isValidVal(d[valueKey]))
+    .map(d => ({ ...d, value: d[valueKey], isToday: d.date === today })).sort((a, b) => a.date.localeCompare(b.date)) : days;
+  const presentDays = plotDays.filter(d => isValidVal(d.value));
   const comparisonDays = trainingPoints(presentDays);
   const comparisonVals = comparisonDays.map(d => d.value);
   if (presentDays.length === 0) {
@@ -80,7 +82,7 @@ function Sparkline({ exerciseName, data, valueKey, color, label, fmt, showTip, h
     return h - padY - ((clamped - min) / range) * (h - 2 * padY);
   };
 
-  const pts = days.map(d => isValidVal(d.value) ? {
+  const pts = plotDays.map(d => isValidVal(d.value) ? {
     x: timeX(Date.parse(d.date + 'T00:00:00Z')), y: yFor(d.value), value: d.value, isToday: d.isToday, isFuture: d.isFuture, date: d.date, isDeload: d.isDeload,
   } : null);
   const presentPts = pts.filter(Boolean);
@@ -105,8 +107,9 @@ function Sparkline({ exerciseName, data, valueKey, color, label, fmt, showTip, h
         <span className="ui-label">{label}</span>
         <span style={{ fontFamily: T.mono, fontSize: 11, fontWeight: 800, color: T.strong }}>
           {fmt(displayDay.value)}
+          {displayDay.isPartial && <span style={{ color: T.muted, marginLeft: 6, fontSize: 9 }}>so far</span>}
           {displayDay.isDeload && <span style={{ color: T.amber, marginLeft: 6, fontSize: 9 }}>DELOAD</span>}
-          {comparisonVals.length > 1 && !displayDay.isDeload && (
+          {comparisonVals.length > 1 && !displayDay.isDeload && !displayDay.isPartial && (
             <span style={{ color: deltaColor, fontWeight: 700, marginLeft: 6, fontSize: 10 }}>
               {delta > 0 ? "↑" : delta < 0 ? "↓" : "→"} {Math.abs(delta)}%
             </span>

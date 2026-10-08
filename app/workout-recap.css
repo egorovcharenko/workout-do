@@ -181,3 +181,9 @@
 .insights-weeks span:last-child i { background: #60A5FA; }
 .insights-weeks b { text-align: center; font: 600 10px var(--suite-font-mono); color: #A9BCD2; margin-top: 3px; }
 .insights-rhythm .insights-note { margin: 6px 0 0; }
+
+/* Volume has its own scale while sharing the existing calendar axis. */
+.recap-volume { color: #C084FC; flex: 0 0 28px; min-height: 28px; margin-top: 5px; border-top: 1px solid rgba(192,132,252,.12); }
+.recap-volume-metric { color: #C084FC; margin-top: 3px; }
+.recap-volume-metric strong { color: #E9D5FF; }
+.workout-recap-metric-summary { min-width: 0; }

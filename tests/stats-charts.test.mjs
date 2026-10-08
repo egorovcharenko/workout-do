@@ -1,3 +1,4 @@
+import * as volume from '../lib/exercise-volume.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -26,7 +27,7 @@ function load(path, dependencies = {}) {
       '@/lib/legacy/standards': standards, '@/lib/deload-progress': deload,
       '@/lib/legacy/cable-stack': cable, '@/lib/legacy/belt-load': belt,
       '@/lib/legacy/history-set-display': display, '@/lib/legacy/exercise-session-history': history,
-      '@/lib/legacy/workout-recap': workoutRecap,
+      '@/lib/legacy/workout-recap': workoutRecap, '@/lib/exercise-volume': volume,
       ...dependencies };
     assert.ok(id in deps, id);
     return deps[id];
@@ -66,7 +67,7 @@ test('all-time handles old-only history, a single point, and empty or invalid se
   assert.match(renderChart([{ date: 'invalid', orm: 20 }, { date: '2027-01-01', orm: 20 }, { date: '2025-01-01', orm: NaN }], true), /no history yet/);
 });
 
-test('stats replaces volume with all-time 1RM and retains saved same-day best when no set is logged', () => {
+test('stats puts working volume above both 1RM charts and retains saved same-day best when no set is logged', () => {
   const charts = [];
   const { StatsPane } = load('../components/session/StatsPane.jsx', { './Sparkline': { Sparkline: props => {
     charts.push(props); return React.createElement('div', null, props.label);
@@ -78,22 +79,24 @@ test('stats replaces volume with all-time 1RM and retains saved same-day best wh
   const sessions = [session('today-high', '2026-09-10', 20, 12), session('today-low', '2026-09-10', 15, 10)];
   const statHistory = { orm: { [name]: [{ date: '2024-01-01', orm: 10 }] } };
   const markup = renderToStaticMarkup(React.createElement(StatsPane, { exercise, history: sessions, statHistory }));
-  assert.doesNotMatch(markup, /volume/i);
+  assert.match(markup, /Volume · last 30 days/);
   assert.match(markup, /All time/);
-  assert.equal(charts.length, 2);
-  assert.ok(charts.every(chart => chart.valueKey === 'orm'));
-  assert.equal(charts[0].allTime, undefined);
-  assert.equal(charts[1].allTime, true);
-  assert.deepEqual(Array.from(charts[1].data, d => d.date), ['2024-01-01', '2026-09-10']);
-  assert.equal(charts[1].data.at(-1).orm, 28);
+  assert.equal(charts.length, 3);
+  assert.equal(charts[0].valueKey, 'value');
+  assert.deepEqual(charts[0].data.map(point => point.value), [240, 150]);
+  assert.ok(charts.slice(1).every(chart => chart.valueKey === 'orm'));
+  assert.equal(charts[1].allTime, undefined);
+  assert.equal(charts[2].allTime, true);
+  assert.deepEqual(Array.from(charts[2].data, d => d.date), ['2024-01-01', '2026-09-10']);
+  assert.equal(charts[2].data.at(-1).orm, 28);
   exercise.sets = [{ kind: 'work', completed: true, weight: 15, reps: 10 }];
   charts.length = 0;
   renderToStaticMarkup(React.createElement(StatsPane, { exercise, history: sessions, statHistory }));
-  assert.equal(charts[1].data.at(-1).orm, 28, 'A lighter live set must not lower the day’s best');
+  assert.equal(charts[2].data.at(-1).orm, 28, 'A lighter live set must not lower the day’s best');
   exercise.sets = [{ kind: 'work', completed: true, weight: 25, reps: 12 }];
   charts.length = 0;
   renderToStaticMarkup(React.createElement(StatsPane, { exercise, history: sessions, statHistory }));
-  assert.equal(charts[1].data.at(-1).orm, 35, 'A stronger live set updates the graph immediately');
+  assert.equal(charts[2].data.at(-1).orm, 35, 'A stronger live set updates the graph immediately');
 });
 
 test('Dips stats look like every other lift: one 30-day chart and one all-time chart', () => {
@@ -107,5 +110,23 @@ test('Dips stats look like every other lift: one 30-day chart and one all-time c
   assert.match(markup, /All time/);
   const allTime = charts.filter(chart => chart.allTime).map(chart => chart.label);
   assert.deepEqual(allTime, ['Top reps']);
-  assert.deepEqual(charts.map(chart => chart.label), ['Top reps', 'Top reps']);
+  assert.deepEqual(charts.map(chart => chart.label), ['Working reps', 'Top reps', 'Top reps']);
+});
+
+test('live volume replaces autosaved rows and incomplete work is marked so far', () => {
+  const { StatsPane } = load('../components/session/StatsPane.jsx', { './Sparkline': { Sparkline } });
+  const exercise = {name, equipment:'cable', sets:[{kind:'work',completed:true,weight:15,reps:10},{kind:'work',completed:false,weight:15,reps:null}]};
+  const sessions = [{id:'current',date:'2026-09-10',sets:[{exercise:name,set_type:'working',weight_lb:20,reps:20}]}];
+  const html = renderToStaticMarkup(React.createElement(StatsPane,{exercise,history:sessions,sessionId:'current'}));
+  const volume = html.slice(html.indexOf('Volume · last 30 days'), html.indexOf('Progress · last 30 days'));
+  assert.match(volume,/150 lb·reps/);
+  assert.match(volume,/so far/);
+  assert.doesNotMatch(volume,/400 lb·reps/);
+});
+
+test('volume retains separate points for two workouts on the same day', () => {
+  const html = renderToStaticMarkup(React.createElement(Sparkline, { exerciseName:name,
+    data:[{date:'2026-09-10',value:100},{date:'2026-09-10',value:200}],valueKey:'value',perWorkout:true,
+    label:'Volume',color:'#C084FC',fmt:v=>`${v} lb·reps` }));
+  assert.equal((html.match(/fill="transparent"/g)||[]).length,2);
 });

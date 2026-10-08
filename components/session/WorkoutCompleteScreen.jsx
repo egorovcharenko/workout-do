@@ -4,6 +4,8 @@ import { workoutDisplayName } from "@/lib/legacy/shared";
 import { useRef, useState } from "react";
 import { buildWorkoutRecap, recapDate, recapDuration } from "@/lib/legacy/workout-recap";
 import { buildRecap1rmTrends, limitTrendsToRecentMonths, recapTrendSession, renderRecap1rm, renderRecapMonthlyChanges, recapTimeDomain, renderRecapTrendMetrics, renderRecapTimeHeader } from "@/lib/legacy/recap-1rm";
+import { buildVolumeTrends, liveVolumeSession } from "@/lib/exercise-volume";
+import { renderVolumeMetric, renderVolumeSparkline } from "@/lib/volume-sparkline";
 import { StrengthLevelUpload } from "./StrengthLevelUpload";
 
 function WorkoutCompleteScreen({ workoutName, elapsedSec, exercises, sessionDate, history = [], sessionId = null, startedAt = null, bodyweightLb = null, testMode = false, onReview, onFinish }) {
@@ -12,7 +14,9 @@ function WorkoutCompleteScreen({ workoutName, elapsedSec, exercises, sessionDate
   const finishPending = useRef(false);
   const recap = buildWorkoutRecap(exercises);
   const trends = limitTrendsToRecentMonths(buildRecap1rmTrends(history, recapTrendSession(exercises, sessionDate, sessionId, startedAt), { bodyweightLb }));
-  const timeDomain = recapTimeDomain(trends);
+  const volumes = limitTrendsToRecentMonths(buildVolumeTrends(history, liveVolumeSession(exercises, sessionDate, sessionId, startedAt),
+    { bodyweightLb, exerciseConfigs: Object.fromEntries(exercises.map(exercise => [exercise.name, exercise])) }));
+  const timeDomain = recapTimeDomain({ ...trends, ...Object.fromEntries(Object.entries(volumes).map(([name, points]) => [`volume:${name}`, points])) });
   const handleFinish = () => {
     if (finishPending.current) return;
     finishPending.current = true;
@@ -46,7 +50,7 @@ function WorkoutCompleteScreen({ workoutName, elapsedSec, exercises, sessionDate
           <ol className="workout-recap-exercises">
             {recap.exercises.map((exercise, index) => (
               <li className="workout-recap-exercise" key={index}>
-                <div className={trends[exercise.name] ? "workout-recap-results has-trend" : "workout-recap-results"}><div className="workout-recap-details">
+                <div className={(trends[exercise.name] || volumes[exercise.name]) ? "workout-recap-results has-trend" : "workout-recap-results"}><div className="workout-recap-details">
                 <div className="workout-recap-exercise-heading"><h2>{exercise.name}</h2></div>
                 <div className="workout-recap-detail-body"><div className="workout-recap-set-groups">
                 {exercise.groups.length ? exercise.groups.map((group, groupIndex) => (
@@ -56,10 +60,10 @@ function WorkoutCompleteScreen({ workoutName, elapsedSec, exercises, sessionDate
                   </div>
                 )) : <p className="workout-recap-warmup-only">{exercise.warmupSets} warm-up {exercise.warmupSets === 1 ? "set" : "sets"} only</p>}
                 </div>
-                {trends[exercise.name] && <div className="workout-recap-metric-summary" dangerouslySetInnerHTML={{ __html: renderRecapTrendMetrics(trends[exercise.name]) }} />}
+                {(trends[exercise.name] || volumes[exercise.name]) && <div className="workout-recap-metric-summary" dangerouslySetInnerHTML={{ __html: renderRecapTrendMetrics(trends[exercise.name]) + renderVolumeMetric(volumes[exercise.name]) }} />}
                 </div>
                 </div>
-                {trends[exercise.name] && <div className="workout-recap-trend" dangerouslySetInnerHTML={{ __html: renderRecap1rm(trends[exercise.name], timeDomain) + renderRecapMonthlyChanges(trends[exercise.name], timeDomain) }} />}
+                {(trends[exercise.name] || volumes[exercise.name]) && <div className="workout-recap-trend" dangerouslySetInnerHTML={{ __html: renderRecap1rm(trends[exercise.name], timeDomain) + renderRecapMonthlyChanges(trends[exercise.name], timeDomain) + renderVolumeSparkline(volumes[exercise.name], timeDomain) }} />}
                 </div>
               </li>
             ))}

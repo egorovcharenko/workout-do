@@ -590,6 +590,9 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
             exercise={shownExercise}
             history={history}
             statHistory={statHistory}
+            sessionDate={sessionDate}
+            startedAt={startedAt}
+            bodyweightLb={window.USER_SETTINGS?.bodyweight}
             exercises={exercises}
             sessionId={sessionId} />
         </aside>

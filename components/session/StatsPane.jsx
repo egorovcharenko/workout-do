@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { workoutDisplayName, T, localDate } from "@/lib/legacy/shared";
 import { beltAdjustedRepScore, calcSet1RM, calcStoredSet1RM, decodeStageScore, isAssistExercise } from "@/lib/legacy/standards";
+import { buildVolumeTrends, liveVolumeSession, volumeMetric } from "@/lib/exercise-volume";
 import { Sparkline } from "./Sparkline";
 import { effectiveExerciseWeight, effectiveStoredExerciseWeight } from "@/lib/legacy/cable-stack";
 import { isStoredBeltLoad, storedBeltLoad } from "@/lib/legacy/belt-load";
@@ -120,7 +121,7 @@ function PreviousSessions({ history, exercise, sessionId }) {
   );
 }
 
-function StatsPane({ exercise, history, statHistory, sessionId }) {
+function StatsPane({ exercise, history, statHistory, sessionId, sessionDate, startedAt, bodyweightLb }) {
   const [tipState, setTip] = useState(null);
   const tip = tipState?.exerciseName === exercise?.name ? tipState : null;
 
@@ -133,6 +134,13 @@ function StatsPane({ exercise, history, statHistory, sessionId }) {
     setTip({ exerciseName: exercise.name, content, x: r.left + r.width / 2, y: r.top - 4 });
   };
   const hideTip = () => setTip(null);
+
+  const volumeOptions = { bodyweightLb, exerciseNames: [exercise.name], exerciseConfigs: { [exercise.name]: exercise } };
+  const liveVolume = liveVolumeSession([exercise], sessionDate || today, sessionId, startedAt);
+  liveVolume.isPartial = (exercise.sets || []).some(set => set.kind === "work" && !set.completed && !set.userSkipped);
+  liveVolume.is_deload = typeof window !== "undefined" && !!window.SESSION_DELOAD;
+  const volumes = buildVolumeTrends(history, liveVolume, volumeOptions)[exercise.name] || [];
+  const volumeUnit = volumeMetric(exercise.name, volumeOptions).unit;
 
   const stat = statHistory || {};
   const isRepsOnly = !!exercise.repsOnly;
@@ -246,6 +254,13 @@ function StatsPane({ exercise, history, statHistory, sessionId }) {
         <div className="ui-label" style={{ marginBottom: 4 }}>Stats</div>
         <div style={{ color: T.strong, fontSize: 16, fontWeight: 800, letterSpacing: -0.3, lineHeight: 1.2 }}>{exercise.name}</div>
       </div>
+
+      <Section label="Volume · last 30 days">
+        <Sparkline exerciseName={exercise.name} data={volumes} valueKey="value" color="#C084FC"
+          label={volumeUnit === "reps" ? "Working reps" : "Working-set volume"} perWorkout
+          fmt={v => `${v.toLocaleString("en-US", { maximumFractionDigits: 1 })} ${volumeUnit}`}
+          showTip={showTip} hideTip={hideTip} />
+      </Section>
 
       <Section label="Progress · last 30 days">
         <Sparkline exerciseName={exercise.name} data={ormHist} valueKey="orm" color="#60A5FA"
