@@ -25,7 +25,7 @@ import { recentActivity, latestLift, latestBody } from "./overview";
 import { storedSessionProgress } from "@/lib/legacy/session-status";
 import { nextProgramWorkout } from "@/lib/main-program";
 import { renderLatestWorkoutRecap } from "./recap";
-import { programWorkouts } from "@/lib/program-builder";
+import { programWorkouts, rotationWorkouts } from "@/lib/program-builder";
 
 function renderWorkoutMuscleMap(w) {
   const muscles = {};
@@ -414,10 +414,28 @@ function renderHome() {
 
   const activeSess = state._activeSessions && state._activeSessions[0];
   const program = programWorkouts(window.USER_SETTINGS);
+  const rotation = rotationWorkouts(window.USER_SETTINGS);
   const nextWorkoutId = nextProgramWorkout(state.history || [], programWorkoutNames);
   const nextW = program.find(w => w.id === nextWorkoutId) || program[0];
 
+  // The compound rotation (Workout 1–3) sits alongside the block program.
+  // Whichever was trained most recently drives the hero and the badge.
+  const lastFinishedOf = list => (state.history || [])
+    .filter(s => (s.finished_at || storedSessionProgress(s)?.finished) && list.some(w => programWorkoutNames(w.id).includes(s.workout_name)))
+    .sort((a, b) => b.date.localeCompare(a.date) || String(b.started_at || '').localeCompare(String(a.started_at || '')))[0];
+  const lastRotation = lastFinishedOf(rotation);
+  const lastProgram = lastFinishedOf(program);
+  const sessionKey = s => `${s.date} ${s.started_at || ''}`;
+  let nextRotation = rotation[0];
+  if (lastRotation) {
+    const idx = rotation.findIndex(w => programWorkoutNames(w.id).includes(lastRotation.workout_name));
+    nextRotation = rotation[(idx + 1) % rotation.length];
+  }
+
   let activeWorkout = nextW;
+  if (lastRotation && (!lastProgram || sessionKey(lastRotation) >= sessionKey(lastProgram))) {
+    activeWorkout = nextRotation;
+  }
   let isOngoing = false;
   let logged = 0;
   let expected = 0;
@@ -439,8 +457,9 @@ function renderHome() {
   }
 
   const hero = renderWorkoutCard(activeWorkout, true, isOngoing, logged, expected, pct);
-  // Every program workout, in rotation order; the one in the card above is marked.
-  const remaining = program.map(w => renderWorkoutCard(w, false, false, 0, 0, 0,
+  // The compound rotation first, then every program workout; the one in the
+  // card above is marked.
+  const remaining = [...rotation, ...program].map(w => renderWorkoutCard(w, false, false, 0, 0, 0,
     w.id === activeWorkout.id ? (isOngoing ? 'In progress' : 'Up next') : '')).join('');
   return `<main class="home-page" style="${homeTokens()}">
     <header class="home-header"><div><div class="home-date">${getSessionDateStr()}</div><h1>Workouts</h1></div><a class="home-chip" href="/builder">Edit workouts</a></header>
