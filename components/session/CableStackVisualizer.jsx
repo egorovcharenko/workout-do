@@ -2,8 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import {
-  CABLE_STACK_ADD_ON_COUNT,
-  CABLE_STACK_ADD_ON_WEIGHT,
   CABLE_STACK_MAX,
   CABLE_STACK_MIN,
   CABLE_STACK_STEP,
@@ -16,9 +14,12 @@ import {
 import styles from "./CableStackVisualizer.module.css";
 
 const VISUAL_PLATES = 10;
+// The pin row offers quick jumps every 5 lb; the +/− buttons adjust by
+// CABLE_STACK_STEP (1 lb).
+const PIN_DISPLAY_STEP = 5;
 const PIN_CHOICES = Array.from(
-  { length: (CABLE_STACK_MAX - CABLE_STACK_MIN) / CABLE_STACK_STEP + 1 },
-  (_, index) => CABLE_STACK_MIN + index * CABLE_STACK_STEP,
+  { length: (CABLE_STACK_MAX - CABLE_STACK_MIN) / PIN_DISPLAY_STEP + 1 },
+  (_, index) => CABLE_STACK_MIN + index * PIN_DISPLAY_STEP,
 );
 
 function formatWeight(value) {
@@ -45,7 +46,7 @@ function CableStackVisualizer({ exerciseName, value, onPick, compact = false }) 
   const multiplier = cableStackMultiplier(exerciseName);
   const recordedStackWeight = cableTotalWeight(value, 1);
   const stackWeight = clampCableStackWeight(recordedStackWeight);
-  const { pinWeight, addOnCount } = cableStackSelection(stackWeight);
+  const { pinWeight } = cableStackSelection(stackWeight);
   const activeRef = useRef(null);
   const loadedCount = Math.max(1, Math.min(VISUAL_PLATES, Math.round((pinWeight / CABLE_STACK_MAX) * VISUAL_PLATES)));
 
@@ -64,13 +65,10 @@ function CableStackVisualizer({ exerciseName, value, onPick, compact = false }) 
   }, [pinWeight]);
 
   const pickPinWeight = (nextPinWeight) => {
-    onPick(cableStackWeightWithAddOns(nextPinWeight, addOnCount));
+    onPick(cableStackWeightWithAddOns(nextPinWeight, 0));
   };
   const stepStack = (delta) => {
     pickPinWeight(pinWeight + delta);
-  };
-  const selectAddOnCount = (nextCount) => {
-    onPick(cableStackWeightWithAddOns(pinWeight, nextCount));
   };
 
   return (
@@ -86,7 +84,7 @@ function CableStackVisualizer({ exerciseName, value, onPick, compact = false }) 
               type="button"
               className={styles.adjustButton}
               onClick={() => stepStack(-CABLE_STACK_STEP)}
-              aria-label={`Decrease cable stack by ${CABLE_STACK_STEP} pounds`}
+              aria-label={`Decrease cable stack by ${CABLE_STACK_STEP} pound${CABLE_STACK_STEP === 1 ? "" : "s"}`}
               disabled={pinWeight <= CABLE_STACK_MIN}
             >
               −
@@ -99,7 +97,7 @@ function CableStackVisualizer({ exerciseName, value, onPick, compact = false }) 
               type="button"
               className={styles.adjustButton}
               onClick={() => stepStack(CABLE_STACK_STEP)}
-              aria-label={`Increase cable stack by ${CABLE_STACK_STEP} pounds`}
+              aria-label={`Increase cable stack by ${CABLE_STACK_STEP} pound${CABLE_STACK_STEP === 1 ? "" : "s"}`}
               disabled={pinWeight >= CABLE_STACK_MAX}
             >
               +
@@ -112,30 +110,6 @@ function CableStackVisualizer({ exerciseName, value, onPick, compact = false }) 
             </div>
           )}
 
-          <div className={styles.addOns}>
-            <div className={styles.addOnRow}>
-              {Array.from({ length: CABLE_STACK_ADD_ON_COUNT + 1 }, (_, count) => {
-                const active = count === addOnCount;
-                return (
-                  <button
-                    key={count}
-                    type="button"
-                    className={`${styles.addOnButton}${active ? ` ${styles.addOnButtonActive}` : ""}`}
-                    onClick={() => selectAddOnCount(count)}
-                    aria-pressed={active}
-                    aria-label={count === 0
-                      ? "Turn off cable stack add-on weights"
-                      : `Use ${count} ${CABLE_STACK_ADD_ON_WEIGHT} pound add-on weight${count === 1 ? "" : "s"}${multiplier === 2 ? " per stack" : ""}`}
-                  >
-                    <span className={styles.addOnIcon} aria-hidden="true">
-                      {count === 0 ? "—" : Array.from({ length: count }, (_, index) => <i key={index} />)}
-                    </span>
-                    <span>{count === 0 ? "OFF" : `${count} × ${formatWeight(CABLE_STACK_ADD_ON_WEIGHT)}`}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
         </div>
       </div>
 

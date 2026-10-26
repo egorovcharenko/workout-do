@@ -11,7 +11,7 @@ test('unedited entries leave the program exactly as defined', () => {
   assert.equal(programWorkouts({}), MAIN_WORKOUTS);
 });
 
-test('edits change sets, reps, rest, warm-ups and supersets; renames only change the label', () => {
+test('edits change sets, reps, rest and warm-ups; saved supersets are dropped; renames only change the label', () => {
   const entries = workoutEntries(a);
   entries[0] = { ...entries[0], sets: entries[0].sets.slice(0, 2), warmups: [], rest: 150 };
   entries[3] = { ...entries[3], superset: 'x' };
@@ -22,7 +22,7 @@ test('edits change sets, reps, rest, warm-ups and supersets; renames only change
   assert.equal(squat.rest, 150);
   assert.equal(squat.noWarmup, true);
   assert.deepEqual(squat.loadProgression.groups, [[1]], 'Existing set groups keep their rules');
-  assert.deepEqual(w.exercises.slice(3).map(ex => ex.superset), ['A', 'A']);
+  assert.deepEqual(w.exercises.slice(3).map(ex => ex.superset), [undefined, undefined]);
   assert.equal(w.name, 'Strength A', 'Saved session name is unchanged');
   assert.equal(workoutDisplayName('Strength A'), 'Legs');
   assert.ok(estimateTemplateWorkoutDuration(w) < estimateTemplateWorkoutDuration(a));
@@ -92,16 +92,14 @@ test('planned RIR is optional per set and overrides the exercise default only wh
   assert.deepEqual(w.exercises[0].workRir, [2, null, 1]);
 });
 
-test('a superset rests once per round with a short transition between partners', () => {
+test('saved superset groups are dropped: every exercise rests between its own sets', () => {
   const entries = workoutEntries(a);
-  const plain = applyProgramBuilder([a], { workouts: { [a.id]: { exercises: entries } } })[0];
-  const linked = entries.map((e, i) => i === 3 || i === 4 ? { ...e, superset: 'x', rest: 120 } : e);
+  const rested = entries.map((e, i) => i === 3 || i === 4 ? { ...e, rest: 120 } : e);
+  const plain = applyProgramBuilder([a], { workouts: { [a.id]: { exercises: rested } } })[0];
+  const linked = rested.map((e, i) => i === 3 || i === 4 ? { ...e, superset: 'x' } : e);
   const [w] = applyProgramBuilder([a], { workouts: { [a.id]: { exercises: linked } } });
-  assert.deepEqual(w.exercises.slice(3).map(ex => ex.supersetTransition), [20, 20]);
-  assert.equal(w.exercises[0].supersetTransition, undefined);
-  // 3 rounds: 2 round rests of 120 s + 3 transitions of 20 s instead of 5 full rests.
-  assert.ok(estimateTemplateWorkoutDuration(w) < estimateTemplateWorkoutDuration(plain));
-  const [slow] = applyProgramBuilder([a], { workouts: { [a.id]: { exercises: linked.map((e, i) => i > 2 ? { ...e, transition: 60 } : e) } } });
-  assert.equal(estimateTemplateWorkoutDuration(slow) - estimateTemplateWorkoutDuration(w), 3 * 40);
+  assert.deepEqual(w.exercises.slice(3).map(ex => ex.superset), [undefined, undefined]);
+  assert.deepEqual(w.exercises.slice(3).map(ex => ex.supersetTransition), [undefined, undefined]);
+  assert.equal(estimateTemplateWorkoutDuration(w), estimateTemplateWorkoutDuration(plain));
   assert.equal(normalizeSupersets([{ name: 'a', superset: 'x', transition: 20 }])[0].transition, undefined);
 });

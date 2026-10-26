@@ -101,21 +101,20 @@ test("historical scoring no longer lets a legacy deload beat a stronger current 
   assert.ok(currentSet > legacyDeload);
 });
 
-test("stack selector supports two 1.25 pound add-ons above each pin", () => {
+test("stack selector adjusts in whole pounds with no add-on weights", () => {
   assert.equal(CABLE_STACK_MIN, 10);
   assert.equal(CABLE_STACK_MAX, 85);
-  assert.equal(CABLE_STACK_STEP, 5);
-  assert.equal(CABLE_STACK_ADD_ON_WEIGHT, 1.25);
-  assert.equal(CABLE_STACK_ADD_ON_COUNT, 2);
-  assert.equal(CABLE_STACK_MAX_LOAD, 87.5);
+  assert.equal(CABLE_STACK_STEP, 1);
+  assert.equal(CABLE_STACK_ADD_ON_COUNT, 0);
+  assert.equal(CABLE_STACK_MAX_LOAD, 85);
   assert.equal(clampCableStackWeight(0), 10);
-  assert.equal(clampCableStackWeight(11.25), 11.25);
-  assert.equal(clampCableStackWeight(12), 12.5);
-  assert.equal(clampCableStackWeight(12.5), 12.5);
-  assert.equal(clampCableStackWeight(13), 12.5);
-  assert.equal(clampCableStackWeight(88), 87.5);
-  assert.deepEqual(cableStackSelection(12.5), { pinWeight: 10, addOnCount: 2, stackWeight: 12.5 });
-  assert.deepEqual(cableStackSelection(31.25), { pinWeight: 30, addOnCount: 1, stackWeight: 31.25 });
-  assert.equal(cableStackWeightWithAddOns(30, 1), 31.25);
-  assert.equal(cableStackWeightWithAddOns(85, 2), 87.5);
+  assert.equal(clampCableStackWeight(11.25), 11);
+  assert.equal(clampCableStackWeight(12), 12);
+  assert.equal(clampCableStackWeight(12.5), 12);
+  assert.equal(clampCableStackWeight(13), 13);
+  assert.equal(clampCableStackWeight(88), 85);
+  assert.deepEqual(cableStackSelection(12), { pinWeight: 12, addOnCount: 0, stackWeight: 12 });
+  assert.deepEqual(cableStackSelection(31), { pinWeight: 31, addOnCount: 0, stackWeight: 31 });
+  assert.equal(cableStackWeightWithAddOns(30, 1), 30);
+  assert.equal(cableStackWeightWithAddOns(85, 2), 85);
 });

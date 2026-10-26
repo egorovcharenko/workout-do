@@ -22,7 +22,7 @@ function initialDraft(settings) {
   const base = defaults();
   for (const id of Object.keys(base)) {
     if (saved[id]?.name) base[id].name = saved[id].name;
-    if (Array.isArray(saved[id]?.exercises)) base[id].exercises = normalizeSupersets(saved[id].exercises.map(normalizeEntry));
+    if (Array.isArray(saved[id]?.exercises)) base[id].exercises = normalizeSupersets(saved[id].exercises.map(entry => ({ ...normalizeEntry(entry), superset: null })));
   }
   return base;
 }

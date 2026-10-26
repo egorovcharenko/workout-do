@@ -102,8 +102,8 @@ test('bench makes only the reviewed top-set adjustment and preserves the three b
 
 test('cable and dumbbell accessories progress with reserve confirmation while all logged reps remain untouched', () => {
   for (const [name, id, weight, reps, expected] of [
-    ['Calf Raises','strength-accessories-2',55,20,56.25],
-    ['Low Row','strength-b',65,12,66.25],
+    ['Calf Raises','strength-accessories-2',55,20,56],
+    ['Low Row','strength-b',65,12,66],
     ['Incline DB Curls','strength-accessories-2',20,15,22.5],
   ]) {
     const w = getWorkout(id);
@@ -172,7 +172,7 @@ test('accessory progression finds its regular baseline across unrelated workout 
     session('Shrugs Focus','2026-08-30',rows,{cable_weight_mode:'per_stack'})];
   const sets = work(guide(w,past),'Calf Raises');
   assert.equal(sets[0].repGuidance.loadProgression.qualifying,2);
-  assert.equal(sets[0].repGuidance.loadProgression.weight,56.25);
+  assert.equal(sets[0].repGuidance.loadProgression.weight,56);
 });
 
 test('replacement cable fly keeps three sets and seeds its actual cable history before Accessories 1 has a result', () => {
@@ -257,6 +257,6 @@ test('cable chest fly starts Shrugs Focus with per-stack loading and progresses 
     const prev = session(w.name, '2026-09-18', reps.map((r,i) => row(name,i+1,10,r,{rir:'1-2'})), {state_json:JSON.stringify({trainingBlock:run})});
     const offer = guide(w, [prev])[0].sets.find(s => s.kind === 'work').repGuidance.loadProgression;
     assert.equal(offer.ready, ready);
-    assert.equal(offer.weight, 11.25);
+    assert.equal(offer.weight, 11);
   }
 });

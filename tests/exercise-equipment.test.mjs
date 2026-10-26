@@ -87,6 +87,6 @@ test('deload always lightens light loads, using stack loads for cables', () => {
   assert.equal(deload(17.5), 15);
   assert.equal(deload(135, { isBarbell: true }), 110);
   assert.equal(deload(50, { isBarbell: true }), 45);
-  assert.equal(deload(15, { equipment: 'cable' }), 12.5);
-  assert.equal(deload(20, { equipment: 'cable' }), 16.25);
+  assert.equal(deload(15, { equipment: 'cable' }), 12);
+  assert.equal(deload(20, { equipment: 'cable' }), 16);
 });

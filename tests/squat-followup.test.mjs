@@ -95,6 +95,6 @@ test('cable offers land on a load the stack can show instead of snapping back do
     assert.equal(offer.ready, true);
     return offer.weight;
   };
-  assert.equal(offerFrom(21.25), 22.5);
-  assert.equal(offerFrom(22.5), 25);
+  assert.equal(offerFrom(21.25), 23);
+  assert.equal(offerFrom(22.5), 24);
 });
