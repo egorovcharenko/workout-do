@@ -5,20 +5,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/db/api";
-import { ALL_WORKOUTS, WORKOUTS, estimateTemplateWorkoutDuration, workoutDisplayName } from "@/lib/legacy/shared";
+import { MAIN_WORKOUTS, estimateTemplateWorkoutDuration, workoutDisplayName } from "@/lib/legacy/shared";
 import {
   DEFAULT_SUPERSET_TRANSITION, PROGRAM_BUILDER_KEY, applyProgramBuilder, exerciseLibrary, normalizeEntry, normalizeSupersets, registerExerciseAliases,
   parseProgramBuilder, plannedWeeklyMuscleSets, workoutEntries,
 } from "@/lib/program-builder";
 import { baseExerciseName, variantName } from "@/lib/exercise-aliases";
 
-// The builder edits the 3-workout rotation (Workout 1-3 templates from
-// shared.js), replacing the old strength-block columns at Egor's direction
-// (2026-10-22). The block program itself is untouched: it still drives the
-// home schedule, and builder edits for its ids stay saved but unused here.
-const BUILDER_WORKOUTS = ["workout-1", "workout-2", "workout-3"].map(id => WORKOUTS.find(w => w.id === id));
-const DEFAULT_NAMES = Object.fromEntries(BUILDER_WORKOUTS.map(w => [w.id, workoutDisplayName(w.name)]));
-const defaults = () => Object.fromEntries(BUILDER_WORKOUTS.map(w => [w.id, { name: DEFAULT_NAMES[w.id], exercises: workoutEntries(w) }]));
+const DEFAULT_NAMES = Object.fromEntries(MAIN_WORKOUTS.map(w => [w.id, workoutDisplayName(w.name)]));
+const defaults = () => Object.fromEntries(MAIN_WORKOUTS.map(w => [w.id, { name: DEFAULT_NAMES[w.id], exercises: workoutEntries(w) }]));
 const clock = sec => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
 const newGroupId = () => `g${Math.random().toString(36).slice(2, 8)}`;
 
@@ -217,7 +212,7 @@ function MusclePanel({ workouts, metric }) {
       </ul>
       <p className="bld-muted">{reps
         ? "Middle of each set's rep range; sets without a range (RIR) count as 8. Secondary muscles count partially."
-        : `Rotation of ${BUILDER_WORKOUTS.length} workouts every 6 days. Secondary muscles count partially. Number colour: amber below target, red above.`}</p>
+        : `Rotation of ${MAIN_WORKOUTS.length} workouts every 6 days. Secondary muscles count partially. Number colour: amber below target, red above.`}</p>
     </section>
   );
 }
@@ -247,7 +242,7 @@ export default function BuilderApp() {
   }, []);
 
   const applied = useMemo(() => draft
-    ? applyProgramBuilder(BUILDER_WORKOUTS, { aliases, workouts: Object.fromEntries(Object.entries(draft).map(([id, w]) => [id, { exercises: w.exercises }])) }, BUILDER_WORKOUTS)
+    ? applyProgramBuilder(MAIN_WORKOUTS, { aliases, workouts: Object.fromEntries(Object.entries(draft).map(([id, w]) => [id, { exercises: w.exercises }])) })
     : [], [draft, aliases]);
   const dirty = draft && JSON.stringify(toSaved(draft, aliases)) !== savedJson;
 
@@ -359,11 +354,11 @@ export default function BuilderApp() {
       </header>
 
       <div className="bld-columns" ref={columnsRef}>
-      {BUILDER_WORKOUTS.map((base, wIdx) => {
+      {MAIN_WORKOUTS.map((base, wIdx) => {
         const w = draft[base.id];
         const minutes = Math.round(estimateTemplateWorkoutDuration(applied[wIdx]) / 60);
         const totalSets = w.exercises.reduce((n, e) => n + e.sets.length, 0);
-        const moveTargets = BUILDER_WORKOUTS.filter(t => t.id !== base.id).map(t => ({ id: t.id, name: draft[t.id].name }));
+        const moveTargets = MAIN_WORKOUTS.filter(t => t.id !== base.id).map(t => ({ id: t.id, name: draft[t.id].name }));
         const changed = JSON.stringify(w) !== JSON.stringify(defaults()[base.id]);
         return (
           <section key={base.id} className="bld-card bld-workout" aria-label={w.name}>
@@ -449,7 +444,7 @@ export default function BuilderApp() {
         <AddExercise library={library} existing={new Set(draft[adding].exercises.map(e => e.name))} onClose={() => setAdding(null)}
           onPick={name => {
             const base = library.get(name);
-            const entry = ALL_WORKOUTS.flatMap(w => workoutEntries(w)).find(e => e.name === name)
+            const entry = MAIN_WORKOUTS.flatMap(w => workoutEntries(w)).find(e => e.name === name)
               || { name, sets: [[8, 12], [8, 12], [8, 12]], rest: Math.min(base?.rest || 75, 120), warmups: [], superset: null, rir: [null, null, null] };
             update(adding, list => [...list, { ...entry, superset: null }]);
             setAdding(null);
