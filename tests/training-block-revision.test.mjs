@@ -50,7 +50,7 @@ test('the revised block preserves the audited full rotation without extra squat 
   assert.deepEqual(shared.BLOCK_WORKOUTS.filter(w => w.exercises.some(e => e.name === 'Barbell Back Squat')).map(w => w.id), ['strength-a']);
   const arms = flatten(getWorkout('strength-accessories-1'));
   assert.deepEqual(plain(arms.map(e => [e.name, e.sets.map(s => s.weight ?? null)])), [
-    ['Dips', [25,25,25]], ['Bayesian Cable Curl', [20,20,20]], ['Single-Arm Cable Rear Delt Fly', [15,15,15]],
+    ['Dips', [0,25,25,25]], ['Bayesian Cable Curl', [20,20,20]], ['Single-Arm Cable Rear Delt Fly', [15,15,15]],
     ['Dumbbell Hammer Curls', [30,30,30]], ['Overhead Tricep Extension', [35,35,35]], ['Dragon Fly Progression', [null,null,null]],
     ['Bench-Supported Dumbbell Wrist Curls', [5,5]],
   ]);
@@ -66,9 +66,10 @@ test('initial revised targets use the regular baseline and ignore the superseded
   const rows = [reduced, regular]; const before = JSON.stringify(rows);
   assert.deepEqual(plain(work(flatten(w, rows), 'Dips').map(s => s.weight)), [25,25,25]);
   const e = guide(w, rows).find(e => e.name === 'Dips');
-  assert.equal(e.sets[0].repGuidance.previous.reps, 11);
-  assert.equal(e.sets[0].repGuidance.rirLabel, '1–2');
-  assert.equal(e.sets[0].repGuidance.suggested, null, 'Show effort without pretending to know maximum reps');
+  const firstWork = e.sets.find(s => s.kind === 'work');
+  assert.equal(firstWork.repGuidance.previous.reps, 11);
+  assert.equal(firstWork.repGuidance.rirLabel, '1–2');
+  assert.equal(firstWork.repGuidance.suggested, null, 'Show effort without pretending to know maximum reps');
   assert.equal(JSON.stringify(rows), before);
 });
 
@@ -78,7 +79,7 @@ test('new revision history owns loads and user-added sets without reapplying the
   const latest = session(w.name, '2026-09-13', [1,2,3,4].map(n => row('Dips', n, 27.5, 9, { load_type: 'belt' })), { state_json: JSON.stringify({ trainingBlock: run }) });
   const sets = work(flatten(w, [latest, regular]), 'Dips');
   assert.deepEqual(plain(sets.map(s => s.weight)), [27.5,27.5,27.5,27.5]);
-  assert.equal(guide(w, [latest, regular]).find(e => e.name === 'Dips').sets[0].repGuidance.previous.reps, 9);
+  assert.equal(guide(w, [latest, regular]).find(e => e.name === 'Dips').sets.find(s => s.kind === 'work').repGuidance.previous.reps, 9);
 });
 
 test('legacy pull-up opener numbering maps all four actual sets and core retains its stage', () => {
@@ -136,7 +137,7 @@ test('RIR and the rep range render together on revised working cards without a f
   const { SetCard } = loadModule('../components/session/SetCard.jsx', { react: React, 'react/jsx-runtime': jsx,
     '@/lib/legacy/shared': shared, '@/lib/legacy/session-utils': utils, '@/lib/legacy/cable-stack': cable });
   const w = getWorkout('strength-accessories-1'); const exercise = guide(w, []).find(e => e.name === 'Dips');
-  const html = renderToStaticMarkup(React.createElement(SetCard, { s: exercise.sets[0], idx: 0, exercise }));
+  const html = renderToStaticMarkup(React.createElement(SetCard, { s: exercise.sets.find(s => s.kind === 'work'), idx: 0, exercise }));
   assert.match(html, /\+25/); assert.match(html, /5–12/); assert.match(html, /1–2 RIR/); assert.doesNotMatch(html, /Suggested/);
 });
 
