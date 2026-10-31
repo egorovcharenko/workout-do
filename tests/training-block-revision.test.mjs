@@ -52,7 +52,7 @@ test('the revised block preserves the audited full rotation without extra squat 
   assert.deepEqual(plain(arms.map(e => [e.name, e.sets.map(s => s.weight ?? null)])), [
     ['Dips', [0,25,25,25]], ['Bayesian Cable Curl', [20,20,20]], ['Single-Arm Cable Rear Delt Fly', [15,15,15]],
     ['Dumbbell Hammer Curls', [30,30,30]], ['Overhead Tricep Extension', [35,35,35]], ['Dragon Fly Progression', [null,null,null]],
-    ['Bench-Supported Dumbbell Wrist Curls', [5,5]],
+    ['Bench-Supported Cable Wrist Curls', [10,10]],
   ]);
   assert.deepEqual(plain(work(flatten(getWorkout('strength-b')), 'Barbell RDL').map(s => s.weight)), [205,205,165]);
   assert.deepEqual(plain(work(flatten(getWorkout('strength-b')), 'Low Row').map(s => s.weight)), [65,65,60]);
@@ -208,28 +208,28 @@ test('replacement cable fly keeps three sets and seeds its actual cable history 
 });
 
 
-test('wrist curls finish both accessory days with dumbbell controls and optional RIR', () => {
-  const name = 'Bench-Supported Dumbbell Wrist Curls';
-  assert.equal(shared.findExerciseConfig(name).equipment, 'dumbbell');
+test('wrist curls finish both accessory days with cable controls and optional RIR', () => {
+  const name = 'Bench-Supported Cable Wrist Curls';
+  assert.equal(shared.findExerciseConfig(name).equipment, 'cable');
   for (const id of ['strength-accessories-1', 'strength-accessories-2']) {
     const w = getWorkout(id);
     const e = guide(w, []).at(-1);
     assert.equal(e.name, name);
-    assert.equal(e.equipment, 'dumbbell');
+    assert.equal(e.equipment, 'cable');
     assert.equal(e.sets.length, 2);
     assert.ok(e.sets.every(s => s.kind === 'work' && s.rir == null && s.reps == null));
     assert.deepEqual(plain(e.sets.map(s => s.repGuidance.range)), [[15,25],[15,25]]);
     assert.ok(e.sets.every(s => s.repGuidance.rirLabel === '1–2'));
     for (const [reps, rir, ready] of [[[25,24], '1-2', false], [[25,25], '0', false], [[25,25], '1-2', true]]) {
-      const prev = session(w.name, '2026-09-18', reps.map((r,i) => row(name,i+1,5,r,{rir})), {state_json:JSON.stringify({trainingBlock:run})});
+      const prev = session(w.name, '2026-09-18', reps.map((r,i) => row(name,i+1,10,r,{rir})), {state_json:JSON.stringify({trainingBlock:run})});
       const guided = guide(w, [prev]);
       const wrist = guided.at(-1);
       const offer = wrist.sets[0].repGuidance.loadProgression;
       assert.equal(offer.ready, ready);
-      assert.equal(offer.weight, 7.5);
+      assert.equal(offer.weight, 11);
       if (ready) {
         const accepted = applySuggestedLoad(guided, guided.length-1, 0);
-        assert.deepEqual(plain(accepted.at(-1).sets.map(s => s.weight)), [7.5,7.5]);
+        assert.deepEqual(plain(accepted.at(-1).sets.map(s => s.weight)), [11,11]);
       }
     }
   }
