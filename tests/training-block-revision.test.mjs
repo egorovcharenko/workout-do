@@ -104,7 +104,7 @@ test('cable and dumbbell accessories progress with reserve confirmation while al
   for (const [name, id, weight, reps, expected] of [
     ['Calf Raises','strength-accessories-2',55,20,56],
     ['Low Row','strength-b',65,12,66],
-    ['Incline DB Curls','strength-accessories-2',20,15,22.5],
+    ['Incline Cable Curls','strength-accessories-2',20,15,21],
   ]) {
     const w = getWorkout(id);
     const rows = [1,2,3].map(n => row(name,n,weight,reps));

@@ -89,7 +89,7 @@ test("no workout uses supersets", () => {
   const shrugs = WORKOUTS.find((workout) => workout.id === "micro-delts");
   const names = shrugs.exercises.map((exercise) => exercise.name);
   assert.ok(names.includes("Single-Arm Cable Rear Delt Fly"));
-  assert.ok(names.includes("Incline DB Curls"));
+  assert.ok(names.includes("Incline Cable Curls"));
 });
 
 test("hanging knee raises are absent from workouts and the exercise library", () => {

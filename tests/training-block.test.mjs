@@ -188,5 +188,5 @@ test('main-program rests: 120 s barbell lifts, 90 s other compounds, 75 s isolat
     .flatMap(w => w.exercises).map(ex => [ex.name, ex.rest]));
   for (const name of ['Barbell Back Squat', 'Barbell Bench Press', 'Barbell RDL', 'Standing Overhead Press', 'Incline Barbell Press']) assert.equal(rests[name], 120, name);
   for (const name of ['Pull-Ups', 'Dips', 'Low Row', 'Lat Pulldown', 'Neutral-Grip Lat Pulldown', 'Barbell Shrugs']) assert.equal(rests[name], 90, name);
-  for (const name of ['Bayesian Cable Curl', 'Incline DB Curls', 'Calf Raises', 'Dragon Fly Progression']) assert.equal(rests[name], 75, name);
+  for (const name of ['Bayesian Cable Curl', 'Incline Cable Curls', 'Calf Raises', 'Dragon Fly Progression']) assert.equal(rests[name], 75, name);
 });

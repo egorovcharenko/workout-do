@@ -44,7 +44,7 @@
     "Goblet Squat": sprite("legs-arms", 1, 0),
     "Hanging Knee Raise": sprite("legs-arms", 2, 2),
     "Incline Barbell Press": sprite("barbell", 2, 1),
-    "Incline DB Curls": sprite("legs-arms", 0, 2),
+    "Incline Cable Curls": sprite("legs-arms", 0, 2),
     "Incline Dumbbell Press": sprite("dumbbell", 1, 0, 323.5),
     "Lat Pulldown": sprite("cable", 1, 1),
     "Neutral-Grip Lat Pulldown": sprite("cable", 1, 1),

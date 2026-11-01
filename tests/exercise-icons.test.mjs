@@ -36,7 +36,7 @@ const exerciseNames = [
   "Goblet Squat",
   "Hanging Knee Raise",
   "Incline Barbell Press",
-  "Incline DB Curls",
+  "Incline Cable Curls",
   "Incline Dumbbell Press",
   "Lat Pulldown",
   "Neutral-Grip Lat Pulldown",
