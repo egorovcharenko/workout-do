@@ -11,6 +11,7 @@ import * as rir from '../lib/legacy/set-rir.js';
 import * as shared from '../lib/legacy/shared.js';
 import * as belt from '../lib/legacy/belt-load.js';
 import * as logging from '../lib/legacy/set-logging.js';
+import * as renames from '../lib/legacy/exercise-renames.js';
 import * as saveScope from '../lib/session-save-scope.js';
 import * as history from '../lib/legacy/exercise-history.js';
 import * as bench from '../lib/legacy/bench-progression.js';
@@ -101,7 +102,7 @@ test('just-logged RIR follows actual logging across exercises and superset partn
 
 test('every RIR option, unset, and cleared survive serialization, database save and resume', async () => {
   const persistence = load('../lib/legacy/session-persistence.js', {
-    './shared': shared, './belt-load': belt, './set-logging': logging,
+    './shared': shared, './belt-load': belt, './set-logging': logging, './exercise-renames': renames,
     './session-utils': { safeJSON: JSON.parse },
   }, { window: {} });
   let stored;

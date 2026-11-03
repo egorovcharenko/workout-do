@@ -44,15 +44,15 @@ const guide = (workout, sessions) => withRepGuidance(flatten(workout, sessions),
 test('the revised block preserves the audited full rotation without extra squat or flat-bench appearances', () => {
   const before = JSON.stringify(shared.WORKOUTS);
   const counts = shared.BLOCK_WORKOUTS.map(w => flatten(w).reduce((n, e) => n + e.sets.filter(s => s.kind === 'work').length, 0));
-  assert.deepEqual(counts, [17, 20, 17, 27]);
-  assert.equal(counts.reduce((a, b) => a + b), 81);
+  assert.deepEqual(counts, [19, 22, 19, 29]);
+  assert.equal(counts.reduce((a, b) => a + b), 89);
   assert.deepEqual(shared.BLOCK_WORKOUTS.filter(w => w.exercises.some(e => e.name === 'Barbell Bench Press')).map(w => w.id), ['strength-a']);
   assert.deepEqual(shared.BLOCK_WORKOUTS.filter(w => w.exercises.some(e => e.name === 'Barbell Back Squat')).map(w => w.id), ['strength-a']);
   const arms = flatten(getWorkout('strength-accessories-1'));
   assert.deepEqual(plain(arms.map(e => [e.name, e.sets.map(s => s.weight ?? null)])), [
     ['Dips', [0,25,25,25]], ['Bayesian Cable Curl', [20,20,20]], ['Single-Arm Cable Rear Delt Fly', [15,15,15]],
     ['Cable Hammer Curls', [30,30,30]], ['Overhead Tricep Extension', [35,35,35]], ['Dragon Fly Progression', [null,null,null]],
-    ['Bench-Supported Cable Wrist Curls', [10,10]],
+    ['Bench-Supported Cable Wrist Curls', [10,10]], ['Decline Abs Crunches', [null,null]],
   ]);
   assert.deepEqual(plain(work(flatten(getWorkout('strength-b')), 'Barbell RDL').map(s => s.weight)), [205,205,165]);
   assert.deepEqual(plain(work(flatten(getWorkout('strength-b')), 'Low Row').map(s => s.weight)), [65,65,60]);
@@ -208,12 +208,12 @@ test('replacement cable fly keeps three sets and seeds its actual cable history 
 });
 
 
-test('wrist curls finish both accessory days with cable controls and optional RIR', () => {
+test('wrist curls keep cable controls and optional RIR on both accessory days', () => {
   const name = 'Bench-Supported Cable Wrist Curls';
   assert.equal(shared.findExerciseConfig(name).equipment, 'cable');
   for (const id of ['strength-accessories-1', 'strength-accessories-2']) {
     const w = getWorkout(id);
-    const e = guide(w, []).at(-1);
+    const e = guide(w, []).find(ex => ex.name === name);
     assert.equal(e.name, name);
     assert.equal(e.equipment, 'cable');
     assert.equal(e.sets.length, 2);
@@ -223,13 +223,14 @@ test('wrist curls finish both accessory days with cable controls and optional RI
     for (const [reps, rir, ready] of [[[25,24], '1-2', false], [[25,25], '0', false], [[25,25], '1-2', true]]) {
       const prev = session(w.name, '2026-09-18', reps.map((r,i) => row(name,i+1,10,r,{rir})), {state_json:JSON.stringify({trainingBlock:run})});
       const guided = guide(w, [prev]);
-      const wrist = guided.at(-1);
+      const wristIdx = guided.findIndex(ex => ex.name === name);
+      const wrist = guided[wristIdx];
       const offer = wrist.sets[0].repGuidance.loadProgression;
       assert.equal(offer.ready, ready);
       assert.equal(offer.weight, 11);
       if (ready) {
-        const accepted = applySuggestedLoad(guided, guided.length-1, 0);
-        assert.deepEqual(plain(accepted.at(-1).sets.map(s => s.weight)), [11,11]);
+        const accepted = applySuggestedLoad(guided, wristIdx, 0);
+        assert.deepEqual(plain(accepted[wristIdx].sets.map(s => s.weight)), [11,11]);
       }
     }
   }
@@ -259,4 +260,10 @@ test('cable chest fly starts Shrugs Focus with per-stack loading and progresses 
     assert.equal(offer.ready, ready);
     assert.equal(offer.weight, 11);
   }
+});
+
+test('block hints bootstrap a renamed exercise from its old-name history', () => {
+  const w = getWorkout('strength-accessories-1');
+  const regular = session('Dips Focus', '2026-09-01', [1, 2, 3].map(n => row('Dumbbell Hammer Curls', n, 20, 12 - n)));
+  assert.deepEqual(plain(work(flatten(w, [regular]), 'Cable Hammer Curls').map(s => s.weight)), [20, 20, 20]);
 });

@@ -12,6 +12,7 @@ import * as squat from '../lib/legacy/squat-progression.js';
 import * as belt from '../lib/legacy/belt-load.js';
 import * as logging from '../lib/legacy/set-logging.js';
 import * as history from '../lib/legacy/exercise-history.js';
+import * as renames from '../lib/legacy/exercise-renames.js';
 import * as cableStackModule from '../lib/legacy/cable-stack.js';
 import { exerciseHintsWithDeloadBootstrap } from '../lib/legacy/exercise-hints.js';
 import { withRepGuidance } from '../lib/legacy/rep-guidance.js';
@@ -125,7 +126,7 @@ test('accepted progression survives a save and becomes the next matching workout
   assert.deepEqual(plain(workSets(next, 'Barbell Bench Press').map(s => [s.weight, s.reps])), [[137, null], [137, null], [137, null]]);
 
   const persistence = loadModule('../lib/legacy/session-persistence.js', {
-    '@/lib/db/api': { api: {} }, './shared': shared, './session-utils': utils, './belt-load': belt, './set-logging': logging,
+    '@/lib/db/api': { api: {} }, './shared': shared, './session-utils': utils, './belt-load': belt, './set-logging': logging, './exercise-renames': renames,
   }, { window: { SESSION_DELOAD: false } });
   persistence.setSessionTrainingBlock(w.name, options.date, run);
   const draft = persistence.serializeForSave(next, w.name, 'current', null, 120, options.date);
@@ -157,7 +158,7 @@ test('accessories retain the existing dragon stage and start dips with the agree
 
 test('saved block sessions retain their identity and edited sets through resume after expiry', () => {
   const persistence = () => loadModule('../lib/legacy/session-persistence.js', {
-    '@/lib/db/api': { api: {} }, './shared': shared, './session-utils': utils, './belt-load': belt, './set-logging': logging,
+    '@/lib/db/api': { api: {} }, './shared': shared, './session-utils': utils, './belt-load': belt, './set-logging': logging, './exercise-renames': renames,
   }, { window: { SESSION_DELOAD: false } });
   const exs = utils.flattenTemplate(workout('strength-b'), {}, {});
   const set = workSets(exs, 'Barbell Bench Press')[0];

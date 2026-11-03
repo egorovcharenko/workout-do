@@ -28,6 +28,7 @@ import { StatsPane } from "./StatsPane";
 import { DurationReadout } from "./DurationReadout";
 import { buildExerciseDurationHistory, estimateExerciseDurationMeta } from "@/lib/legacy/duration-estimates";
 import { mergeTemplateAndSavedSet, shouldKeepRemovedWarmup } from "@/lib/legacy/exercise-history";
+import { currentExerciseName, savedSetsForExercise } from "@/lib/legacy/exercise-renames";
 import { isBeltLoadExercise } from "@/lib/legacy/belt-load";
 import { regularToBlockWorkoutId, trainingBlockHints, resolveTrainingBlockSession } from "@/lib/training-block";
 import { applyProgramBuilder, parseProgramBuilder, programWorkouts as builderProgram } from "@/lib/program-builder";
@@ -148,11 +149,14 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
         if (savedSetsMap && Object.keys(savedSetsMap).length) {
           const templateNames = new Set(exs.map(ex => ex.name));
           exs = exs.map(ex => {
+            // Sets saved before a rename live under the old name; merge them
+            // into the renamed exercise instead of restoring a duplicate.
+            const stored = savedSetsForExercise(savedSetsMap, ex.name);
             const saved = ex.name === CABLE_CHEST_FLY.name
-              ? restoreChestFlyPrescription(ex.sets, savedSetsMap[ex.name])
+              ? restoreChestFlyPrescription(ex.sets, stored)
               : ex.name === SQUAT_EXERCISE && workout.trainingBlockId
-                ? dropRetiredSquatWarmup(savedSetsMap[ex.name], ex.sets)
-                : savedSetsMap[ex.name];
+                ? dropRetiredSquatWarmup(stored, ex.sets)
+                : stored;
             if (saved && saved.length) {
               const savedWarmups = saved.filter(s => s.kind === "warmup");
               const savedWorking = saved.filter(s => s.kind === "work");
@@ -199,6 +203,9 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
 
           // Restore any custom added library exercises
           Object.keys(savedSetsMap).forEach(name => {
+            // A saved name that maps onto a template exercise was already
+            // merged above; restoring it would duplicate the exercise.
+            if (templateNames.has(currentExerciseName(name))) return;
             if (!templateNames.has(name)) {
               const saved = savedSetsMap[name];
               if (shouldRestoreCustomExercise(saved)) {

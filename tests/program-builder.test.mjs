@@ -22,7 +22,7 @@ test('edits change sets, reps, rest and warm-ups; saved supersets are dropped; r
   assert.equal(squat.rest, 150);
   assert.equal(squat.noWarmup, true);
   assert.deepEqual(squat.loadProgression.groups, [[1]], 'Existing set groups keep their rules');
-  assert.deepEqual(w.exercises.slice(3).map(ex => ex.superset), [undefined, undefined]);
+  assert.deepEqual(w.exercises.slice(3, 5).map(ex => ex.superset), [undefined, undefined]);
   assert.equal(w.name, 'Strength A', 'Saved session name is unchanged');
   assert.equal(workoutDisplayName('Strength A'), 'Legs');
   assert.ok(estimateTemplateWorkoutDuration(w) < estimateTemplateWorkoutDuration(a));
@@ -98,8 +98,20 @@ test('saved superset groups are dropped: every exercise rests between its own se
   const plain = applyProgramBuilder([a], { workouts: { [a.id]: { exercises: rested } } })[0];
   const linked = rested.map((e, i) => i === 3 || i === 4 ? { ...e, superset: 'x' } : e);
   const [w] = applyProgramBuilder([a], { workouts: { [a.id]: { exercises: linked } } });
-  assert.deepEqual(w.exercises.slice(3).map(ex => ex.superset), [undefined, undefined]);
-  assert.deepEqual(w.exercises.slice(3).map(ex => ex.supersetTransition), [undefined, undefined]);
+  assert.deepEqual(w.exercises.slice(3, 5).map(ex => ex.superset), [undefined, undefined]);
+  assert.deepEqual(w.exercises.slice(3, 5).map(ex => ex.supersetTransition), [undefined, undefined]);
   assert.equal(estimateTemplateWorkoutDuration(w), estimateTemplateWorkoutDuration(plain));
   assert.equal(normalizeSupersets([{ name: 'a', superset: 'x', transition: 20 }])[0].transition, undefined);
+});
+
+test('saved programs migrate renamed exercises and drop duplicates', () => {
+  const acc1 = MAIN_WORKOUTS[1];
+  const entries = workoutEntries(acc1);
+  const old = entries.map(e => e.name === 'Cable Hammer Curls' ? { ...e, name: 'Dumbbell Hammer Curls' } : e);
+  const [migrated] = applyProgramBuilder([acc1], { workouts: { [acc1.id]: { exercises: old } } });
+  assert.ok(migrated.exercises.some(ex => ex.name === 'Cable Hammer Curls'));
+  assert.ok(!migrated.exercises.some(ex => ex.name === 'Dumbbell Hammer Curls'));
+  const dup = [...old, { ...old.find(e => e.name === 'Dumbbell Hammer Curls'), name: 'Cable Hammer Curls' }];
+  const [deduped] = applyProgramBuilder([acc1], { workouts: { [acc1.id]: { exercises: dup } } });
+  assert.equal(deduped.exercises.filter(ex => ex.name === 'Cable Hammer Curls').length, 1);
 });

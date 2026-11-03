@@ -65,14 +65,16 @@ test("main workout pull-ups do not show assisted progression instructions", () =
   }
 });
 
-test("micro days close with dragon fly, add leg accessories, and drop surf pop-up", () => {
+test("micro days close with decline crunches, add leg accessories, and drop surf pop-up", () => {
   const arms = WORKOUTS.find((candidate) => candidate.id === "micro-arms");
   const delts = WORKOUTS.find((candidate) => candidate.id === "micro-delts");
 
   assert.ok(arms.exercises.some((exercise) => exercise.name === "Cable Reverse Lunges"));
   assert.ok(delts.exercises.some((exercise) => exercise.name === "Calf Raises"));
-  assert.equal(arms.exercises[arms.exercises.length - 1].name, "Dragon Fly Progression");
-  assert.equal(delts.exercises[delts.exercises.length - 1].name, "Dragon Fly Progression");
+  assert.equal(arms.exercises[arms.exercises.length - 1].name, "Decline Abs Crunches");
+  assert.equal(delts.exercises[delts.exercises.length - 1].name, "Decline Abs Crunches");
+  assert.equal(arms.exercises[arms.exercises.length - 2].name, "Dragon Fly Progression");
+  assert.equal(delts.exercises[delts.exercises.length - 2].name, "Dragon Fly Progression");
 
   const allNames = WORKOUTS.flatMap((workout) => workout.exercises.flatMap((exercise) => [
     exercise.name,
