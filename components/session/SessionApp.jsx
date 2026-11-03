@@ -491,6 +491,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
                 onReopenSet={(sIdx) => actions.onReopenSet(i, sIdx)}
                 onAddSet={() => actions.onAddSet(i)}
                 onRemoveSet={() => actions.onRemoveSet(i)}
+                onSkipSet={() => actions.onSkipSet(i)}
                 onRemoveWarmup={() => actions.onRemoveWarmup(i)} /> );
             if (!combined) { return ( <React.Fragment key={ex.id}>
                   {ex.superset && ( <div style={{ margin: "4px 16px 6px", display: "flex", alignItems: "center", gap: 8 }}>

@@ -361,6 +361,29 @@ function useWorkoutActions({
     updateAndSave(next);
   };
 
+  const onSkipSet = (eIdx) => {
+    startTimer();
+    const current = exercisesRef.current;
+    const ex = current[eIdx];
+    if (!ex) return;
+    // Skip the set on screen: the active set, falling back to the first
+    // pending work set when this card has no active set. The set stays in
+    // the strip marked skipped (userSkipped, like the existing flag) so it
+    // counts as resolved, logs no volume, and can be reopened by tapping it.
+    const activeIdx = ex.sets.findIndex(s => s.active);
+    const targetIdx = activeIdx !== -1
+      ? activeIdx
+      : ex.sets.findIndex(s => s.kind === "work" && !s.completed && !s.userSkipped);
+    if (targetIdx === -1) return;
+    const next = current.map((e, i) => i !== eIdx ? e : ({
+      ...e,
+      sets: e.sets.map((s, j) => j === targetIdx ? { ...s, active: false, completed: false, userSkipped: true } : s),
+    }));
+    // Skipping the active set must not leave the session without one.
+    if (!next.some(e => e.sets.some(s => s.active))) activateNextSet(next);
+    updateAndSave(next);
+  };
+
   const onRemoveWarmup = (eIdx) => {
     startTimer();
     const next = exercisesRef.current.map((e, i) => i !== eIdx ? e : ({ ...e, sets: e.sets.filter(s => s.kind !== "warmup") }));
@@ -474,6 +497,7 @@ function useWorkoutActions({
     onSwapExercise,
     onAddSet,
     onRemoveSet,
+    onSkipSet,
     onRemoveWarmup,
     onFinishWorkout,
     onAbandonWorkout,

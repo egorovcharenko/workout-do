@@ -10,7 +10,7 @@ import { ProgressionBanner } from "./ProgressionBanner";
 
 // ─── file: workout-session-exercise-card.js ───
 
-function ExerciseCardContent({ exercise, sessionTimes, durationMeta, supersetTag, embedded, rest, onRestAdd, onRestSkip, onRestToggle, onPickWeight, onApplyLoadProgression, onPickBodyweight, onPickGrip, onToggleBand, onClearBands, onLogReps, onPickRir, lastLoggedSet, onPickLastRir, onSkipExercise, onSwapExercise, onReopenSet, onAddSet, onRemoveSet, onRemoveWarmup }) {
+function ExerciseCardContent({ exercise, sessionTimes, durationMeta, supersetTag, embedded, rest, onRestAdd, onRestSkip, onRestToggle, onPickWeight, onApplyLoadProgression, onPickBodyweight, onPickGrip, onToggleBand, onClearBands, onLogReps, onPickRir, lastLoggedSet, onPickLastRir, onSkipExercise, onSwapExercise, onReopenSet, onAddSet, onRemoveSet, onSkipSet, onRemoveWarmup }) {
   const [showAllFamilies, setShowAllFamilies] = useState(false);
   const [showVariants, setShowVariants] = useState(false);
   const currentFamilyName = getSwapGroupName(exercise.name) || "Other";
@@ -42,6 +42,7 @@ function ExerciseCardContent({ exercise, sessionTimes, durationMeta, supersetTag
   const activeWarmupPos = activeSet && activeSet.kind === "warmup" ? warmups.indexOf(activeSet) + 1 : null;
   const lastWork = [...exercise.sets].reverse().find(s => s.kind === "work");
   const canRemove = totalWork > 1;
+  const canSkip = activeSet != null || exercise.sets.some(s => s.kind === "work" && !s.completed && !s.userSkipped);
 
 
 
@@ -279,6 +280,7 @@ function ExerciseCardContent({ exercise, sessionTimes, durationMeta, supersetTag
         {embedded && hasVariants && footerBtn(showVariants ? "Hide variants" : "Swap variant", () => setShowVariants(!showVariants))}
         {footerBtn("Add set", onAddSet)}
         {footerBtn("Remove set", onRemoveSet, !canRemove)}
+        {footerBtn("Skip set", onSkipSet, !canSkip)}
         {footerBtn("Skip exercise", onSkipExercise)}
         <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
           {/* Offer removing the warm-up ramp once past it. */}

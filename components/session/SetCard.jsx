@@ -51,6 +51,7 @@ function SetCard({ s, idx, exercise, onReopenSet, dur }) {
     `${rDelta > 0 ? "+" : ""}${rDelta}r`;
   const isWarm = s.kind === "warmup";
   const isCurrent = s.active;
+  const isSkipped = !!s.userSkipped;
   const tappable = !isCurrent;
 
   const btnRef = React.useRef(null);
@@ -72,13 +73,13 @@ function SetCard({ s, idx, exercise, onReopenSet, dur }) {
                   : "inset 0 0 0 2px rgba(96,165,250,0.6), 0 4px 14px -4px rgba(59,130,246,0.5)")
         : "none",
       border: 0,
-      opacity: 1,
+      opacity: isSkipped ? 0.6 : 1,
       display: "flex", flexDirection: "column", alignItems: "stretch", justifyContent: "center", gap: 5,
       flex: "1 0 auto", flexShrink: 0, transition: "all 200ms ease",
     }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 6 }}>
-      <span style={{ color: isWarm ? T.amber : isCurrent ? T.accentLight : T.faint, fontFamily: T.mono, fontSize: 9, fontWeight: 800, letterSpacing: 0.7 }}>
-        {setStripLabel(s, exercise.sets)}
+      <span style={{ color: isSkipped ? T.muted : isWarm ? T.amber : isCurrent ? T.accentLight : T.faint, fontFamily: T.mono, fontSize: 9, fontWeight: 800, letterSpacing: 0.7, textDecoration: isSkipped ? "line-through" : "none" }}>
+        {isSkipped ? "× " : ""}{setStripLabel(s, exercise.sets)}
         {!s.completed && (guidance?.rangeLabel || guidance?.rirLabel) && <span style={{ color: T.muted, marginLeft: 5, fontSize: 10, fontFamily: "var(--suite-font-sans)", fontWeight: 500, letterSpacing: 0 }}>Target</span>}
       </span>
       {(() => {
