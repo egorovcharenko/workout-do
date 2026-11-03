@@ -69,7 +69,7 @@ test("micro days close with dragon fly, add leg accessories, and drop surf pop-u
   const arms = WORKOUTS.find((candidate) => candidate.id === "micro-arms");
   const delts = WORKOUTS.find((candidate) => candidate.id === "micro-delts");
 
-  assert.ok(arms.exercises.some((exercise) => exercise.name === "Lunges"));
+  assert.ok(arms.exercises.some((exercise) => exercise.name === "Cable Reverse Lunges"));
   assert.ok(delts.exercises.some((exercise) => exercise.name === "Calf Raises"));
   assert.equal(arms.exercises[arms.exercises.length - 1].name, "Dragon Fly Progression");
   assert.equal(delts.exercises[delts.exercises.length - 1].name, "Dragon Fly Progression");

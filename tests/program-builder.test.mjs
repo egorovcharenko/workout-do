@@ -33,11 +33,11 @@ test('edits change sets, reps, rest and warm-ups; saved supersets are dropped; r
 test('moved and added exercises keep their own configuration', () => {
   const dips = workoutEntries(acc1).find(e => e.name === 'Dips');
   const [w] = applyProgramBuilder([a], { workouts: { [a.id]: { exercises: [...workoutEntries(a), dips,
-    { name: 'Goblet Squat', sets: [[8, 12], [8, 12]], rest: 60, warmups: [], superset: null }] } } });
+    { name: 'Cable Goblet Squat', sets: [[8, 12], [8, 12]], rest: 60, warmups: [], superset: null }] } } });
   const moved = w.exercises.find(ex => ex.name === 'Dips');
   assert.deepEqual(moved.loadProgression, acc1.exercises.find(ex => ex.name === 'Dips').loadProgression);
-  const goblet = w.exercises.find(ex => ex.name === 'Goblet Squat');
-  assert.equal(goblet.equipment, 'dumbbell');
+  const goblet = w.exercises.find(ex => ex.name === 'Cable Goblet Squat');
+  assert.equal(goblet.equipment, 'cable');
   assert.deepEqual(goblet.workRepRanges, [[8, 12], [8, 12]]);
 });
 

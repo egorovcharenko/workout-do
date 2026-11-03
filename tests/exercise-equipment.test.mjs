@@ -46,8 +46,8 @@ test('every workout and library exercise has explicitly assigned equipment', () 
     workout.exercises.flatMap(exercise => exercise.supersetExercises || [exercise]));
   exercises.push(...shared.SWAP_GROUPS.flatMap(group => group.exercises));
   for (const exercise of exercises) assert.ok(allowed.has(exercise.equipment), `Missing equipment: ${exercise.name}`);
-  for (const exercise of exercises.filter(exercise => exercise.name === 'Reverse Flyes')) {
-    assert.equal(exercise.equipment, 'dumbbell');
+  for (const exercise of exercises.filter(exercise => exercise.name === 'Cable Reverse Flyes')) {
+    assert.equal(exercise.equipment, 'cable');
   }
 });
 
@@ -68,15 +68,16 @@ test('equipment controls use assignments even when the name suggests a different
   assert.equal(buildLibraryExerciseTemplate('Barbell Cable Dumbbell').equipment, null);
 });
 
-test('Reverse Flyes uses its assigned dumbbells when added or resumed, preserving logged values', () => {
-  const official = shared.findExerciseConfig('Reverse Flyes');
+test('Cable Reverse Flyes uses its assigned cable stack when added or resumed, preserving logged values', () => {
+  const official = shared.findExerciseConfig('Cable Reverse Flyes');
   const template = buildLibraryExerciseTemplate(official.name, official);
   const exercise = utils.flattenTemplate({ exercises: [template] }, {}, {})[0];
   const saved = { ...exercise.sets[0], weight: 25, reps: 12, rir: '1-2', completed: true,
     logged_at: '2026-09-07T18:00:00Z' };
   exercise.sets[0] = history.mergeTemplateAndSavedSet(exercise.name, exercise.sets[0], saved);
   assert.deepEqual(exercise.sets[0], saved);
-  assert.match(render(exercise), /viewBox="0 0 72 34"/);
+  assert.match(render(exercise), /cable control/);
+  assert.doesNotMatch(render(exercise), /viewBox="0 0 72 34"/);
 });
 
 test('deload always lightens light loads, using stack loads for cables', () => {

@@ -37,7 +37,7 @@ test('muscle volume counts secondary movers fractionally and flags low, in-range
   for (let week = 0; week < 4; week++) for (const day of [2, 6]) {
     sessions.push(session(week * 7 + day, [
       ...Array(4).fill(set('Barbell Bench Press')),
-      ...Array(12).fill(set('Dumbbell Lateral Raises')),
+      ...Array(12).fill(set('Cable Lateral Raises')),
     ]));
   }
   const { muscles, actions, balance } = buildInsights(sessions, {}, { today });
