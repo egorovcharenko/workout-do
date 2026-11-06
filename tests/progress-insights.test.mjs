@@ -108,3 +108,16 @@ test('time per set and exercise comes from gaps between logged sets', () => {
   assert.match(html, /3:00/);
   assert.match(html, /−60s/);
 });
+
+test('a low-muscle suggestion recognizes an exercise done only under its pre-rename name', () => {
+  // Four weeks of hammer curls twice a week (3 sets each), only ever logged
+  // under the dumbbell name: 6 biceps sets/week, below the 8–18 target.
+  const sessions = [];
+  for (let week = 0; week < 4; week++) for (const day of [2, 6]) {
+    sessions.push(session(week * 7 + day, [...Array(3).fill(set('Dumbbell Hammer Curls'))]));
+  }
+  const { actions } = buildInsights(sessions, {}, { today });
+  const biceps = actions.find(a => a.kind === 'low' && /Biceps: 6 sets\/week/.test(a.text));
+  assert.ok(biceps, 'biceps is flagged low');
+  assert.match(biceps.text, /Cable Hammer Curls/, 'suggests the exercise already trained, under its current name');
+});

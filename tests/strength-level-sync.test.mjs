@@ -165,3 +165,17 @@ test("the snippet's match key uses a real space, not a stray control byte", () =
   assert.ok(!/[\u0000-\u0008\u000b-\u001f]/.test(snippet));
   assert.ok(snippet.includes('return date + " " + (LEGACY[name] || name);'));
 });
+
+test("pre-rename sets map to the current exercise instead of unmapped", () => {
+  const p = buildStoredSessionPayload(session({
+    sets: [
+      { exercise: "Dumbbell Hammer Curls", set_type: "working", reps: "10", weight_lb: 25 },
+      { exercise: "Dumbbell Hammer Curls", set_type: "working", reps: "9", weight_lb: 25 },
+    ],
+  }));
+  assert.deepEqual(p.unmapped, []);
+  assert.equal(p.exercises.length, 1);
+  assert.equal(p.setCount, 2);
+  assert.equal(p.exercises[0].exercise_id, SL_EXERCISE_MAP["Cable Hammer Curls"]);
+  assert.deepEqual(p.exercises[0].sets.map((set) => set.weight), [kg(25), kg(25)]);
+});

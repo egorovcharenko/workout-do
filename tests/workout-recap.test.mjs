@@ -258,3 +258,14 @@ test('finish submits only once, keeps review available, and allows a retry after
   assert.equal(calls, 2);
   assert.ok(buttons(output).every(button => button.props.disabled));
 });
+
+test('stored recap merges rows saved under a pre-rename name into the current exercise', () => {
+  const session = { date: '2026-10-20', cable_weight_mode: 'per_stack', sets: [
+    { exercise: 'Dumbbell Hammer Curls', set_type: 'working', weight_lb: 25, reps: '10' },
+    { exercise: 'Dumbbell Hammer Curls', set_type: 'working', weight_lb: 25, reps: '9' },
+  ] };
+  const result = recap.buildStoredWorkoutRecap(session);
+  assert.deepEqual(result.exercises.map(ex => ex.name), ['Cable Hammer Curls']);
+  assert.equal(result.exercises[0].workingSets, 2);
+  assert.deepEqual(result.exercises[0].groups, [{ load: '25 lb', reps: [10, 9] }]);
+});

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildRecap1rmTrends, limitTrendsToRecentMonths, recapTrendSession, recapMonthlyChanges, renderRecapMonthlyChanges, renderRecap1rm, recapTimeDomain, renderRecapTrendMetrics, renderRecapTimeHeader } from '../lib/legacy/recap-1rm.js';
+import { buildAllTime1rmTrends, buildRecap1rmTrends, limitTrendsToRecentMonths, recapTrendSession, recapMonthlyChanges, renderRecapMonthlyChanges, renderRecap1rm, recapTimeDomain, renderRecapTrendMetrics, renderRecapTimeHeader } from '../lib/legacy/recap-1rm.js';
 import { renderLatestWorkoutRecap } from '../components/home/recap.js';
 const name = 'Barbell Bench Press';
 const row = (weight, reps, extra = {}) => ({ exercise: name, weight_lb: weight, reps, set_type: 'working', ...extra });
@@ -236,4 +236,23 @@ test('recap charts keep the last three calendar months, or the last point when n
   });
   assert.deepEqual(trends.Squat.map(p => p.date), ['2026-07-01', '2026-09-18']);
   assert.deepEqual(trends.Old.map(p => p.date), ['2025-02-01']);
+});
+
+test('recap trend keeps pre-rename history for a renamed exercise', () => {
+  const old = session('old', '2026-10-20', [{ exercise: 'Dumbbell Hammer Curls', weight_lb: 25, reps: 10, set_type: 'working' }]);
+  const current = { id: 'today', date: '2026-11-06', sets: [{ exercise: 'Cable Hammer Curls', weight_lb: 30, reps: 10, set_type: 'working' }] };
+  const trends = buildRecap1rmTrends([old], current, {});
+  assert.deepEqual(Object.keys(trends), ['Cable Hammer Curls']);
+  assert.equal(trends['Cable Hammer Curls'].length, 2);
+  assert.equal(trends['Cable Hammer Curls'][0].date, '2026-10-20');
+});
+
+test('all-time trends merge pre- and post-rename rows under the current name', () => {
+  const history = [
+    session('s1', '2026-10-20', [{ exercise: 'Dumbbell Hammer Curls', weight_lb: 25, reps: 10, set_type: 'working' }]),
+    session('s2', '2026-11-06', [{ exercise: 'Cable Hammer Curls', weight_lb: 30, reps: 10, set_type: 'working' }]),
+  ];
+  const trends = buildAllTime1rmTrends(history, {});
+  assert.deepEqual(Object.keys(trends), ['Cable Hammer Curls']);
+  assert.equal(trends['Cable Hammer Curls'].length, 2);
 });

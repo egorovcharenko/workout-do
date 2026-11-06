@@ -108,3 +108,13 @@ test("hint maps carry last-performed counts so an added set persists", () => {
 
   assert.equal(hints.__counts["Lat Pulldown"], 4);
 });
+
+test("normal history under a pre-rename name blocks the deload bootstrap", () => {
+  const hints = exerciseHintsWithDeloadBootstrap([
+    session({ id: "normal", is_deload: 0, sets: [set("Dumbbell Hammer Curls", 1, 25, 10)] }),
+    session({ id: "deload", is_deload: 1, sets: [set("Cable Hammer Curls", 1, 20, 10)] }),
+  ]);
+
+  assert.equal(hints["Cable Hammer Curls|working|1"].weight_lb, 25);
+  assert.equal(hints["Dumbbell Hammer Curls|working|1"], undefined);
+});

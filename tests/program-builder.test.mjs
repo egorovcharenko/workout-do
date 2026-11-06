@@ -145,3 +145,30 @@ test('saved lists that already end with crunches and wrist curls are untouched',
   const [w] = applyProgramBuilder([acc2], { workouts: { [acc2.id]: { exercises: entries } } });
   assert.deepEqual(w.exercises.map(ex => ex.name), entries.map(e => e.name));
 });
+
+test('saved accessories-1 lists gain crunches but keep wrist curls where the code puts them', () => {
+  const acc1 = MAIN_WORKOUTS[1];
+  const entries = workoutEntries(acc1).filter(e => e.name !== 'Decline Abs Crunches');
+  const wrist = entries.find(e => e.name === 'Bench-Supported Cable Wrist Curls');
+  const rest = entries.filter(e => e.name !== 'Bench-Supported Cable Wrist Curls');
+  // Pre-Nov 3 saved order: wrist curls mid-list, no crunches.
+  const saved = [rest[0], wrist, ...rest.slice(1)];
+  const [w] = applyProgramBuilder([acc1], { workouts: { [acc1.id]: { exercises: saved } } });
+  const names = w.exercises.map(ex => ex.name);
+  assert.equal(names[names.length - 1], 'Decline Abs Crunches');
+  assert.equal(names[1], 'Bench-Supported Cable Wrist Curls');
+});
+
+test('saved lists with the pre-rename wrist-curl name still gain crunches with wrist curls last', () => {
+  const acc2 = MAIN_WORKOUTS[3];
+  const entries = workoutEntries(acc2).filter(e => e.name !== 'Decline Abs Crunches');
+  const old = entries.map(e => e.name === 'Bench-Supported Cable Wrist Curls' ? { ...e, name: 'Bench-Supported Dumbbell Wrist Curls' } : e);
+  const wrist = old.find(e => e.name === 'Bench-Supported Dumbbell Wrist Curls');
+  const rest = old.filter(e => e.name !== 'Bench-Supported Dumbbell Wrist Curls');
+  const saved = [rest[0], wrist, ...rest.slice(1)];
+  const [w] = applyProgramBuilder([acc2], { workouts: { [acc2.id]: { exercises: saved } } });
+  const names = w.exercises.map(ex => ex.name);
+  assert.equal(names[names.length - 1], 'Bench-Supported Cable Wrist Curls');
+  assert.equal(names[names.length - 2], 'Decline Abs Crunches');
+  assert.ok(!names.includes('Bench-Supported Dumbbell Wrist Curls'));
+});

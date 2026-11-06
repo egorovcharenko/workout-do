@@ -13,6 +13,7 @@ import { MUSCLE_GROUPS } from "./shell";
 import { latestSessionDeltaPercent, trainingPoints } from "@/lib/deload-progress";
 import { effectiveStoredExerciseWeight } from "@/lib/legacy/cable-stack";
 import { storedBeltLoad } from "@/lib/legacy/belt-load";
+import { currentExerciseName } from "@/lib/legacy/exercise-renames";
 
 function renderWorkoutSummaryCard() {
   const history = state.history || [];
@@ -100,7 +101,7 @@ function renderWorkoutSummaryCard() {
     history.forEach(s => {
       let best = _assist(exName) ? -Infinity : 0, bw = 0, br = 0, has = false;
       (s.sets || []).forEach(set => {
-        if (set.exercise === exName && set.set_type === 'working' && set.reps) {
+        if (currentExerciseName(set.exercise) === exName && set.set_type === 'working' && set.reps) {
           has = true;
           const recordedWeight = parseFloat(set.weight_lb) || 0, r = parseInt(set.reps) || 0;
           const w = effectiveStoredExerciseWeight(exName, recordedWeight, s);
@@ -141,20 +142,22 @@ function renderWorkoutSummaryCard() {
     if (isNaN(sMs) || sMs < weekStartMs || sMs > weekAnchorMs) return;
     (s.sets || []).forEach(set => {
       if (set.set_type !== 'working' || !set.reps) return;
-      const map = EXERCISE_MUSCLES[set.exercise];
+      const name = currentExerciseName(set.exercise);
+      const map = EXERCISE_MUSCLES[name];
       if (!map) return;
-      map.primary.forEach(mm => { weeklySets[mm] = (weeklySets[mm] || 0) + getMuscleImpact(set.exercise, mm, true); });
-      map.secondary.forEach(mm => { weeklySets[mm] = (weeklySets[mm] || 0) + getMuscleImpact(set.exercise, mm, false); });
+      map.primary.forEach(mm => { weeklySets[mm] = (weeklySets[mm] || 0) + getMuscleImpact(name, mm, true); });
+      map.secondary.forEach(mm => { weeklySets[mm] = (weeklySets[mm] || 0) + getMuscleImpact(name, mm, false); });
     });
   });
 
   const todaySets = {};
   (latest.sets || []).forEach(set => {
     if (set.set_type !== 'working' || !set.reps) return;
-    const map = EXERCISE_MUSCLES[set.exercise];
+    const name = currentExerciseName(set.exercise);
+    const map = EXERCISE_MUSCLES[name];
     if (!map) return;
-    map.primary.forEach(mm => { todaySets[mm] = (todaySets[mm] || 0) + getMuscleImpact(set.exercise, mm, true); });
-    map.secondary.forEach(mm => { todaySets[mm] = (todaySets[mm] || 0) + getMuscleImpact(set.exercise, mm, false); });
+    map.primary.forEach(mm => { todaySets[mm] = (todaySets[mm] || 0) + getMuscleImpact(name, mm, true); });
+    map.secondary.forEach(mm => { todaySets[mm] = (todaySets[mm] || 0) + getMuscleImpact(name, mm, false); });
   });
 
   const combinedList = [];

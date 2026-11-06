@@ -100,3 +100,18 @@ test("correcting a logged set preserves its original timestamp", () => {
   assert.equal(loggedAtForSetUpdate({ logged_at: original }, correctionTime), original);
   assert.equal(loggedAtForSetUpdate({}, correctionTime), correctionTime);
 });
+
+test("durations merge sets logged under a pre-rename name into the current exercise", () => {
+  const result = sessionExerciseDurations({
+    started_at: "2026-07-01T10:00:00.000Z",
+    sets: [set("Dumbbell Hammer Curls", 2), set("Cable Hammer Curls", 4), set("Lat Pulldown", 6)],
+  });
+  assert.deepEqual(result["Cable Hammer Curls"], { durationSec: 240, setCount: 2 });
+  assert.equal(result["Dumbbell Hammer Curls"], undefined);
+  const history = buildExerciseDurationHistory([
+    { id: "old", date: "2026-07-01", sets: [set("Dumbbell Hammer Curls", 2)] },
+    { id: "new", date: "2026-07-02", sets: [set("Cable Hammer Curls", 2)] },
+  ]);
+  assert.equal(history["Cable Hammer Curls"].length, 2);
+  assert.equal(history["Dumbbell Hammer Curls"], undefined);
+});
