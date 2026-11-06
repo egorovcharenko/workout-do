@@ -67,6 +67,42 @@ test('missing history never turns a template default or another set into a previ
   assert.equal(withRepGuidance(raw, [], options)[0].sets[0].repGuidance.previous, null);
 });
 
+test('a renamed cable exercise shows its previous reps from rows saved under the old dumbbell name', () => {
+  const name = 'Incline Cable Curls';
+  const old = 'Incline DB Curls';
+  const past = session('previous', 'Shrugs Focus', '2026-10-31', [row(old, 1, 15, 8), row(old, 2, 15, 8), row(old, 3, 15, 7)]);
+  const older = session('older', 'Shrugs Focus', '2026-10-03', [row(old, 1, 25, 6), row(old, 2, 25, 6)]);
+  const raw = [ex(name, [set(1, 15, { targetRepRange: [6, 15] }), set(2, 15, { targetRepRange: [6, 15] }), set(3, 15, { targetRepRange: [6, 15] })], { repRange: '6-15' })];
+  const guided = withRepGuidance(raw, [older, past], { ...options, date: '2026-11-06' })[0];
+  assert.deepEqual(guided.sets.map(s => s.repGuidance.previous.reps), [8, 8, 7]);
+  assert.equal(guided.sets[0].repGuidance.previous.label, '15 lb × 8');
+  assert.deepEqual(guided.sets.map(s => navSetDisplay(s, guided).lastReps), [8, 8, 7]);
+  assert.equal(guided.sets[0].repGuidance.suggested, 9, 'One more rep at the same load');
+});
+
+test('load progression counts qualifying appearances saved under a renamed exercise’s old name', () => {
+  const name = 'Incline Cable Curls';
+  const old = 'Incline DB Curls';
+  const run2 = { ...createTrainingBlock('2026-09-06', 'run-two', '2026-09-05'), prescriptionRevision: 2 };
+  const workout2 = sharedModule.BLOCK_WORKOUTS.find(w => w.id === 'strength-accessories-2');
+  const config = workout2.exercises.find(e => e.name === name);
+  const raw = [ex(name, config.defaultWork.map((weight, i) => set(i + 1, weight, { targetRepRange: config.workRepRanges[i] })), { repRange: '6-15' })];
+  const appearance = (id, date, extra = {}) => session(id, 'Strength Accessories 2', date,
+    [1, 2, 3].map(n => row(old, n, 20, 15)),
+    { state_json: JSON.stringify({ trainingBlock: run2 }), ...extra });
+  const history = [appearance('a2', '2026-09-18'), appearance('a1', '2026-09-12')];
+  const guided = withRepGuidance(raw, history, { workout: workout2, block: run2, sessionId: 'today', date: '2026-09-25' })[0];
+  assert.deepEqual(guided.sets.map(s => s.repGuidance.previous.reps), [15, 15, 15]);
+  const first = guided.sets[0].repGuidance.loadProgression;
+  assert.equal(first.qualifying, 2);
+  assert.equal(first.ready, true);
+  assert.equal(first.weight, 21);
+  const skipped = [appearance('a2', '2026-09-18', { state_json: JSON.stringify({ trainingBlock: run2,
+    setsMap: { [old]: [{ kind: 'work', setNumber: 1, userSkipped: true }] } }) }), appearance('a1', '2026-09-12')];
+  assert.equal(withRepGuidance(raw, skipped, { workout: workout2, block: run2, sessionId: 'today', date: '2026-09-25' })[0]
+    .sets[0].repGuidance.loadProgression.qualifying, 0, 'A set skipped under the old name still breaks the streak');
+});
+
 test('lighter bench sets retain the previous reps within the range instead of resetting to six', () => {
   const name = 'Barbell Bench Press';
   const past = session('past', 'Squat Focus', '2026-09-05', [row(name, 2, 145, 8)]);
