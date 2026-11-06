@@ -17,6 +17,7 @@ import {
 import { EXERCISE_MUSCLES } from "@/lib/legacy/standards";
 import { loadSkippedExercises } from "@/lib/legacy/session-persistence";
 import { cableStackMultiplier } from "@/lib/legacy/cable-stack";
+import { legacyNamesFor } from "@/lib/legacy/exercise-renames";
 import { state } from "./state";
 import { renderCalendar } from "./calendar";
 import { renderMeasurementsCard } from "./measurementsCard";
@@ -74,7 +75,10 @@ function renderWorkoutCard(w, isSuggested, isOngoing, logged, expected, pct, bad
     if (w.trainingBlockId) {
       return `<div class="home-exercise"><span>${escapeHtml(ex.name)}</span><span class="home-value">${ex.sets} sets</span></div>`;
     }
-    const last = state.lastSession[`${ex.name}|working|1`] || state.lastSession[`${ex.name}|working|2`] || state.lastSession[`${ex.name}|working|3`];
+    // Rows saved before a rename live under the old name; check those too so
+    // a renamed exercise still shows its last weight.
+    const last = [ex.name, ...legacyNamesFor(ex.name)]
+      .flatMap(n => [1, 2, 3].map(i => state.lastSession[`${n}|working|${i}`])).find(Boolean);
     const weight = last?.weight_lb ?? '—', reps = last?.reps ?? '—';
     const value = !last ? '—' : ex.repsOnly ? `${reps} reps` : `${weight}${cableStackMultiplier(ex.name) === 2 ? '×2' : ''} × ${reps}`;
     return `<div class="home-exercise"><span title="${escapeHtml(ex.name)}">${escapeHtml(ex.name)}</span><span class="home-value">${escapeHtml(value)}</span></div>`;

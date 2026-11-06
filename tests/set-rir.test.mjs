@@ -149,6 +149,7 @@ test('new workout sets never inherit RIR from previous workout hints', () => {
     './shared': shared, './session-persistence': { loadBodyweight: () => 165 },
     './bench-progression': bench, './squat-progression': squat,
     './belt-load': belt, './set-logging': logging, './exercise-history': history,
+    './exercise-renames': renames,
   });
   const exercises = utils.flattenTemplate({ exercises: [{ name: 'Dips', repsOnly: true, beltLoad: true, sets: 3, noWarmup: true, reps: '6-12' }] }, {}, {
     'Dips|working|1': { reps: '11', weight_lb: 25, load_type: 'belt', rir: '0' },

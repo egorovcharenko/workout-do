@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { LEGACY_EXERCISE_NAMES, currentExerciseName, savedSetsForExercise } from "../lib/legacy/exercise-renames.js";
+import { LEGACY_EXERCISE_NAMES, currentExerciseName, legacyNamesFor, savedSetsForExercise } from "../lib/legacy/exercise-renames.js";
 import * as shared from "../lib/legacy/shared.js";
 import { hintsFromSessions, workingSetCountsFromSessions } from "../lib/legacy/exercise-hints.js";
 import { buildExerciseSessionHistory } from "../lib/legacy/exercise-session-history.js";
@@ -48,6 +48,12 @@ test("per-exercise history includes rows saved under the old name", () => {
   const { rows } = buildExerciseSessionHistory(history, "Cable Hammer Curls");
   assert.equal(rows.length, 1);
   assert.equal(rows[0].sets[0].weight_lb, 20);
+});
+
+test("legacyNamesFor lists the old names for a renamed exercise", () => {
+  assert.deepEqual(legacyNamesFor("Bench-Supported Cable Wrist Curls"), ["Bench-Supported Dumbbell Wrist Curls"]);
+  assert.deepEqual(legacyNamesFor("Cable Hammer Curls"), ["Dumbbell Hammer Curls"]);
+  assert.deepEqual(legacyNamesFor("Barbell RDL"), []);
 });
 
 test("findExerciseConfig resolves an old name to the cable exercise", () => {

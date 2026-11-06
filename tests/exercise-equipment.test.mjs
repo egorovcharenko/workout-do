@@ -9,6 +9,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import * as shared from '../lib/legacy/shared.js';
 import * as belt from '../lib/legacy/belt-load.js';
 import * as history from '../lib/legacy/exercise-history.js';
+import * as renames from '../lib/legacy/exercise-renames.js';
 import * as cableStack from '../lib/legacy/cable-stack.js';
 import { buildLibraryExerciseTemplate } from '../lib/legacy/session-mutations.js';
 
@@ -35,6 +36,7 @@ const { ActiveSetBlock } = load('../components/session/ActiveSetBlock.jsx', {
 const utils = load('../lib/legacy/session-utils.js', {
   './shared': shared, './session-persistence': { loadBodyweight: () => 165 },
   './belt-load': belt, './exercise-history': history, './cable-stack': cableStack,
+  './exercise-renames': renames,
 });
 const render = exercise => renderToStaticMarkup(React.createElement(ActiveSetBlock, {
   exercise, set: exercise.sets[0],

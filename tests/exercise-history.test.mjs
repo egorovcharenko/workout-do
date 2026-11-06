@@ -49,6 +49,31 @@ test("other exercises retain global hints and last-set fallback", () => {
   assert.equal(previousWorkingSet("Lat Pulldown", history, 2, 3).reps, "10");
 });
 
+test("renamed exercises prefill from history saved under the old name", () => {
+  const lastSession = {};
+  const globalHints = {
+    "Bench-Supported Dumbbell Wrist Curls|working|1": row(20),
+    "Bench-Supported Dumbbell Wrist Curls|working|2": row(18),
+  };
+  const source = selectWorkingHistorySource("Bench-Supported Cable Wrist Curls", lastSession, globalHints);
+  const history = workingHistoryBySetNumber("Bench-Supported Cable Wrist Curls", source);
+
+  assert.equal(history[1].reps, "20");
+  assert.equal(history[2].reps, "18");
+});
+
+test("current-name history wins per set over old-name rows", () => {
+  const source = {
+    "Bench-Supported Dumbbell Wrist Curls|working|1": row(20),
+    "Bench-Supported Cable Wrist Curls|working|1": row(25),
+    "Bench-Supported Dumbbell Wrist Curls|working|2": row(18),
+  };
+  const history = workingHistoryBySetNumber("Bench-Supported Cable Wrist Curls", source);
+
+  assert.equal(history[1].reps, "25");
+  assert.equal(history[2].reps, "18");
+});
+
 test("stale uncompleted pull-up previews are replaced on hydration", () => {
   const template = { kind: "work", idx: 3, setNumber: 3, lastReps: null, reps: null, completed: false };
   const saved = { kind: "work", idx: 3, setNumber: 3, lastReps: 5, reps: null, completed: false };

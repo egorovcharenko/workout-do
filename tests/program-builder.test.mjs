@@ -115,3 +115,33 @@ test('saved programs migrate renamed exercises and drop duplicates', () => {
   const [deduped] = applyProgramBuilder([acc1], { workouts: { [acc1.id]: { exercises: dup } } });
   assert.equal(deduped.exercises.filter(ex => ex.name === 'Cable Hammer Curls').length, 1);
 });
+
+test('saved lists gain missing decline crunches and keep wrist curls last (Nov 6, 2026)', () => {
+  const acc2 = MAIN_WORKOUTS[3];
+  const entries = workoutEntries(acc2).filter(e => e.name !== 'Decline Abs Crunches');
+  const wrist = entries.find(e => e.name === 'Bench-Supported Cable Wrist Curls');
+  const rest = entries.filter(e => e.name !== 'Bench-Supported Cable Wrist Curls');
+  // Pre-Nov 3 saved order: wrist curls mid-list, no crunches.
+  const saved = [rest[0], wrist, ...rest.slice(1)];
+  const [w] = applyProgramBuilder([acc2], { workouts: { [acc2.id]: { exercises: saved } } });
+  const names = w.exercises.map(ex => ex.name);
+  assert.equal(names[names.length - 1], 'Bench-Supported Cable Wrist Curls');
+  assert.equal(names[names.length - 2], 'Decline Abs Crunches');
+  assert.deepEqual(names.slice(0, -2), rest.map(e => e.name));
+});
+
+test('saved strength-b lists gain missing decline crunches at the end', () => {
+  const b = MAIN_WORKOUTS[2];
+  const entries = workoutEntries(b).filter(e => e.name !== 'Decline Abs Crunches');
+  const [w] = applyProgramBuilder([b], { workouts: { [b.id]: { exercises: entries } } });
+  const names = w.exercises.map(ex => ex.name);
+  assert.equal(names[names.length - 1], 'Decline Abs Crunches');
+  assert.deepEqual(names.slice(0, -1), entries.map(e => e.name));
+});
+
+test('saved lists that already end with crunches and wrist curls are untouched', () => {
+  const acc2 = MAIN_WORKOUTS[3];
+  const entries = workoutEntries(acc2);
+  const [w] = applyProgramBuilder([acc2], { workouts: { [acc2.id]: { exercises: entries } } });
+  assert.deepEqual(w.exercises.map(ex => ex.name), entries.map(e => e.name));
+});

@@ -14,6 +14,7 @@ import * as squat from '../lib/legacy/squat-progression.js';
 import * as belt from '../lib/legacy/belt-load.js';
 import * as logging from '../lib/legacy/set-logging.js';
 import * as history from '../lib/legacy/exercise-history.js';
+import * as renames from '../lib/legacy/exercise-renames.js';
 import * as cable from '../lib/legacy/cable-stack.js';
 import { withRepGuidance } from '../lib/legacy/rep-guidance.js';
 import { applySuggestedLoad } from '../lib/legacy/load-guidance.js';
@@ -31,6 +32,7 @@ const utils = loadModule('../lib/legacy/session-utils.js', {
   './shared': shared, './session-persistence': { loadBodyweight: () => 165 },
   './duration-estimates': duration, './bench-progression': bench, './squat-progression': squat,
   './belt-load': belt, './set-logging': logging, './exercise-history': history, './cable-stack': cable,
+  './exercise-renames': renames,
 });
 const plain = value => JSON.parse(JSON.stringify(value));
 const getWorkout = id => shared.BLOCK_WORKOUTS.find(w => w.id === id);
@@ -266,4 +268,17 @@ test('block hints bootstrap a renamed exercise from its old-name history', () =>
   const w = getWorkout('strength-accessories-1');
   const regular = session('Dips Focus', '2026-09-01', [1, 2, 3].map(n => row('Dumbbell Hammer Curls', n, 20, 12 - n)));
   assert.deepEqual(plain(work(flatten(w, [regular]), 'Cable Hammer Curls').map(s => s.weight)), [20, 20, 20]);
+});
+
+test('a renamed exercise prefills from history saved under its old name (Nov 6, 2026)', () => {
+  const w = getWorkout('strength-accessories-1');
+  const hints = {
+    'Bench-Supported Dumbbell Wrist Curls|working|1': { reps: '20', weight_lb: 25 },
+    'Bench-Supported Dumbbell Wrist Curls|working|2': { reps: '18', weight_lb: 25 },
+  };
+  const flat = utils.flattenTemplate(w, {}, hints);
+  const wrist = flat.find(e => e.name === 'Bench-Supported Cable Wrist Curls');
+  const workSets = wrist.sets.filter(s => s.kind === 'work');
+  assert.deepEqual(plain(workSets.map(s => s.lastWeight)), [25, 25]);
+  assert.deepEqual(plain(workSets.map(s => s.weight)), [25, 25]);
 });

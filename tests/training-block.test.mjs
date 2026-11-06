@@ -39,6 +39,7 @@ const utils = loadModule('../lib/legacy/session-utils.js', {
   './shared': shared, './session-persistence': { loadBodyweight: () => 165 },
   './duration-estimates': duration, './bench-progression': bench, './squat-progression': squat,
   './belt-load': belt, './set-logging': logging, './exercise-history': history, './cable-stack': cableStackModule,
+  './exercise-renames': renames,
 });
 const plain = value => JSON.parse(JSON.stringify(value));
 const workSets = (exercises, name) => exercises.find(ex => ex.name === name).sets.filter(s => s.kind === 'work');
