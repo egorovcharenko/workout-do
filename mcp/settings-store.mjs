@@ -42,16 +42,37 @@ function projectId(serviceAccount) {
   throw new Error("No Firebase project id. Set WORKOUT_PROJECT_ID.");
 }
 
+const NO_CREDENTIALS = [
+  "Firestore refused the credentials.",
+  "Either point WORKOUT_SA_PATH at a service-account key JSON with Cloud Datastore User on the project (Firebase console → Project settings → Service accounts → Generate new private key),",
+  "or give this machine application-default credentials: install the gcloud CLI and run `gcloud auth application-default login`.",
+  "WORKOUT_STORE=file with WORKOUT_SETTINGS_FILE is a dry run that needs neither.",
+].join(" ");
+
+/** Credential errors surface on the first request, not at startup, so every
+ * call explains both ways to fix them instead of leaking a raw gRPC trace. */
+async function guard(work) {
+  try { return await work(); } catch (error) {
+    const message = String(error?.message || error);
+    if (/default credentials|PERMISSION_DENIED|UNAUTHENTICATED|invalid_grant/i.test(message)) {
+      throw new Error(`${NO_CREDENTIALS} (${message.split("\n")[0]})`);
+    }
+    throw error;
+  }
+}
+
 async function firestoreStore() {
   const keyPath = process.env.WORKOUT_SA_PATH || process.env.GOOGLE_APPLICATION_CREDENTIALS;
-  if (!keyPath) {
-    throw new Error("No credentials. Point WORKOUT_SA_PATH at a service-account key JSON for the Firebase project (Project settings → Service accounts → Generate new private key), or set WORKOUT_STORE=file with WORKOUT_SETTINGS_FILE for a dry run.");
-  }
-  const key = JSON.parse(await readFile(keyPath, "utf8"));
-  const { initializeApp, cert, getApps } = await import("firebase-admin/app");
+  const key = keyPath ? JSON.parse(await readFile(keyPath, "utf8")) : null;
+  const { initializeApp, applicationDefault, cert, getApps } = await import("firebase-admin/app");
   const { getFirestore } = await import("firebase-admin/firestore");
   const project = projectId(key);
-  if (!getApps().length) initializeApp({ credential: cert(key), projectId: project });
+  // No key path: fall back to application-default credentials (gcloud login).
+  // Mint a token up front — inside gRPC a missing ADC throws where no caller
+  // can catch it and takes the process down with it.
+  const credential = key ? cert(key) : applicationDefault();
+  if (!key) await guard(() => credential.getAccessToken());
+  if (!getApps().length) initializeApp({ credential, projectId: project });
   const db = getFirestore();
 
   let uid = process.env.WORKOUT_UID || null;
@@ -65,15 +86,15 @@ async function firestoreStore() {
   const ref = async () => db.doc(`users/${await resolveUid()}/settings/app`);
 
   return {
-    describe: () => `Firestore ${project}, user ${uid || "(auto)"}`,
-    async getSettings() {
+    describe: () => `Firestore ${project} (${keyPath ? "service account" : "application-default credentials"}), user ${uid || "(auto)"}`,
+    getSettings: () => guard(async () => {
       const snap = await (await ref()).get();
       return snap.exists ? snap.data() : {};
-    },
-    async saveSettings(patch) {
+    }),
+    saveSettings: (patch) => guard(async () => {
       const clean = Object.fromEntries(Object.entries(patch).map(([key, value]) => [key, String(value)]));
       await (await ref()).set(clean, { merge: true });
-    },
+    }),
   };
 }
 

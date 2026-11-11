@@ -130,3 +130,16 @@ test("a tool call with a bad argument reports the error instead of writing", asy
   assert.match(failed.result.content[0].text, /already in Dips Focus/);
   assert.equal(readFileSync(file, "utf8").trim(), "{}");
 });
+
+test("a credential failure is reported per call and leaves the server running", async () => {
+  const replies = await rpc([
+    { jsonrpc: "2.0", id: 1, method: "initialize", params: {} },
+    { jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "program_show" } },
+    { jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: "library_list", arguments: { query: "external" } } },
+  ], { WORKOUT_STORE: "firestore", WORKOUT_SA_PATH: "", GOOGLE_APPLICATION_CREDENTIALS: "" });
+
+  assert.equal(replies[2].result.isError, true);
+  assert.match(replies[2].result.content[0].text, /service-account key|application-default credentials/);
+  // Still answering afterwards, and the library needs no credentials at all.
+  assert.deepEqual(JSON.parse(replies[3].result.content[0].text).exercises, ["Band External Rotations"]);
+});

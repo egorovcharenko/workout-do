@@ -59,14 +59,15 @@ const tools = [
 ];
 
 async function call(name, args = {}) {
+  // The library comes from the code program, so it answers without credentials.
+  if (name === "library_list") {
+    const names = libraryNames(args.query);
+    return { count: names.length, exercises: names };
+  }
   const db = await store();
   if (name === "program_show") {
     const settings = await db.getSettings();
     return { source: db.describe(), ...renderProgram(settings) };
-  }
-  if (name === "library_list") {
-    const names = libraryNames(args.query);
-    return { count: names.length, exercises: names };
   }
   if (name === "program_undo") {
     const settings = await db.getSettings();
@@ -84,6 +85,12 @@ async function call(name, args = {}) {
   await db.saveSettings({ [PROGRAM_BUILDER_KEY]: value, [PREV_KEY]: settings[PROGRAM_BUILDER_KEY] || NO_EDITS });
   return { summary: `${summary} Saved — your next ${workout.name} uses it.`, workout };
 }
+
+// A credential failure deep inside gRPC can reject with no caller to catch
+// it; stay alive and let the next tool call report it.
+process.on("unhandledRejection", (error) => {
+  process.stderr.write(`workout-program: ${error?.message || error}\n`);
+});
 
 const send = (message) => process.stdout.write(`${JSON.stringify(message)}\n`);
 const reply = (id, result) => send({ jsonrpc: "2.0", id, result });

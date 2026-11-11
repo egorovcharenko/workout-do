@@ -96,7 +96,13 @@ Credentials:
 
 - `WORKOUT_SA_PATH` — service-account key JSON for `workout-do-egor` with
   Cloud Datastore User (Firebase console → Project settings → Service accounts
-  → Generate new private key). Required for live edits.
+  → Generate new private key).
+- With no key path it falls back to application-default credentials
+  (`gcloud auth application-default login`). This Mac has no gcloud and no ADC
+  as of Nov 11, 2026, and the key in `sports-modern/` that `import_m2.mjs`
+  uses is PERMISSION_DENIED for this project, so one of the two is still
+  needed for live edits; without them every tool call says so and the server
+  keeps running (`library_list` works regardless).
 - `WORKOUT_UID` — only needed if `users/` holds more than one doc.
 - `WORKOUT_STORE=file` + `WORKOUT_SETTINGS_FILE=<path>` — dry run against a
   local JSON file instead of Firestore (what `tests/program-mcp.test.mjs` uses).
