@@ -41,6 +41,7 @@
     "Cable Shrugs": sprite("barbell", 0, 1),
     "Cable Face Pulls": sprite("cable", 2, 0),
     "Face Pulls": sprite("cable", 0, 1),
+    "Band External Rotations": sprite("band", 1, 1),
     "Cable Goblet Squat": sprite("legs-arms", 1, 0),
     "Hanging Knee Raise": sprite("legs-arms", 2, 2),
     "Decline Abs Crunches": sprite("legs-arms", 2, 2),

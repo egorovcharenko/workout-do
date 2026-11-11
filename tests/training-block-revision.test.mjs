@@ -46,14 +46,15 @@ const guide = (workout, sessions) => withRepGuidance(flatten(workout, sessions),
 test('the revised block preserves the audited full rotation without extra squat or flat-bench appearances', () => {
   const before = JSON.stringify(shared.WORKOUTS);
   const counts = shared.BLOCK_WORKOUTS.map(w => flatten(w).reduce((n, e) => n + e.sets.filter(s => s.kind === 'work').length, 0));
-  assert.deepEqual(counts, [19, 22, 19, 29]);
-  assert.equal(counts.reduce((a, b) => a + b), 89);
+  assert.deepEqual(counts, [19, 26, 19, 33]);
+  assert.equal(counts.reduce((a, b) => a + b), 97);
   assert.deepEqual(shared.BLOCK_WORKOUTS.filter(w => w.exercises.some(e => e.name === 'Barbell Bench Press')).map(w => w.id), ['strength-a']);
   assert.deepEqual(shared.BLOCK_WORKOUTS.filter(w => w.exercises.some(e => e.name === 'Barbell Back Squat')).map(w => w.id), ['strength-a']);
   const arms = flatten(getWorkout('strength-accessories-1'));
   assert.deepEqual(plain(arms.map(e => [e.name, e.sets.map(s => s.weight ?? null)])), [
     ['Dips', [0,25,25,25]], ['Bayesian Cable Curl', [20,20,20]], ['Single-Arm Cable Rear Delt Fly', [15,15,15]],
-    ['Cable Hammer Curls', [30,30,30]], ['Overhead Tricep Extension', [35,35,35]], ['Dragon Fly Progression', [null,null,null]],
+    ['Cable Hammer Curls', [30,30,30]], ['Overhead Tricep Extension', [35,35,35]],
+    ['Band External Rotations', [0,0]], ['Cable Face Pulls', [20,20]], ['Dragon Fly Progression', [null,null,null]],
     ['Bench-Supported Cable Wrist Curls', [10,10]], ['Decline Abs Crunches', [null,null]],
   ]);
   assert.deepEqual(plain(work(flatten(getWorkout('strength-b')), 'Barbell RDL').map(s => s.weight)), [205,205,165]);
