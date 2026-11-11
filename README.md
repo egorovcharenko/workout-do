@@ -96,7 +96,9 @@ Credentials:
 
 - `WORKOUT_SA_PATH` — service-account key JSON for `workout-do-egor` with
   Cloud Datastore User (Firebase console → Project settings → Service accounts
-  → Generate new private key).
+  → Generate new private key). `.mcp.json` defaults to
+  `~/.secrets/workout-do-sa.json` (chmod 600, outside the repo — never commit
+  a key).
 - With no key path it falls back to application-default credentials
   (`gcloud auth application-default login`). This Mac has no gcloud and no ADC
   as of Nov 11, 2026, and the key in `sports-modern/` that `import_m2.mjs`

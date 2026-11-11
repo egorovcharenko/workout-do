@@ -19,3 +19,7 @@ firebase-debug.log
 # Local agent context; not part of the product repository.
 /AGENTS.md
 /sources/
+
+# service-account keys never belong in the repo
+*.serviceAccount.json
+*-firebase-adminsdk-*.json
