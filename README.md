@@ -76,3 +76,27 @@ Port of the old flat-file app in the `egorovcharenko/workout-tracker` GitHub rep
 They are npm workspaces, so `npm install` at the repo root wires them up and `transpilePackages`
 in `next.config.ts` compiles them. **These are copies** — a change here does not reach
 `personal-suite` or the sibling app repo, and vice versa. Port shared-package edits by hand.
+
+## Editing the program without a browser (MCP)
+
+`mcp/server.mjs` is a stdio MCP server that edits the live program the Workout
+builder writes — `settings.program_builder` in Firestore — so an agent can
+change the plan without driving `/builder` in a browser. `.mcp.json` registers
+it as **workout-program**. Tools: `program_show`, `library_list`,
+`exercise_add`, `exercise_update`, `exercise_remove`, `exercise_move`,
+`workout_rename`, `workout_reset`, `program_undo` (one step; the previous JSON
+is kept in `settings.program_builder_prev`).
+
+It writes the same draft→saved shape as the builder (`mcp/program-edit.mjs`
+reuses `lib/program-builder.js`), so only workouts that differ from the code
+program are stored and saved session names — which history and progression
+match on — never change.
+
+Credentials:
+
+- `WORKOUT_SA_PATH` — service-account key JSON for `workout-do-egor` with
+  Cloud Datastore User (Firebase console → Project settings → Service accounts
+  → Generate new private key). Required for live edits.
+- `WORKOUT_UID` — only needed if `users/` holds more than one doc.
+- `WORKOUT_STORE=file` + `WORKOUT_SETTINGS_FILE=<path>` — dry run against a
+  local JSON file instead of Firestore (what `tests/program-mcp.test.mjs` uses).

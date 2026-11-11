@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "workout-program": {
+      "command": "node",
+      "args": ["mcp/server.mjs"],
+      "env": {
+        "WORKOUT_SA_PATH": "${WORKOUT_SA_PATH:-}",
+        "WORKOUT_PROJECT_ID": "${WORKOUT_PROJECT_ID:-workout-do-egor}",
+        "WORKOUT_UID": "${WORKOUT_UID:-}",
+        "WORKOUT_STORE": "${WORKOUT_STORE:-}",
+        "WORKOUT_SETTINGS_FILE": "${WORKOUT_SETTINGS_FILE:-}"
+      }
+    }
+  }
+}
