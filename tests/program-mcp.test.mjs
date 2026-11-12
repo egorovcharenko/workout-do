@@ -132,14 +132,18 @@ test("a tool call with a bad argument reports the error instead of writing", asy
 });
 
 test("a credential failure is reported per call and leaves the server running", async () => {
+  // A path that cannot be read fails fast and identically on every machine,
+  // whether or not this one happens to have application-default credentials.
+  const missing = path.join(mkdtempSync(path.join(tmpdir(), "program-mcp-")), "missing.json");
   const replies = await rpc([
     { jsonrpc: "2.0", id: 1, method: "initialize", params: {} },
     { jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "program_show" } },
     { jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: "library_list", arguments: { query: "external" } } },
-  ], { WORKOUT_STORE: "firestore", WORKOUT_SA_PATH: "", GOOGLE_APPLICATION_CREDENTIALS: "" });
+  ], { WORKOUT_STORE: "firestore", WORKOUT_SA_PATH: missing, GOOGLE_APPLICATION_CREDENTIALS: "" });
 
   assert.equal(replies[2].result.isError, true);
   assert.match(replies[2].result.content[0].text, /service-account key|application-default credentials/);
+  assert.match(replies[2].result.content[0].text, /missing\.json/);
   // Still answering afterwards, and the library needs no credentials at all.
   assert.deepEqual(JSON.parse(replies[3].result.content[0].text).exercises, ["Band External Rotations"]);
 });

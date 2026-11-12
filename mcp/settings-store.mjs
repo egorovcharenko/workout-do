@@ -63,7 +63,12 @@ async function guard(work) {
 
 async function firestoreStore() {
   const keyPath = process.env.WORKOUT_SA_PATH || process.env.GOOGLE_APPLICATION_CREDENTIALS;
-  const key = keyPath ? JSON.parse(await readFile(keyPath, "utf8")) : null;
+  let key = null;
+  if (keyPath) {
+    try { key = JSON.parse(await readFile(keyPath, "utf8")); } catch (error) {
+      throw new Error(`Could not read the service-account key at ${keyPath} (${error.message}). ${NO_CREDENTIALS}`);
+    }
+  }
   const { initializeApp, applicationDefault, cert, getApps } = await import("firebase-admin/app");
   const { getFirestore } = await import("firebase-admin/firestore");
   const project = projectId(key);

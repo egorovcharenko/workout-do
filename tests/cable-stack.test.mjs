@@ -29,6 +29,7 @@ test("lat pulldowns, low rows, and calf raises use two cable stacks", () => {
   assert.equal(cableStackMultiplier("Cable Low Row"), 2);
   assert.equal(cableStackMultiplier("Calf Raises"), 2);
   assert.equal(cableStackMultiplier("Calf Raise"), 2);
+  assert.equal(cableStackMultiplier("Cable Chest Press"), 2);
 });
 
 test("other cable exercises use one stack", () => {
@@ -57,6 +58,17 @@ test("effective load doubles current per-stack values only for dual-stack moveme
   assert.equal(effectiveExerciseWeight("Low Row", 50), 100);
   assert.equal(effectiveExerciseWeight("Calf Raises", 50), 100);
   assert.equal(effectiveExerciseWeight("Cable Face Pulls", 30), 30);
+  assert.equal(effectiveExerciseWeight("Cable Chest Press", 40), 80);
+});
+
+// The dumbbell-era rows (logged as Dumbbell Flat Bench Press before the
+// per-stack selector shipped) must keep their own load, not double.
+test("pre-per-stack chest press history keeps its stored load", () => {
+  const legacy = { date: "2026-06-01" };
+  const current = { date: "2026-11-12", cable_weight_mode: "per_stack" };
+  assert.equal(effectiveStoredExerciseWeight("Cable Chest Press", 50, legacy), 50);
+  assert.equal(effectiveStoredExerciseWeight("Cable Chest Press", 40, current), 80);
+  assert.equal(storedExerciseInputWeight("Cable Chest Press", 40, current), 40);
 });
 
 test("stored cable history respects the July 2026 storage transition", () => {
