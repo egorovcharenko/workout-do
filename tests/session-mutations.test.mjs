@@ -72,6 +72,22 @@ test("library exercise templates retain staged and band-addon metadata", () => {
 });
 
 test("unfinished custom exercises remain restorable", () => {
-  assert.equal(shouldRestoreCustomExercise([{ completed: false, weight: 25 }]), true);
+  assert.equal(shouldRestoreCustomExercise([{ completed: false, weight: 25, customAdded: true }]), true);
   assert.equal(shouldRestoreCustomExercise([]), false);
+});
+
+// An exercise dropped from the program kept coming back, because every set the
+// UI draws is persisted — including previews nobody touched.
+test('only real work restores an exercise the program no longer has', () => {
+  const preview = [
+    { kind: 'work', weight: 72, reps: null, completed: false },
+    { kind: 'work', weight: 20, reps: null, completed: false },
+  ];
+  assert.equal(shouldRestoreCustomExercise(preview), false);
+
+  assert.equal(shouldRestoreCustomExercise([{ kind: 'work', weight: 20, reps: 15, completed: true }]), true);
+  assert.equal(shouldRestoreCustomExercise([{ kind: 'work', weight: 20, reps: 12, completed: false }]), true);
+  assert.equal(shouldRestoreCustomExercise([{ kind: 'work', weight: 20, reps: null, userSkipped: true }]), true);
+  assert.equal(shouldRestoreCustomExercise([]), false);
+  assert.equal(shouldRestoreCustomExercise(undefined), false);
 });

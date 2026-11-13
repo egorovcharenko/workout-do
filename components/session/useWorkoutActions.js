@@ -465,6 +465,10 @@ function useWorkoutActions({
     if (window.SESSION_DELOAD) flatAdded = applyDeloadPrescription(flatAdded);
     return {
       ...flatAdded[0],
+      // Mark the sets too, not just the exercise: the session persists sets,
+      // so this is what survives a reload and tells a deliberately added
+      // exercise apart from residue left by a program change.
+      sets: (flatAdded[0].sets || []).map((set) => ({ ...set, customAdded: true })),
       id: `${templateExIdx}-${Date.now()}`,
       templateExIdx,
       customAdded: true,
