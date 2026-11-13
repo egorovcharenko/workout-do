@@ -4,6 +4,7 @@
 // doesn't know the backend changed.
 
 import { auth } from "@/lib/firebase/client";
+import { authHeaders } from "@/lib/firebase/id-token";
 import {
   fetchAllSessions,
   get1RMHistory,
@@ -48,7 +49,7 @@ export const api = {
   deleteSession: async (id: string) => {
     const response = await fetch(`/api/workout-sessions/${encodeURIComponent(String(id))}`, {
       method: "DELETE",
-      headers: { Accept: "application/json" },
+      headers: { Accept: "application/json", ...(await authHeaders()) },
     });
     if (!response.ok) {
       const body = await response.json().catch(() => null);

@@ -8,7 +8,6 @@ import {
   type ReactNode,
 } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
-import { syncFirebaseAuthFromSuite } from "@personal-suite/suite-auth/firebase-client";
 import { auth } from "./client";
 import { error as logError, log, warn } from "@/lib/log";
 
@@ -23,32 +22,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ user: null, loading: true });
 
   useEffect(() => {
-    log("auth", "AuthProvider mounted — syncing shared suite session");
+    log("auth", "AuthProvider mounted — subscribing to Firebase auth state");
     const stuckTimer = setTimeout(() => {
       warn("auth", "no auth-state event after 8000ms — Firebase Auth may be stuck");
     }, 8000);
 
-    let syncComplete = false;
     let cancelled = false;
-    const unsub = onAuthStateChanged(auth(), (user) => {
-      if (syncComplete && !cancelled) setState({ user, loading: false });
-    });
-    void syncFirebaseAuthFromSuite(auth())
-      .then((user) => {
-        syncComplete = true;
+    const unsub = onAuthStateChanged(
+      auth(),
+      (user) => {
         clearTimeout(stuckTimer);
-        log("auth", user ? "shared session connected" : "shared session absent", {
+        log("auth", user ? "signed in" : "signed out", {
           uid: user?.uid,
           email: user?.email,
         });
         if (!cancelled) setState({ user, loading: false });
-      })
-      .catch((e: unknown) => {
-        syncComplete = true;
+      },
+      (e) => {
         clearTimeout(stuckTimer);
-        logError("auth", "shared session sync failed", e);
+        logError("auth", "auth-state subscription failed", e);
         if (!cancelled) setState({ user: null, loading: false });
-      });
+      },
+    );
     return () => {
       cancelled = true;
       clearTimeout(stuckTimer);

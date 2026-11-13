@@ -60,6 +60,20 @@ Port of the old flat-file app in the `egorovcharenko/workout-tracker` GitHub rep
   their own revision's history. An optional `resumeDate` allows the current regular workout to
   remain available for the day without moving the block's original end date.
 
+## Auth
+
+The app signs in directly with Firebase Auth (Google provider, popup with a redirect
+fallback) — there is no shared-suite SSO hop any more. Client state comes from
+`onAuthStateChanged` in `lib/firebase/auth.tsx`; the two privileged API routes
+(`/api/progress-share`, `DELETE /api/workout-sessions/:id`) take an
+`Authorization: Bearer <Firebase ID token>` header, verified server-side in
+`lib/firebase/admin.ts` against the `AUTH_ALLOWED_EMAIL` allow-list.
+
+Server env vars: `AUTH_ALLOWED_EMAIL`, plus `FIREBASE_ADMIN_PROJECT_ID`,
+`FIREBASE_ADMIN_CLIENT_EMAIL` and `FIREBASE_ADMIN_PRIVATE_KEY`. The production
+domain must be listed under Firebase console → Authentication → Settings →
+Authorized domains, or Google sign-in fails with `auth/unauthorized-domain`.
+
 ## Shared suite packages
 
 `packages/` holds a vendored copy of the shared code this app used to import from the
@@ -71,7 +85,6 @@ Port of the old flat-file app in the `egorovcharenko/workout-tracker` GitHub rep
 | `@personal-suite/app-shell` | Suite chrome (header, app switcher) shared across apps. |
 | `@personal-suite/design-system` | Fonts and base Tailwind/CSS tokens. |
 | `@personal-suite/pwa` | Manifest builder + service-worker registrar. |
-| `@personal-suite/suite-auth` | NextAuth + Firebase Admin/client glue. |
 
 They are npm workspaces, so `npm install` at the repo root wires them up and `transpilePackages`
 in `next.config.ts` compiles them. **These are copies** — a change here does not reach

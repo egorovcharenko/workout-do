@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getFirebaseAdminFirestore } from '@personal-suite/suite-auth/firebase-admin';
+import { getFirebaseAdminFirestore } from '@/lib/firebase/admin';
 import { readPublicProgress } from '@/lib/progress-share-store';
 import { validProgressToken } from '@/lib/progress-sharing';
 import { renderProgressModel } from '@/components/home/progress';

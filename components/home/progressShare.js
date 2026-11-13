@@ -1,9 +1,10 @@
+import { authHeaders } from '@/lib/firebase/id-token';
 import { state } from './state';
 import { render } from './shell';
 
 export async function loadProgressShare() {
   try {
-    const response = await fetch('/api/progress-share', { cache: 'no-store' });
+    const response = await fetch('/api/progress-share', { cache: 'no-store', headers: await authHeaders() });
     if (!response.ok) return;
     const result = await response.json();
     if (state.progressShareOpen) return;
@@ -35,7 +36,7 @@ export async function shareProgress() {
   state.progressShareMessage = '';
   render();
   try {
-    const response = await fetch('/api/progress-share', { method: 'POST' });
+    const response = await fetch('/api/progress-share', { method: 'POST', headers: await authHeaders() });
     if (!response.ok) throw new Error('Could not share progress. Try again.');
     const result = await response.json();
     state.progressSharePath = result.path;
@@ -49,7 +50,7 @@ export async function stopSharingProgress() {
   state.progressShareBusy = true;
   render();
   try {
-    const response = await fetch('/api/progress-share', { method: 'DELETE' });
+    const response = await fetch('/api/progress-share', { method: 'DELETE', headers: await authHeaders() });
     if (!response.ok) throw new Error('Could not stop sharing. Try again.');
     state.progressSharePath = null;
     state.progressShareMessage = 'Sharing stopped';
