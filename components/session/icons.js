@@ -1,9 +1,6 @@
 
 // ─── file: workout-session-icons.js ───
 
-(function() {
-  if (typeof window === "undefined") return;
-
   const sprite = (sheet, column, row, height = 300) => ({
     src: `/exercises/sprites/${sheet}.png`,
     column,
@@ -75,7 +72,12 @@
     </div>
   `;
 
-  window.getExerciseIcon = function(name) {
+  /** The artwork for an exercise: a file path, a sprite cell, or null. */
+  export function getExerciseImage(name) {
+    return imageMap[name] || null;
+  }
+
+  export function getExerciseIcon(name) {
     const image = imageMap[name];
     if (!image) return fallback;
 
@@ -94,5 +96,7 @@
         <img src="${image}" alt="" aria-hidden="true" style="width:100%;height:100%;object-fit:contain;display:block;background:#fff" />
       </div>
     `;
-  };
-})();
+  }
+
+// Kept for the legacy inline-HTML callers that still reach for the global.
+if (typeof window !== "undefined") window.getExerciseIcon = getExerciseIcon;
