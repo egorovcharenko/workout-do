@@ -18,7 +18,7 @@ test("an untouched program saves nothing and reads back the code workouts", () =
     ["strength-a", "strength-accessories-1", "strength-b", "strength-accessories-2"]);
   assert.ok(program.workouts.every(w => w.edited === false));
   const arms = program.workouts.find(w => w.id === "strength-accessories-1");
-  assert.ok(arms.exercises.some(ex => ex.name === "Band External Rotations"));
+  assert.ok(arms.exercises.some(ex => ex.name === "Cable External Rotations"));
   assert.ok(program.weekly_sets_per_muscle.Chest.sets > 0);
 });
 
@@ -145,5 +145,5 @@ test("a credential failure is reported per call and leaves the server running", 
   assert.match(replies[2].result.content[0].text, /service-account key|application-default credentials/);
   assert.match(replies[2].result.content[0].text, /missing\.json/);
   // Still answering afterwards, and the library needs no credentials at all.
-  assert.deepEqual(JSON.parse(replies[3].result.content[0].text).exercises, ["Band External Rotations"]);
+  assert.deepEqual(JSON.parse(replies[3].result.content[0].text).exercises, ["Cable External Rotations"]);
 });

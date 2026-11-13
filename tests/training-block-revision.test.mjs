@@ -54,7 +54,7 @@ test('the revised block preserves the audited full rotation without extra squat 
   assert.deepEqual(plain(arms.map(e => [e.name, e.sets.map(s => s.weight ?? null)])), [
     ['Dips', [0,25,25,25]], ['Bayesian Cable Curl', [20,20,20]], ['Single-Arm Cable Rear Delt Fly', [15,15,15]],
     ['Cable Hammer Curls', [30,30,30]], ['Overhead Tricep Extension', [35,35,35]],
-    ['Band External Rotations', [0,0]], ['Cable Face Pulls', [20,20]], ['Dragon Fly Progression', [null,null,null]],
+    ['Cable External Rotations', [0,0]], ['Cable Face Pulls', [20,20]], ['Dragon Fly Progression', [null,null,null]],
     ['Bench-Supported Cable Wrist Curls', [10,10]], ['Decline Abs Crunches', [null,null]],
   ]);
   assert.deepEqual(plain(work(flatten(getWorkout('strength-b')), 'Barbell RDL').map(s => s.weight)), [205,205,165]);
