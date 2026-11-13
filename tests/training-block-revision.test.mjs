@@ -105,7 +105,7 @@ test('bench makes only the reviewed top-set adjustment and preserves the three b
 
 test('cable and dumbbell accessories progress with reserve confirmation while all logged reps remain untouched', () => {
   for (const [name, id, weight, reps, expected] of [
-    ['Calf Raises','strength-accessories-2',55,20,56],
+    ['Cable Tricep Pushdowns','strength-accessories-2',55,12,56],
     ['Low Row','strength-b',65,12,66],
     ['Incline Cable Curls','strength-accessories-2',20,15,21],
   ]) {
@@ -168,12 +168,12 @@ test('the restored regular Dips workout supplies the next block load after the o
 
 test('accessory progression finds its regular baseline across unrelated workout days', () => {
   const w = getWorkout('strength-accessories-2');
-  const rows = [1,2,3].map(n=>row('Calf Raises',n,55,20));
+  const rows = [1,2,3].map(n=>row('Cable Tricep Pushdowns',n,55,12));
   const past = [session('Squat Focus','2026-09-05',[row('Barbell Back Squat',1,135,8)]),
     session('Shrugs Focus','2026-09-03',rows,{cable_weight_mode:'per_stack'}),
     session('Dips Focus','2026-09-01',[row('Dips',1,25,11,{load_type:'belt'})]),
     session('Shrugs Focus','2026-08-30',rows,{cable_weight_mode:'per_stack'})];
-  const sets = work(guide(w,past),'Calf Raises');
+  const sets = work(guide(w,past),'Cable Tricep Pushdowns');
   assert.equal(sets[0].repGuidance.loadProgression.qualifying,2);
   assert.equal(sets[0].repGuidance.loadProgression.weight,56);
 });

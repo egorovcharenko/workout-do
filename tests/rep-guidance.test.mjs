@@ -261,7 +261,7 @@ test('navigation buttons show each previous set’s reps alongside the target ra
 });
 
 test('navigation last-rep labels never mistake template defaults for logged history', () => {
-  const exercise = ex('Calf Raises', [set(1, 55, { lastReps: 20, targetRepRange: [15, 20] })]);
+  const exercise = ex('Lat Pulldown', [set(1, 55, { lastReps: 20, targetRepRange: [15, 20] })]);
   const guided = withRepGuidance([exercise], [], { ...options, block: null })[0];
   const display = navSetDisplay(guided.sets[0], guided);
   assert.equal(display.lastReps, null);

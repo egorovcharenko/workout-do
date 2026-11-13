@@ -8,6 +8,7 @@ import {
   CABLE_STACK_MIN,
   CABLE_STACK_STEP,
   cableStackMultiplier,
+  storedCableStackMultiplier,
   cableStackSelection,
   cableStackWeight,
   cableStackWeightWithAddOns,
@@ -21,19 +22,18 @@ import {
 } from "../lib/legacy/cable-stack.js";
 import { calcSet1RM, calcStoredSet1RM } from "../lib/legacy/standards.js";
 
-test("lat pulldowns, low rows, and calf raises use two cable stacks", () => {
+test("lat pulldowns and low rows use two cable stacks", () => {
   assert.equal(cableStackMultiplier("Lat Pulldown"), 2);
   assert.equal(cableStackMultiplier("Lat Pulldowns"), 2);
   assert.equal(cableStackMultiplier("Low Row"), 2);
   assert.equal(cableStackMultiplier("Seated Low Rows"), 2);
   assert.equal(cableStackMultiplier("Cable Low Row"), 2);
-  assert.equal(cableStackMultiplier("Calf Raises"), 2);
-  assert.equal(cableStackMultiplier("Calf Raise"), 2);
   assert.equal(cableStackMultiplier("Cable Chest Press"), 2);
 });
 
 test("other cable exercises use one stack", () => {
   assert.equal(cableStackMultiplier("Cable Face Pulls"), 1);
+  assert.equal(cableStackMultiplier("Calf Raises"), 1);
   assert.equal(cableStackMultiplier("Cable Tricep Pushdowns"), 1);
   assert.equal(cableStackMultiplier("Single-Arm Cable Lateral Raise"), 1);
 });
@@ -56,7 +56,6 @@ test("effective load doubles current per-stack values only for dual-stack moveme
   assert.equal(effectiveExerciseWeight("Lat Pulldown", 70), 140);
   assert.equal(effectiveExerciseWeight("Lat Pulldown", 71.25), 142.5);
   assert.equal(effectiveExerciseWeight("Low Row", 50), 100);
-  assert.equal(effectiveExerciseWeight("Calf Raises", 50), 100);
   assert.equal(effectiveExerciseWeight("Cable Face Pulls", 30), 30);
   assert.equal(effectiveExerciseWeight("Cable Chest Press", 40), 80);
 });
@@ -69,6 +68,20 @@ test("pre-per-stack chest press history keeps its stored load", () => {
   assert.equal(effectiveStoredExerciseWeight("Cable Chest Press", 50, legacy), 50);
   assert.equal(effectiveStoredExerciseWeight("Cable Chest Press", 40, current), 80);
   assert.equal(storedExerciseInputWeight("Cable Chest Press", 40, current), 40);
+});
+
+// Calf raises went single-sided on Nov 13, 2026: earlier rows ran a handle on
+// each stack, later ones do not.
+test("calf raise history keeps the two stacks it was logged with", () => {
+  const twoStack = { date: "2026-11-01", cable_weight_mode: "per_stack" };
+  const oneStack = { date: "2026-11-13", cable_weight_mode: "per_stack" };
+  assert.equal(storedCableStackMultiplier("Calf Raises", twoStack), 2);
+  assert.equal(storedCableStackMultiplier("Calf Raises", oneStack), 1);
+  assert.equal(effectiveStoredExerciseWeight("Calf Raises", 70, twoStack), 140);
+  assert.equal(effectiveStoredExerciseWeight("Calf Raises", 70, oneStack), 70);
+  // The selector still shows the pin number the set was logged with.
+  assert.equal(storedExerciseInputWeight("Calf Raises", 70, twoStack), 70);
+  assert.equal(effectiveExerciseWeight("Calf Raises", 70), 70);
 });
 
 test("stored cable history respects the July 2026 storage transition", () => {
