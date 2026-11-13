@@ -81,9 +81,9 @@ button { font-family: inherit; }
 .load-guidance-status { margin-left: auto; }
 .load-guidance button { margin-left: auto; min-height: 40px; padding: 8px 14px; border: 0; border-radius: 12px; background: #3B82F6; color: #fff; color: #dbeafe; font: inherit; font-weight: 700; cursor: pointer; }
 .load-guidance button:focus-visible { outline: 2px solid #bfdbfe; outline-offset: 3px; }
-.rep-guidance { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 12px; padding: 3px 4px 0; color: #9ca3af; font-family: var(--suite-font-mono); font-size: 11px; line-height: 1.4; }
+.rep-guidance { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 12px; padding: 3px 4px 0; color: #9ca3af; font-family: var(--suite-font-mono); font-size: 13px; line-height: 1.4; }
 .rep-guidance > span { white-space: nowrap; }
-.rep-guidance strong { color: #e5e7eb; font-weight: 700; }
+.rep-guidance strong { color: #f3f4f6; font-weight: 700; }
 .rep-guidance .rep-suggested-label, .rep-guidance .rep-suggested-label strong { color: #93c5fd; }
 .rep-suggested-label { margin-left: auto; }
 .rep-last-dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: #22c55e; margin: 0 5px 1px 0; }
@@ -302,3 +302,46 @@ button { font-family: inherit; }
 
 /* Section and field labels: sentence case in the UI sans, not tiny uppercase mono. */
 .ui-label { color: #9CA3AF; font: 600 12.5px var(--suite-font-sans, system-ui, sans-serif); letter-spacing: -.1px; }
+
+/* ─── Phone fixes ────────────────────────────────────────────────────────────
+   Everything below applies only to the single-column mobile layout. These
+   treatments already existed for the short-desktop case; a phone in a gym has
+   the same problem — a tall stack of context above the one control that is
+   actually being used — only worse, because the viewport is shorter still. */
+@media (max-width: 899px) {
+  /* Rep entry is the last step of every set and was sitting below the fold
+     under the header, nav strip, plan note, banner, set chips and weight
+     control. Dock it to the bottom of the viewport while the set is open. */
+  .rep-entry-dock {
+    position: sticky;
+    bottom: 8px;
+    z-index: 8;
+    margin: 8px -4px -4px;
+    padding: 6px 6px 4px;
+    border: 1px solid rgba(96,165,250,0.38);
+    border-radius: 12px;
+    background: rgba(11,15,20,0.94);
+    box-shadow: 0 -10px 24px -14px rgba(0,0,0,0.95), 0 6px 22px -12px rgba(59,130,246,0.8);
+    backdrop-filter: blur(12px);
+  }
+
+  /* Per-exercise duration readouts and the progression explainer are reading
+     material, not controls. They cost a third of the screen mid-set. */
+  .compact-hide { display: none !important; }
+
+  /* The barbell editor forced a 442px grid inside a horizontal scroller, so on
+     a ~320px card the plate picker sat off-screen to the right with no hint it
+     was there. Stack it instead, and give the steppers a real thumb target. */
+  .barbell-inline-scroll { overflow-x: visible; }
+  .barbell-inline-editor {
+    grid-template-columns: 1fr;
+    min-width: 0;
+    gap: 10px;
+  }
+  .barbell-inline-weight .weight-stepper-controls > button {
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 15px !important;
+  }
+  .barbell-inline-weight .weight-stepper-value { font-size: 30px !important; }
+}

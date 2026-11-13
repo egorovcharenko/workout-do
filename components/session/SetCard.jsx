@@ -21,6 +21,37 @@ function setStripLabel(s, allSets) {
   return `S${s.idx}`;
 }
 
+/**
+ * "190×2 × 6–15" for the set you are about to do — the one thing worth reading
+ * while the rest timer runs. Mirrors the load/rep rules SetCard renders, so the
+ * timer and the set strip never disagree about what is next.
+ */
+function setTargetSummary(s, exercise) {
+  if (!s) return null;
+  const isBW = exercise.mode === "bodyweight";
+  const baseW = isBW ? (s.bodyweight || 0) : (s.weight || 0);
+  const bandSum = (s.bands || []).reduce((a, b) => a + b, 0);
+  const totalLb = exercise.assist
+    ? Math.max(0, baseW - bandSum)
+    : exercise.isBandsOnly ? bandSum : baseW + bandSum;
+  const stages = exercise.stages || null;
+  const rank = stages ? stageRank(stages, s.grip || s.lastGrip) : 0;
+  const guidance = s.repGuidance;
+  const range = s.targetRepRange;
+  const reps = guidance?.rangeLabel
+    || (range ? (range[0] === range[1] ? String(range[0]) : range.join("–")) : null)
+    || (guidance?.suggested != null ? String(guidance.suggested) : null);
+
+  const load = exercise.beltLoad ? (totalLb > 0 ? `+${totalLb}` : "BW")
+    : stages ? (rank > 0 ? `S${rank}` : null)
+    : exercise.repsOnly ? null
+    : cableStackMultiplier(exercise.name) === 2 ? `${totalLb}×2` : `${totalLb}`;
+
+  if (load && reps) return `${load} × ${reps}`;
+  if (load) return load;
+  return reps ? `${reps} reps` : null;
+}
+
 function SetCard({ s, idx, exercise, onReopenSet, dur }) {
   const guidance = s.repGuidance;
   const previous = guidance?.previous;
@@ -129,4 +160,4 @@ function SetCard({ s, idx, exercise, onReopenSet, dur }) {
   );
 }
 
-export { setStripLabel, SetCard };
+export { setStripLabel, setTargetSummary, SetCard };

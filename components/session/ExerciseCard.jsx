@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { T, SWAP_GROUPS, getSwapGroup, getSwapGroupName } from "@/lib/legacy/shared";
-import { SetCard, setStripLabel } from "./SetCard";
+import { SetCard, setStripLabel, setTargetSummary } from "./SetCard";
 import { RirSelector } from "./RirSelector";
 import { RestTimer } from "./RestTimer";
 import { ActiveSetBlock } from "./ActiveSetBlock";
@@ -47,7 +47,7 @@ function ExerciseCardContent({ exercise, sessionTimes, durationMeta, supersetTag
 
 
   const footerBtn = (label, onClick, disabled) => (
-    <button onClick={disabled ? undefined : onClick} disabled={disabled} style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.06)", color: disabled ? T.disabled : T.muted, padding: "5px 10px", borderRadius: 7, cursor: disabled ? "default" : "pointer", fontSize: 12, fontWeight: 500, opacity: disabled ? 0.5 : 1 }}>{label}</button>
+    <button onClick={disabled ? undefined : onClick} disabled={disabled} style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.06)", color: disabled ? T.disabled : T.muted, padding: "0 12px", minHeight: 40, borderRadius: 9, cursor: disabled ? "default" : "pointer", fontSize: 12.5, fontWeight: 500, opacity: disabled ? 0.5 : 1 }}>{label}</button>
   );
 
   return (
@@ -73,6 +73,11 @@ function ExerciseCardContent({ exercise, sessionTimes, durationMeta, supersetTag
             <span className="compact-hide" style={{ display: "contents" }}>
               <DurationReadout meta={durationMeta} variant="card" />
             </span>
+            {/* Coaching cues used to render only for superset members, so form
+                notes on an ordinary exercise were written but never shown. */}
+            {exercise.note && (
+              <p style={{ margin: "6px 0 0", color: T.muted, fontSize: 12.5, lineHeight: 1.45 }}>{exercise.note}</p>
+            )}
           </div>
           {hasVariants && (
             <button
@@ -238,7 +243,16 @@ function ExerciseCardContent({ exercise, sessionTimes, durationMeta, supersetTag
         ))}
       </div>
 
-      {rest && <RestTimer rest={rest} onAdd={onRestAdd} onSkip={onRestSkip} onToggle={onRestToggle} />}
+      {rest && (
+        <RestTimer
+          rest={rest}
+          onAdd={onRestAdd}
+          onSkip={onRestSkip}
+          onToggle={onRestToggle}
+          upNext={setTargetSummary(activeSet, exercise)}
+          upNextLabel={activeSet ? setStripLabel(activeSet, exercise.sets) : null}
+        />
+      )}
 
       {lastLoggedSet && activeSet?.reps == null && (
         <RirSelector
@@ -279,9 +293,10 @@ function ExerciseCardContent({ exercise, sessionTimes, durationMeta, supersetTag
       <div className="ex-footer" style={{ display: "flex", gap: 6, marginTop: 10, paddingTop: 10, borderTop: `1px solid ${T.cardBorder}`, flexWrap: "wrap" }}>
         {embedded && hasVariants && footerBtn(showVariants ? "Hide variants" : "Swap variant", () => setShowVariants(!showVariants))}
         {footerBtn("Add set", onAddSet)}
-        {footerBtn("Remove set", onRemoveSet, !canRemove)}
         {footerBtn("Skip set", onSkipSet, !canSkip)}
         {footerBtn("Skip exercise", onSkipExercise)}
+        {/* Destructive, and it used to sit right beside "Add set". */}
+        {footerBtn("Remove set", onRemoveSet, !canRemove)}
         <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
           {/* Offer removing the warm-up ramp once past it. */}
           {hasWarmup && !warmupActive && footerBtn("Skip warm-up", onRemoveWarmup)}

@@ -81,3 +81,31 @@
 @media (prefers-reduced-motion: reduce) {
   .progressFill { transition: none; }
 }
+
+/* The number you walk back to the rack with. While resting it is the only
+   thing on this card worth reading, so it outranks the countdown's siblings. */
+.upNext {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.upNextLabel {
+  flex: none;
+  color: #9CA3AF;
+  font: 700 10px var(--suite-font-mono);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.upNextValue {
+  margin-left: auto;
+  color: #F3F4F6;
+  font: 800 22px var(--suite-font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.4px;
+}

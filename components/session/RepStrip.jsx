@@ -116,7 +116,7 @@ function RepStrip({ min = 1, max = 20, range, last, suggested, logged, onLog, co
         onClick={() => ref.current?.scrollBy({ left: -ref.current.clientWidth * 0.6, behavior: "smooth" })}
         style={{
         position: "absolute", left: 2, top: "50%", transform: "translateY(-50%)",
-        width: 28, height: 28, borderRadius: 14, padding: 0, cursor: "pointer",
+        width: 38, height: 38, borderRadius: 19, padding: 0, cursor: "pointer",
         background: "rgba(17,24,39,0.92)", border: "1px solid #374151",
         display: "flex", alignItems: "center", justifyContent: "center",
         color: "#D1D5DB", fontSize: 14, fontWeight: 800, fontFamily: T.mono, lineHeight: 1,
@@ -127,7 +127,7 @@ function RepStrip({ min = 1, max = 20, range, last, suggested, logged, onLog, co
         onClick={() => ref.current?.scrollBy({ left: ref.current.clientWidth * 0.6, behavior: "smooth" })}
         style={{
         position: "absolute", right: 2, top: "50%", transform: "translateY(-50%)",
-        width: 28, height: 28, borderRadius: 14, padding: 0, cursor: "pointer",
+        width: 38, height: 38, borderRadius: 19, padding: 0, cursor: "pointer",
         background: "rgba(17,24,39,0.92)", border: "1px solid #374151",
         display: "flex", alignItems: "center", justifyContent: "center",
         color: "#D1D5DB", fontSize: 14, fontWeight: 800, fontFamily: T.mono, lineHeight: 1,

@@ -3,7 +3,7 @@
 import { T } from "@/lib/legacy/shared";
 import styles from "./RestTimer.module.css";
 
-function RestTimer({ rest, onAdd, onSkip, onToggle }) {
+function RestTimer({ rest, onAdd, onSkip, onToggle, upNext, upNextLabel }) {
   const { left, total, paused } = rest;
   const minutes = Math.floor(left / 60);
   const seconds = String(left % 60).padStart(2, "0");
@@ -26,6 +26,13 @@ function RestTimer({ rest, onAdd, onSkip, onToggle }) {
         <span className={styles.status}><i />{status}</span>
         <strong className={styles.countdown}>{minutes}:{seconds}</strong>
       </div>
+
+      {upNext && (
+        <div className={styles.upNext}>
+          <span className={styles.upNextLabel}>Up next{upNextLabel ? ` · ${upNextLabel}` : ""}</span>
+          <strong className={styles.upNextValue}>{upNext}</strong>
+        </div>
+      )}
 
       <div className={styles.progressTrack} role="progressbar" aria-label="Rest progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}>
         <div className={styles.progressFill} style={{ width: `${progress}%` }} />

@@ -20,6 +20,14 @@ function ExerciseNav({ exercises, durationMeta, shownIdx, currentIdx, onSelect, 
   const [searchFocused, setSearchFocused] = useState(false);
   const searchInputRef = useRef(null);
 
+  // The mobile strip scrolls horizontally and never followed the session, so by
+  // the fourth exercise the one you were on had scrolled out of sight.
+  const selectedChipRef = useRef(null);
+  useEffect(() => {
+    if (variant !== "strip") return;
+    selectedChipRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+  }, [variant, shownIdx]);
+
   const updateSwapOpenIdx = (value) => {
     setShowAllFamilies(false);
     setSwapOpenIdx(value);
@@ -161,7 +169,7 @@ function ExerciseNav({ exercises, durationMeta, shownIdx, currentIdx, onSelect, 
             const m = meta(e, i);
             const sel = i === shownIdx;
             return (
-              <button key={e.id} onClick={() => onSelect(i)} style={{
+              <button key={e.id} ref={sel ? selectedChipRef : undefined} onClick={() => onSelect(i)} style={{
                 flex: "0 0 auto", width: 132, textAlign: "left",
                 padding: "8px 10px", borderRadius: 10, cursor: "pointer", fontFamily: "inherit",
                 border: sel ? `1px solid ${T.accentLight}` : `1px solid ${T.cardBorder}`,

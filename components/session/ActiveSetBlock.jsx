@@ -128,7 +128,9 @@ function ActiveSetBlock({ exercise, set, totalWork, onPickWeight, onApplyLoadPro
           logged={set.reps}
           onLog={onLogReps}
         />
-        <RirSelector value={set.rir} onPick={onPickRir} />
+        {/* RIR only makes sense once the reps are in — before that this block
+            and the previous-set selector in ExerciseCard both showed at once. */}
+        {set.reps != null && <RirSelector value={set.rir} onPick={onPickRir} />}
       </div>
 
 
