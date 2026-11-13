@@ -5,6 +5,7 @@ import {
   getDoc,
   getDocs,
   limit as qLimit,
+  onSnapshot,
   orderBy,
   query,
   setDoc,
@@ -28,6 +29,17 @@ function settingsRef(uid: string) {
 export async function getSettings(uid: string): Promise<Settings> {
   const snap = await getDoc(settingsRef(uid));
   return { ...SETTINGS_DEFAULTS, ...(snap.exists() ? (snap.data() as Settings) : {}) };
+}
+
+/**
+ * Live settings. The program lives in this doc, so an edit made elsewhere (the
+ * Builder in another tab, the MCP server) should reach an open session without
+ * the user reloading the page.
+ */
+export function watchSettings(uid: string, onChange: (settings: Settings) => void) {
+  return onSnapshot(settingsRef(uid), (snap) => {
+    onChange({ ...SETTINGS_DEFAULTS, ...(snap.exists() ? (snap.data() as Settings) : {}) });
+  });
 }
 
 export async function saveSettings(uid: string, data: Record<string, unknown>) {

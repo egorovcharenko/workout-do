@@ -172,3 +172,21 @@ test('saved lists with the pre-rename wrist-curl name still gain crunches with w
   assert.equal(names[names.length - 2], 'Decline Abs Crunches');
   assert.ok(!names.includes('Bench-Supported Dumbbell Wrist Curls'));
 });
+
+// A deleted exercise used to come straight back: APPENDED_EXERCISES ran on
+// every build, so the Builder could not remove crunches or the cuff work.
+test('version 2 saved programs never get code exercises appended back', () => {
+  const acc2 = MAIN_WORKOUTS.find(w => w.id === 'strength-accessories-2');
+  const withoutCrunches = workoutEntries(acc2).filter(e => e.name !== 'Decline Abs Crunches');
+  const builder = { workouts: { 'strength-accessories-2': { exercises: withoutCrunches } } };
+
+  const v1 = applyProgramBuilder(MAIN_WORKOUTS, { ...builder, version: 1 })
+    .find(w => w.id === 'strength-accessories-2');
+  assert.ok(v1.exercises.some(e => e.name === 'Decline Abs Crunches'),
+    'a version 1 list still gets the migration');
+
+  const v2 = applyProgramBuilder(MAIN_WORKOUTS, { ...builder, version: 2 })
+    .find(w => w.id === 'strength-accessories-2');
+  assert.ok(!v2.exercises.some(e => e.name === 'Decline Abs Crunches'),
+    'a version 2 list is the whole truth: a removal stays removed');
+});

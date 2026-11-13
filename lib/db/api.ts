@@ -24,6 +24,7 @@ import {
   saveMeasurementsBulk,
   saveSettings,
   upsertExerciseNote,
+  watchSettings,
 } from "./misc";
 import type { MeasurementDoc } from "./types";
 
@@ -41,6 +42,7 @@ export const api = {
   history1RM: () => get1RMHistory(uid()),
   activeSessions: () => getActiveSessions(uid()),
   settings: () => getSettings(uid()),
+  watchSettings: (onChange: Parameters<typeof watchSettings>[1]) => watchSettings(uid(), onChange),
   saveSettings: (data: Record<string, unknown>) => saveSettings(uid(), data),
   save: (body: SavePayload) => saveSession(uid(), body),
   deleteSession: async (id: string) => {

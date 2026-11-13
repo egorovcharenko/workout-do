@@ -4,8 +4,9 @@
 // the MCP server stays a thin wrapper around these functions.
 import { MAIN_WORKOUTS, workoutDisplayName } from "../lib/legacy/shared.js";
 import {
-  PROGRAM_BUILDER_KEY, applyProgramBuilder, exerciseEntry, exerciseLibrary, normalizeEntry,
-  normalizeSupersets, parseProgramBuilder, plannedWeeklyMuscleSets, registerExerciseAliases, workoutEntries,
+  PROGRAM_BUILDER_KEY, PROGRAM_BUILDER_VERSION, applyProgramBuilder, exerciseEntry, exerciseLibrary,
+  migrateSavedWorkoutExercises, normalizeEntry, normalizeSupersets, parseProgramBuilder,
+  plannedWeeklyMuscleSets, registerExerciseAliases, workoutEntries,
 } from "../lib/program-builder.js";
 
 export { PROGRAM_BUILDER_KEY };
@@ -23,7 +24,13 @@ export function draftFromSettings(settings) {
     const edit = saved?.workouts?.[id];
     if (edit?.name) base[id].name = edit.name;
     if (Array.isArray(edit?.exercises)) {
-      base[id].exercises = normalizeSupersets(edit.exercises.map(entry => ({ ...normalizeEntry(entry), superset: null })));
+      const entries = normalizeSupersets(edit.exercises.map(entry => ({ ...normalizeEntry(entry), superset: null })));
+      // Same migration the session builder applies, so an edit made here saves
+      // the list a session would actually show (and stops the appending).
+      const code = MAIN_WORKOUTS.find(w => w.id === id);
+      base[id].exercises = code
+        ? migrateSavedWorkoutExercises(entries, { ...code, exercises: workoutEntries(code) }, saved?.version)
+        : entries;
     }
   }
   return { draft: base, aliases: saved?.aliases || {} };
@@ -42,7 +49,7 @@ export function toSaved(draft, aliases = {}) {
   }
   const used = new Set(Object.values(draft).flatMap(w => w.exercises.map(e => e.name)));
   const kept = Object.fromEntries(Object.entries(aliases).filter(([alias]) => used.has(alias)));
-  return { version: 1, workouts, ...(Object.keys(kept).length ? { aliases: kept } : {}) };
+  return { version: PROGRAM_BUILDER_VERSION, workouts, ...(Object.keys(kept).length ? { aliases: kept } : {}) };
 }
 
 export function resolveWorkoutId(draft, key) {

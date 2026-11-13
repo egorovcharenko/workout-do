@@ -30,6 +30,7 @@ import { buildExerciseDurationHistory, estimateExerciseDurationMeta } from "@/li
 import { mergeTemplateAndSavedSet, shouldKeepRemovedWarmup } from "@/lib/legacy/exercise-history";
 import { currentExerciseName, savedSetsForExercise } from "@/lib/legacy/exercise-renames";
 import { isBeltLoadExercise } from "@/lib/legacy/belt-load";
+import { warn } from "@/lib/log";
 import { regularToBlockWorkoutId, trainingBlockHints, resolveTrainingBlockSession } from "@/lib/training-block";
 import { applyProgramBuilder, parseProgramBuilder, programWorkouts as builderProgram } from "@/lib/program-builder";
 import { mainProgramContext } from "@/lib/main-program";
@@ -66,6 +67,22 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
   const [statHistory, setStatHistory] = useState({});
   const [swaps, setSwaps] = useState({});
   const dataRef = useRef({ last: {}, hints: {} });
+  // Bumped when the program document changes under an open session, which
+  // re-runs the loader below: logged sets are merged back in by the same path
+  // that restores them after a refresh, so nothing typed in is lost.
+  const [programToken, setProgramToken] = useState(0);
+  useEffect(() => {
+    let seen = null;
+    let stop = () => {};
+    try {
+      stop = api.watchSettings((settings) => {
+        const next = String(settings?.program_builder ?? "");
+        if (seen === null) { seen = next; return; }
+        if (next !== seen) { seen = next; setProgramToken(t => t + 1); }
+      });
+    } catch (e) { warn("session", "live program updates unavailable", e); }
+    return () => stop();
+  }, []);
   useEffect(() => { let cancelled = false;
     // settings goes first: it's the cheapest query but gates deload/bodyweight,
     // and a single-threaded dev server processes requests in arrival order —
@@ -263,7 +280,7 @@ function App() { const [workoutId, setWorkoutId] = useState(() => { const fromUr
       } catch (e) { console.error("[V2] mount failed:", e);
         setLoadError(e.message || "The workout could not be loaded. Reload to try again.");
         setLoaded(true); } })(); return () => { cancelled = true; };
-  }, [requestedWorkout, setElapsed, setStartedAt]);
+  }, [requestedWorkout, setElapsed, setStartedAt, programToken]);
   const startedAtRef = useRef(startedAt);
   const elapsedRef = useRef(elapsed);
   const saveScopeRef = useRef(`${workout.name}:${sessionDate}`);

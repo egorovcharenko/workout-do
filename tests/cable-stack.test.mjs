@@ -127,12 +127,12 @@ test("historical scoring no longer lets a legacy deload beat a stronger current 
 });
 
 test("stack selector adjusts in whole pounds with no add-on weights", () => {
-  assert.equal(CABLE_STACK_MIN, 10);
+  assert.equal(CABLE_STACK_MIN, 8);
   assert.equal(CABLE_STACK_MAX, 85);
   assert.equal(CABLE_STACK_STEP, 1);
   assert.equal(CABLE_STACK_ADD_ON_COUNT, 0);
   assert.equal(CABLE_STACK_MAX_LOAD, 85);
-  assert.equal(clampCableStackWeight(0), 10);
+  assert.equal(clampCableStackWeight(0), 8);
   assert.equal(clampCableStackWeight(11.25), 11);
   assert.equal(clampCableStackWeight(12), 12);
   assert.equal(clampCableStackWeight(12.5), 12);

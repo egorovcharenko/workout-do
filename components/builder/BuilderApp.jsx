@@ -7,7 +7,7 @@ import Link from "next/link";
 import { api } from "@/lib/db/api";
 import { MAIN_WORKOUTS, estimateTemplateWorkoutDuration, workoutDisplayName } from "@/lib/legacy/shared";
 import {
-  DEFAULT_SUPERSET_TRANSITION, PROGRAM_BUILDER_KEY, applyProgramBuilder, exerciseLibrary, normalizeEntry, normalizeSupersets, registerExerciseAliases,
+  DEFAULT_SUPERSET_TRANSITION, PROGRAM_BUILDER_KEY, PROGRAM_BUILDER_VERSION, applyProgramBuilder, exerciseLibrary, migrateSavedWorkoutExercises, normalizeEntry, normalizeSupersets, registerExerciseAliases,
   parseProgramBuilder, plannedWeeklyMuscleSets, workoutEntries,
 } from "@/lib/program-builder";
 import { baseExerciseName, variantName } from "@/lib/exercise-aliases";
@@ -18,11 +18,21 @@ const clock = sec => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0"
 const newGroupId = () => `g${Math.random().toString(36).slice(2, 8)}`;
 
 function initialDraft(settings) {
-  const saved = parseProgramBuilder(settings)?.workouts || {};
+  const parsed = parseProgramBuilder(settings);
+  const saved = parsed?.workouts || {};
   const base = defaults();
   for (const id of Object.keys(base)) {
     if (saved[id]?.name) base[id].name = saved[id].name;
-    if (Array.isArray(saved[id]?.exercises)) base[id].exercises = normalizeSupersets(saved[id].exercises.map(entry => ({ ...normalizeEntry(entry), superset: null })));
+    if (Array.isArray(saved[id]?.exercises)) {
+      // Pre-version-2 lists are shown with the appended exercises already in
+      // them, so what the Builder displays is what a session will contain —
+      // and saving bakes them in, after which nothing is appended again.
+      const entries = normalizeSupersets(saved[id].exercises.map(entry => ({ ...normalizeEntry(entry), superset: null })));
+      const code = MAIN_WORKOUTS.find(w => w.id === id);
+      base[id].exercises = code
+        ? migrateSavedWorkoutExercises(entries, { ...code, exercises: workoutEntries(code) }, parsed?.version)
+        : entries;
+    }
   }
   return base;
 }
@@ -41,7 +51,7 @@ function toSaved(draft, aliases = {}) {
   }
   const used = new Set(Object.values(draft).flatMap(w => w.exercises.map(e => e.name)));
   const kept = Object.fromEntries(Object.entries(aliases).filter(([alias]) => used.has(alias)));
-  return { version: 1, workouts, ...(Object.keys(kept).length ? { aliases: kept } : {}) };
+  return { version: PROGRAM_BUILDER_VERSION, workouts, ...(Object.keys(kept).length ? { aliases: kept } : {}) };
 }
 
 function NumberField({ value, onChange, label, step = 1, min = 0, width = 52, placeholder = "" }) {
