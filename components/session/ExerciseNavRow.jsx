@@ -1,16 +1,12 @@
 "use client";
-import { useState } from "react";
 import { T, SWAP_GROUPS, getSwapGroup, getSwapGroupName } from "@/lib/legacy/shared";
 import { navSetDisplay, SetChip } from "./NavChip";
-import { ExerciseImage, hasExerciseImage } from "./ExerciseImage";
 import { isResolvedSet } from "@/lib/legacy/session-mutations";
 
 // ─── file: workout-session-nav-row.js ───
 
 function ExerciseNavRow({ i, exercises, shownIdx, currentIdx, onSelect, onSelectSet, onSwapExercise, swapOpenIdx, setSwapOpenIdx, showAllFamilies, setShowAllFamilies }) {
   const e = exercises[i];
-  const [imageOpen, setImageOpen] = useState(false);
-  const showImage = hasExerciseImage(e.name);
   const doneWork = e.sets.filter(isResolvedSet).length;
   const allDone = e.sets.length > 0 && e.sets.every(isResolvedSet);
   let status = "upcoming";
@@ -83,23 +79,6 @@ function ExerciseNavRow({ i, exercises, shownIdx, currentIdx, onSelect, onSelect
         display: "flex", alignItems: "center", gap: 9, cursor: "pointer",
       }}>
         <span style={{ width: 13, textAlign: "center", color: STATUS_COLOR[status], fontSize: 12, flexShrink: 0, marginTop: 0 }}>{STATUS_GLYPH[status]}</span>
-        {showImage && (
-          <button
-            type="button"
-            onClick={(ev) => { ev.stopPropagation(); setImageOpen(o => !o); }}
-            aria-expanded={imageOpen}
-            aria-label={imageOpen ? `Hide ${e.name} illustration` : `Show ${e.name} illustration`}
-            title={imageOpen ? "Hide illustration" : "Show illustration"}
-            style={{
-              flexShrink: 0, width: 34, height: 34, padding: 2, borderRadius: 8,
-              border: `1px solid ${imageOpen ? "rgba(96,165,250,0.6)" : T.cardBorder}`,
-              background: "#fff", cursor: "pointer", overflow: "hidden",
-              opacity: status === "skipped" ? 0.4 : 1,
-            }}
-          >
-            <ExerciseImage name={e.name} rounded={6} />
-          </button>
-        )}
         <div style={{ flex: 1, minWidth: 0 }}>
           {tag && tagChip(tag)}
           <span style={{
@@ -128,11 +107,6 @@ function ExerciseNavRow({ i, exercises, shownIdx, currentIdx, onSelect, onSelect
         </div>
       )}
 
-      {showImage && imageOpen && (
-        <div style={{ marginTop: 8, maxWidth: 260 }}>
-          <ExerciseImage name={e.name} rounded={10} />
-        </div>
-      )}
 
       {!e.skipped && hasVariants && swapOpen && (() => {
         const currentFamilyName = getSwapGroupName(e.name) || "Other";

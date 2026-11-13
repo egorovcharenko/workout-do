@@ -1,8 +1,6 @@
 
 // ─── file: workout-session-icons.js ───
 
-import { VARIANT_SEPARATOR, baseExerciseName } from "../../lib/exercise-aliases.js";
-
   const sprite = (sheet, column, row, height = 300) => ({
     src: `/exercises/sprites/${sheet}.png`,
     column,
@@ -11,8 +9,6 @@ import { VARIANT_SEPARATOR, baseExerciseName } from "../../lib/exercise-aliases.
   });
 
   const imageMap = {
-    "Bayesian Cable Curl": "/exercises/gym-monster/bayesian-cable-curl.jpg",
-    "Cable External Rotations": "/exercises/gym-monster/cable-external-rotations.jpg",
     // Core Exercises
     "Pull-Ups": "/exercises/pull-up.png",
     "Band Bicep Curls": sprite("band", 0, 0),
@@ -20,7 +16,7 @@ import { VARIANT_SEPARATOR, baseExerciseName } from "../../lib/exercise-aliases.
     "Band Row": sprite("band", 2, 0),
     "Band Squat": sprite("band", 0, 1),
     "Band Torso Rotation": sprite("band", 1, 1),
-    "Cable Tricep Pushdowns": "/exercises/gym-monster/cable-tricep-pushdowns.jpg",
+    "Cable Tricep Pushdowns": sprite("cable", 0, 0),
     "Band Tricep Pushdowns": sprite("band", 2, 1),
     "Barbell Back Squat": sprite("barbell", 0, 0),
     "Barbell Bench Press": sprite("barbell", 1, 0),
@@ -31,28 +27,26 @@ import { VARIANT_SEPARATOR, baseExerciseName } from "../../lib/exercise-aliases.
     "Cable Torso Rotation": sprite("cable", 1, 0),
     "Dragon Fly Progression": "/exercises/dragon-fly/strict-dragon-fly.png",
     "Surf Pop-Up": "/exercises/surf-pop-up-two-step.png",
-    "Calf Raises": "/exercises/gym-monster/calf-raises.jpg",
+    "Calf Raises": sprite("barbell", 2, 2),
     "Dips": sprite("cable", 1, 2),
     "Cable Bent-Over Rows": sprite("barbell", 1, 1),
     "Cable Bicep Curls": sprite("legs-arms", 1, 1),
-    "Cable Chest Press": "/exercises/gym-monster/cable-chest-press.jpg",
-    "Cable Hammer Curls": "/exercises/gym-monster/cable-hammer-curls.jpg",
-    "Bench-Supported Cable Wrist Curls": "/exercises/gym-monster/wrist-curls.jpg",
-    "Bench-Supported Dumbbell Wrist Curls": "/exercises/gym-monster/wrist-curls.jpg",
+    "Cable Chest Press": sprite("barbell", 1, 0),
+    "Cable Hammer Curls": sprite("legs-arms", 2, 1),
     "Cable Lateral Raises": sprite("cable", 0, 2),
     "Cable Romanian Deadlift": sprite("barbell", 2, 0),
     "Cable Shrugs": sprite("barbell", 0, 1),
-    "Cable Face Pulls": "/exercises/gym-monster/cable-face-pulls.jpg",
+    "Cable Face Pulls": sprite("cable", 2, 0),
     "Face Pulls": sprite("cable", 0, 1),
     "Cable Goblet Squat": sprite("legs-arms", 1, 0),
     "Hanging Knee Raise": sprite("legs-arms", 2, 2),
     "Decline Abs Crunches": sprite("legs-arms", 2, 2),
     "Incline Barbell Press": sprite("barbell", 2, 1),
-    "Incline Cable Curls": "/exercises/gym-monster/incline-cable-curls.jpg",
+    "Incline Cable Curls": sprite("legs-arms", 0, 2),
     "Incline Cable Press": sprite("barbell", 2, 1),
-    "Lat Pulldown": "/exercises/gym-monster/lat-pulldown.jpg",
-    "Neutral-Grip Lat Pulldown": "/exercises/gym-monster/neutral-grip-lat-pulldown.jpg",
-    "Low Row": "/exercises/gym-monster/low-row.jpg",
+    "Lat Pulldown": sprite("cable", 1, 1),
+    "Neutral-Grip Lat Pulldown": sprite("cable", 1, 1),
+    "Low Row": sprite("cable", 2, 1),
     "Cable Reverse Lunges": sprite("legs-arms", 2, 0),
     "Cable Overhead Press": sprite("barbell", 1, 2),
     "Overhead Tricep Extension": sprite("legs-arms", 1, 2),
@@ -60,7 +54,7 @@ import { VARIANT_SEPARATOR, baseExerciseName } from "../../lib/exercise-aliases.
     "Cable Reverse Flyes": sprite("cable", 0, 2),
     "Seated Cable Overhead Press": sprite("barbell", 0, 2),
     "Single-Arm Cable Lateral Raise": sprite("cable", 0, 2),
-    "Single-Arm Cable Rear Delt Fly": "/exercises/gym-monster/single-arm-cable-rear-delt-fly.jpg",
+    "Single-Arm Cable Rear Delt Fly": sprite("cable", 0, 2),
     "Single-Arm Cable Rows": sprite("cable", 2, 1),
     "Single-Leg Cable RDL": sprite("legs-arms", 0, 1),
     // "close-grip military press" is the DB's standard shoulder-width barbell OHP.
@@ -76,20 +70,6 @@ import { VARIANT_SEPARATOR, baseExerciseName } from "../../lib/exercise-aliases.
       </svg>
     </div>
   `;
-
-  /**
-   * The artwork for an exercise: a file path, a sprite cell, or null.
-   * A variant ("Barbell Back Squat · Pre-RDL") keeps its own history and
-   * weights but is the same movement, so it falls back to the base lift's
-   * picture rather than showing the blank placeholder.
-   */
-  export function getExerciseImage(name) {
-    if (imageMap[name]) return imageMap[name];
-    const base = baseExerciseName(name);
-    if (base !== name && imageMap[base]) return imageMap[base];
-    const stripped = String(name || "").split(VARIANT_SEPARATOR)[0];
-    return (stripped !== name && imageMap[stripped]) || null;
-  }
 
   export function getExerciseIcon(name) {
     const image = imageMap[name];
