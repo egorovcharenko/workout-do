@@ -6,7 +6,7 @@
         "mcp/server.mjs"
       ],
       "env": {
-        "WORKOUT_SA_PATH": "${WORKOUT_SA_PATH:-${HOME}/.secrets/workout-do-sa.json}",
+        "WORKOUT_SA_PATH": "${WORKOUT_SA_PATH:-/Users/egorovcharenko/.secrets/workout-do-sa.json}",
         "WORKOUT_PROJECT_ID": "${WORKOUT_PROJECT_ID:-workout-do-egor}",
         "WORKOUT_UID": "${WORKOUT_UID:-}",
         "WORKOUT_STORE": "${WORKOUT_STORE:-}",
