@@ -1,6 +1,8 @@
 
 // ─── file: workout-session-icons.js ───
 
+import { VARIANT_SEPARATOR, baseExerciseName } from "../../lib/exercise-aliases.js";
+
   const sprite = (sheet, column, row, height = 300) => ({
     src: `/exercises/sprites/${sheet}.png`,
     column,
@@ -35,6 +37,8 @@
     "Cable Bicep Curls": sprite("legs-arms", 1, 1),
     "Cable Chest Press": "/exercises/gym-monster/cable-chest-press.jpg",
     "Cable Hammer Curls": "/exercises/gym-monster/cable-hammer-curls.jpg",
+    "Bench-Supported Cable Wrist Curls": "/exercises/gym-monster/wrist-curls.jpg",
+    "Bench-Supported Dumbbell Wrist Curls": "/exercises/gym-monster/wrist-curls.jpg",
     "Cable Lateral Raises": sprite("cable", 0, 2),
     "Cable Romanian Deadlift": sprite("barbell", 2, 0),
     "Cable Shrugs": sprite("barbell", 0, 1),
@@ -73,9 +77,18 @@
     </div>
   `;
 
-  /** The artwork for an exercise: a file path, a sprite cell, or null. */
+  /**
+   * The artwork for an exercise: a file path, a sprite cell, or null.
+   * A variant ("Barbell Back Squat · Pre-RDL") keeps its own history and
+   * weights but is the same movement, so it falls back to the base lift's
+   * picture rather than showing the blank placeholder.
+   */
   export function getExerciseImage(name) {
-    return imageMap[name] || null;
+    if (imageMap[name]) return imageMap[name];
+    const base = baseExerciseName(name);
+    if (base !== name && imageMap[base]) return imageMap[base];
+    const stripped = String(name || "").split(VARIANT_SEPARATOR)[0];
+    return (stripped !== name && imageMap[stripped]) || null;
   }
 
   export function getExerciseIcon(name) {
