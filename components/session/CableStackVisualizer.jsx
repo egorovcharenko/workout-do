@@ -14,13 +14,25 @@ import {
 import styles from "./CableStackVisualizer.module.css";
 
 const VISUAL_PLATES = 10;
-// The pin row offers quick jumps every 5 lb; the +/− buttons adjust by
-// CABLE_STACK_STEP (1 lb).
+// The pin row offers quick jumps on round multiples of 5 lb, starting at the
+// first one the stack allows (the 8 lb minimum rounds up to 10). Anchoring the
+// row to the minimum instead gave 8/13/18/23, which nobody reads as a weight.
+// The +/− buttons still adjust by CABLE_STACK_STEP (1 lb), so the minimum and
+// every value between the chips stays reachable.
 const PIN_DISPLAY_STEP = 5;
+const FIRST_PIN_CHOICE = Math.ceil(CABLE_STACK_MIN / PIN_DISPLAY_STEP) * PIN_DISPLAY_STEP;
 const PIN_CHOICES = Array.from(
-  { length: (CABLE_STACK_MAX - CABLE_STACK_MIN) / PIN_DISPLAY_STEP + 1 },
-  (_, index) => CABLE_STACK_MIN + index * PIN_DISPLAY_STEP,
+  { length: Math.floor((CABLE_STACK_MAX - FIRST_PIN_CHOICE) / PIN_DISPLAY_STEP) + 1 },
+  (_, index) => FIRST_PIN_CHOICE + index * PIN_DISPLAY_STEP,
 );
+
+/** The chip to scroll to when the pin sits between two of them. */
+function nearestPinChoice(pinWeight) {
+  return PIN_CHOICES.reduce(
+    (best, pin) => (Math.abs(pin - pinWeight) < Math.abs(best - pinWeight) ? pin : best),
+    PIN_CHOICES[0],
+  );
+}
 
 function formatWeight(value) {
   return Number.isInteger(value) ? String(value) : String(Math.round(value * 100) / 100);
@@ -48,6 +60,7 @@ function CableStackVisualizer({ exerciseName, value, onPick, compact = false }) 
   const stackWeight = clampCableStackWeight(recordedStackWeight);
   const { pinWeight } = cableStackSelection(stackWeight);
   const activeRef = useRef(null);
+  const scrollTarget = nearestPinChoice(pinWeight);
   const loadedCount = Math.max(1, Math.min(VISUAL_PLATES, Math.round((pinWeight / CABLE_STACK_MAX) * VISUAL_PLATES)));
 
   useEffect(() => {
@@ -120,7 +133,7 @@ function CableStackVisualizer({ exerciseName, value, onPick, compact = false }) 
             return (
               <button
                 key={pin}
-                ref={selected ? activeRef : null}
+                ref={pin === scrollTarget ? activeRef : null}
                 type="button"
                 className={`${styles.pinChoice}${selected ? ` ${styles.pinChoiceActive}` : ""}`}
                 onClick={() => pickPinWeight(pin)}
