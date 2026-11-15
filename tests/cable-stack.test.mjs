@@ -28,7 +28,6 @@ test("lat pulldowns and low rows use two cable stacks", () => {
   assert.equal(cableStackMultiplier("Low Row"), 2);
   assert.equal(cableStackMultiplier("Seated Low Rows"), 2);
   assert.equal(cableStackMultiplier("Cable Low Row"), 2);
-  assert.equal(cableStackMultiplier("Cable Chest Press"), 2);
 });
 
 test("other cable exercises use one stack", () => {
@@ -36,6 +35,7 @@ test("other cable exercises use one stack", () => {
   assert.equal(cableStackMultiplier("Calf Raises"), 1);
   assert.equal(cableStackMultiplier("Cable Tricep Pushdowns"), 1);
   assert.equal(cableStackMultiplier("Single-Arm Cable Lateral Raise"), 1);
+  assert.equal(cableStackMultiplier("Cable Chest Press"), 1);
 });
 
 test("low rows are recognized as cable-stack exercises even without equipment metadata", () => {
@@ -57,17 +57,22 @@ test("effective load doubles current per-stack values only for dual-stack moveme
   assert.equal(effectiveExerciseWeight("Lat Pulldown", 71.25), 142.5);
   assert.equal(effectiveExerciseWeight("Low Row", 50), 100);
   assert.equal(effectiveExerciseWeight("Cable Face Pulls", 30), 30);
-  assert.equal(effectiveExerciseWeight("Cable Chest Press", 40), 80);
+  assert.equal(effectiveExerciseWeight("Cable Chest Press", 40), 40);
 });
 
 // The dumbbell-era rows (logged as Dumbbell Flat Bench Press before the
-// per-stack selector shipped) must keep their own load, not double.
+// per-stack selector shipped) must keep their own load, not double. The two
+// stacks the lift ran between Nov 12 and Nov 14, 2026 still count double;
+// from Nov 15 it is one stack.
 test("pre-per-stack chest press history keeps its stored load", () => {
   const legacy = { date: "2026-06-01" };
-  const current = { date: "2026-11-12", cable_weight_mode: "per_stack" };
+  const dual = { date: "2026-11-12", cable_weight_mode: "per_stack" };
+  const single = { date: "2026-11-15", cable_weight_mode: "per_stack" };
   assert.equal(effectiveStoredExerciseWeight("Cable Chest Press", 50, legacy), 50);
-  assert.equal(effectiveStoredExerciseWeight("Cable Chest Press", 40, current), 80);
-  assert.equal(storedExerciseInputWeight("Cable Chest Press", 40, current), 40);
+  assert.equal(effectiveStoredExerciseWeight("Cable Chest Press", 40, dual), 80);
+  assert.equal(storedExerciseInputWeight("Cable Chest Press", 40, dual), 40);
+  assert.equal(effectiveStoredExerciseWeight("Cable Chest Press", 40, single), 40);
+  assert.equal(storedExerciseInputWeight("Cable Chest Press", 40, single), 40);
 });
 
 // Calf raises went single-sided on Nov 13, 2026: earlier rows ran a handle on
