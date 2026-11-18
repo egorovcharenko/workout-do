@@ -358,7 +358,7 @@ export async function saveSession(
         duration_sec: data.duration_sec ?? 0,
         notes: data.notes ?? "",
         is_deload: data.is_deload ? 1 : 0,
-        cable_weight_mode: "per_stack",
+        cable_weight_mode: "sides",
         ...(data.state_json !== undefined && data.state_json !== null
           ? { state_json: data.state_json }
           : {}),
@@ -384,7 +384,7 @@ export async function saveSession(
     created_at: nowIso,
     state_json: data.state_json ?? null,
     is_deload: data.is_deload ? 1 : 0,
-    cable_weight_mode: "per_stack",
+    cable_weight_mode: "sides",
     sets,
   };
   await setDoc(ref, docData);

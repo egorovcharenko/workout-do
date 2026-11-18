@@ -31,7 +31,7 @@ const { ActiveSetBlock } = load('../components/session/ActiveSetBlock.jsx', {
   './WeightSelection': weights, './RepStrip': { RepStrip: empty }, './RirSelector': { RirSelector: empty },
   './LoadProgression': { LoadProgression: empty },
   './BarbellVisualizer': { BarbellVisualizer: () => React.createElement('span', null, 'barbell control') },
-  './CableStackVisualizer': { CableStackVisualizer: () => React.createElement('span', null, 'cable control') },
+  './CableWeightPicker': { CableWeightPicker: () => React.createElement('span', null, 'cable control') },
 });
 const utils = load('../lib/legacy/session-utils.js', {
   './shared': shared, './session-persistence': { loadBodyweight: () => 165 },
@@ -82,7 +82,7 @@ test('Cable Reverse Flyes uses its assigned cable stack when added or resumed, p
   assert.doesNotMatch(render(exercise), /viewBox="0 0 72 34"/);
 });
 
-test('deload always lightens light loads, using stack loads for cables', () => {
+test('deload always lightens light loads, and respects each cable range', () => {
   const deload = (weight, extra = {}) => utils.applyDeloadPrescription([{ name: 'X', ...extra,
     sets: [1, 2].map(setNumber => ({ kind: 'work', setNumber, weight })) }])[0].sets.at(-1).weight;
   assert.equal(deload(15), 10);
@@ -90,6 +90,10 @@ test('deload always lightens light loads, using stack loads for cables', () => {
   assert.equal(deload(17.5), 15);
   assert.equal(deload(135, { isBarbell: true }), 110);
   assert.equal(deload(50, { isBarbell: true }), 45);
+  assert.equal(deload(100, { equipment: 'cable' }), 80);
   assert.equal(deload(15, { equipment: 'cable' }), 12);
   assert.equal(deload(20, { equipment: 'cable' }), 16);
+  // Caps apply per lift: 260 lb with both arms, 130 lb on one side.
+  assert.equal(deload(400, { equipment: 'cable' }), 260);
+  assert.equal(deload(400, { equipment: 'cable', name: 'Calf Raises' }), 130);
 });

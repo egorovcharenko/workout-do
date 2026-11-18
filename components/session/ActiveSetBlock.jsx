@@ -4,7 +4,7 @@ import { GripSelector, BandsGrid } from "./Stepper";
 import { StageSelector } from "./StageSelector";
 import { RepStrip } from "./RepStrip";
 import { BarbellVisualizer } from "./BarbellVisualizer";
-import { CableStackVisualizer } from "./CableStackVisualizer";
+import { CableWeightPicker } from "./CableWeightPicker";
 import { EquipmentWeightSelector } from "./WeightSelection";
 import { BeltPlateVisualizer } from "./BeltPlateVisualizer";
 import { LoadProgression } from "./LoadProgression";
@@ -81,7 +81,7 @@ function ActiveSetBlock({ exercise, set, totalWork, onPickWeight, onApplyLoadPro
       )}
 
       {!exercise.isBandsOnly && !stages && !exercise.repsOnly && isCable && (
-        <CableStackVisualizer
+        <CableWeightPicker
           exerciseName={exercise.name}
           value={baseW || 0}
           last={lastBaseW || null}

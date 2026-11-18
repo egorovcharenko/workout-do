@@ -71,9 +71,9 @@ test('all-time recap trend uses the best working set per workout and replaces cu
   assert.match(html,/1RM EST/);
 });
 
-test('live and stored charts agree, including legacy cable totals and current per-stack loads', () => {
+test('live and stored charts agree, including legacy cable totals and current loads', () => {
   const exercises = [{name:'Low Row',equipment:'cable',sets:[
-    {kind:'work',weight:60,reps:10,completed:true},
+    {kind:'work',weight:120,reps:10,completed:true},
     {kind:'work',weight:100,reps:20,completed:false},
     {kind:'work',weight:100,reps:20,completed:true,userSkipped:true},
   ]}];

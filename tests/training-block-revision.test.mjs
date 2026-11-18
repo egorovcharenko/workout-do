@@ -104,10 +104,12 @@ test('bench makes only the reviewed top-set adjustment and preserves the three b
 });
 
 test('cable and dumbbell accessories progress with reserve confirmation while all logged reps remain untouched', () => {
-  for (const [name, id, weight, reps, expected] of [
-    ['Cable Tricep Pushdowns','strength-accessories-2',55,12,56],
-    ['Low Row','strength-b',65,12,66],
-    ['Incline Cable Curls','strength-accessories-2',20,15,21],
+  // `seeded` is what the logged rows mean today: a per-stack row on a
+  // two-stack lift reports the load it really was.
+  for (const [name, id, weight, reps, seeded, expected] of [
+    ['Cable Tricep Pushdowns','strength-accessories-2',55,12,55,56],
+    ['Low Row','strength-b',65,12,130,131],
+    ['Incline Cable Curls','strength-accessories-2',20,15,20,21],
   ]) {
     const w = getWorkout(id);
     const rows = [1,2,3].map(n => row(name,n,weight,reps));
@@ -117,7 +119,7 @@ test('cable and dumbbell accessories progress with reserve confirmation while al
     assert.equal(offer.ready,true,name); assert.equal(offer.weight,expected,name); assert.equal(offer.rirLabel,'1–2');
     const accepted = applySuggestedLoad(guided,ei,si);
     assert.equal(accepted[ei].sets[si].weight,expected); assert.equal(accepted[ei].sets[si].reps,null);
-    assert.equal(guided[ei].sets[si].weight,weight);
+    assert.equal(guided[ei].sets[si].weight,seeded);
   }
 });
 
@@ -239,7 +241,7 @@ test('wrist curls keep cable controls and optional RIR on both accessory days', 
   }
 });
 
-test('cable chest fly starts Shrugs Focus with per-stack loading and progresses all three sets together', () => {
+test('cable chest fly starts Shrugs Focus pulling both sides and progresses all three sets together', () => {
   const name = 'Cable Chest Fly';
   const w = getWorkout('strength-accessories-2');
   const e = guide(w, [])[0];
@@ -247,11 +249,11 @@ test('cable chest fly starts Shrugs Focus with per-stack loading and progresses 
   assert.equal(e.equipment, 'cable');
   assert.equal(e.rest, 75);
   assert.equal(shared.findExerciseConfig(name).equipment, 'cable');
-  assert.equal(cable.cableStackMultiplier(name), 2);
-  assert.equal(cable.effectiveExerciseWeight(name, 10), 20);
+  assert.equal(cable.cableSides(name), 2);
+  assert.equal(cable.effectiveExerciseWeight(name, 10), 10);
   assert.equal(e.sets.length, 4);
   assert.equal(e.sets[0].kind, 'warmup');
-  assert.equal(e.sets[0].weight, 10);
+  assert.equal(e.sets[0].weight, 20);
   assert.deepEqual(plain(e.sets[0].repGuidance.range), [10,10]);
   const working = e.sets.filter(s => s.kind === 'work');
   assert.deepEqual(plain(working.map(s => s.repGuidance.range)), [[12,20],[12,20],[12,20]]);
@@ -261,7 +263,8 @@ test('cable chest fly starts Shrugs Focus with per-stack loading and progresses 
     const prev = session(w.name, '2026-09-18', reps.map((r,i) => row(name,i+1,10,r,{rir:'1-2'})), {state_json:JSON.stringify({trainingBlock:run})});
     const offer = guide(w, [prev])[0].sets.find(s => s.kind === 'work').repGuidance.loadProgression;
     assert.equal(offer.ready, ready);
-    assert.equal(offer.weight, 11);
+    // 10 per stack is 20 lb across both arms; the machine adds 2 lb at a time.
+    assert.equal(offer.weight, 22);
   }
 });
 

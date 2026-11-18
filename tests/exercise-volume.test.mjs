@@ -15,10 +15,13 @@ test('volume sums actual working sets; ignores warmups, skips, incomplete and in
 });
 
 test('cable history and live sets use matching load conventions, including variants', () => {
-  const exercise = {name:'Cable Chest Fly', equipment:'cable', sets:[{kind:'work',completed:true,weight:20,reps:12}]};
-  const live = liveVolumeSession([exercise], '2026-10-08', 'live');
+  // 40 lb reaches the same volume under all three storage models: a live set
+  // (the real load), a pre-July total, and a per-stack row that doubles.
+  const exercise = {name:'Cable Chest Fly', equipment:'cable', sets:[{kind:'work',completed:true,weight:40,reps:12}]};
+  const live = liveVolumeSession([exercise], '2026-11-20', 'live');
   assert.equal(exerciseVolume(live,exercise.name).value,480);
   assert.equal(exerciseVolume(session('old','2026-07-01',[row(40,12,{exercise:exercise.name})]), exercise.name).value,480);
+  assert.equal(exerciseVolume(session('mid','2026-10-08',[row(20,12,{exercise:exercise.name})]), exercise.name).value,480);
   setExerciseAliases({'Cable Chest Fly · High':'Cable Chest Fly'});
   try { assert.equal(exerciseVolume(session('v','2026-10-08',[row(20,12,{exercise:'Cable Chest Fly · High'})]), 'Cable Chest Fly · High').value,480); }
   finally {setExerciseAliases({});}

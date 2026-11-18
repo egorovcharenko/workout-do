@@ -2,7 +2,6 @@
 import React from "react";
 import { T, stageRank } from "@/lib/legacy/shared";
 import { fmtSetDuration } from "@/lib/legacy/session-utils";
-import { cableStackMultiplier } from "@/lib/legacy/cable-stack";
 
 // ─── file: workout-session-set-card.js ───
 
@@ -45,7 +44,7 @@ function setTargetSummary(s, exercise) {
   const load = exercise.beltLoad ? (totalLb > 0 ? `+${totalLb}` : "BW")
     : stages ? (rank > 0 ? `S${rank}` : null)
     : exercise.repsOnly ? null
-    : cableStackMultiplier(exercise.name) === 2 ? `${totalLb}×2` : `${totalLb}`;
+    : `${totalLb}`;
 
   if (load && reps) return `${load} × ${reps}`;
   if (load) return load;
@@ -64,7 +63,7 @@ function SetCard({ s, idx, exercise, onReopenSet, dur }) {
   const bandSum = (s.bands || []).reduce((a, b) => a + b, 0);
   const lastBandSum = (s.lastBands || []).reduce((a, b) => a + b, 0);
   const totalLb = isAssist ? Math.max(0, baseW - bandSum) : (isBandsOnly ? bandSum : baseW + bandSum);
-  const weightDisplay = cableStackMultiplier(exercise.name) === 2 ? `${totalLb}×2` : totalLb;
+  const weightDisplay = totalLb;
   const prev = isAssist ? Math.max(0, lastBaseW - lastBandSum) : (isBandsOnly ? lastBandSum : lastBaseW + lastBandSum);
   const stages = exercise.stages || null;
   // Staged exercise: the "weight" slot shows the stage (S1..Sn); deltas compare

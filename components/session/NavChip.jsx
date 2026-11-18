@@ -39,7 +39,7 @@ function SetChip({ d, k, onClick }) {
         ? <span style={{ fontSize: 11 }}>{d.lb && d.lb !== "BW" ? `${d.lb} · ` : ''}{d.rirLabel} RIR</span>
         : d.repsOnly
         ? (d.reps != null ? d.reps : "—")
-        : <>{d.lb || "—"}{d.weightMultiplier === 2 && <span style={{ color: box.xColor, fontWeight: 600, fontSize: 10 }}>×2</span>}<span style={{ color: box.xColor, fontWeight: 400, fontSize: 11 }}>×</span>{d.reps != null ? d.reps : "—"}</>}
+        : <>{d.lb || "—"}<span style={{ color: box.xColor, fontWeight: 400, fontSize: 11 }}>×</span>{d.reps != null ? d.reps : "—"}</>}
       </span>
       {d.lastReps != null && <span title={d.lastTitle || undefined} style={{ color: d.state === "current" ? "rgba(255,255,255,0.85)" : T.muted, fontSize: 10, fontWeight: 500, lineHeight: 1.2 }}>
         Last <strong style={{ fontWeight: 700 }}>{d.lastReps}</strong>

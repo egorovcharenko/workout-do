@@ -5,7 +5,6 @@ import vm from 'node:vm';
 import * as shared from '../lib/legacy/shared.js';
 import * as overview from '../components/home/overview.js';
 import { EXERCISE_MUSCLES } from '../lib/legacy/standards.js';
-import { cableStackMultiplier } from '../lib/legacy/cable-stack.js';
 import { legacyNamesFor } from '../lib/legacy/exercise-renames.js';
 import * as trainingBlock from '../lib/training-block.js';
 import { mainProgramSchedule, nextProgramWorkout } from '../lib/main-program.js';
@@ -17,7 +16,7 @@ function homeHarness(settings = {}, today = '2026-09-18') {
   const state = { loaded: true, history: [], lastSession: {}, measurements: [] };
   const elements = { planEditorText: { value: '' }, planEditorError: { style: {} } };
   const saves = [];
-  const context = vm.createContext({ ...shared, ...overview, ...trainingBlock, mainProgramSchedule, nextProgramWorkout, programWorkouts, storedSessionProgress, EXERCISE_MUSCLES, cableStackMultiplier, legacyNamesFor, state,
+  const context = vm.createContext({ ...shared, ...overview, ...trainingBlock, mainProgramSchedule, nextProgramWorkout, programWorkouts, storedSessionProgress, EXERCISE_MUSCLES, legacyNamesFor, state,
     renderLatestWorkoutRecap: (history, active) => renderLatestWorkoutRecap(history, active, today),
     localDate: () => today,
     trainingBlockStatus: settings => trainingBlock.trainingBlockStatus(settings, today),

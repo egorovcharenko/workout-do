@@ -11,7 +11,6 @@ const shared = { ...sharedModule, BLOCK_WORKOUTS: sharedModule.LEGACY_BLOCK_WORK
 import { createTrainingBlock } from '../lib/training-block.js';
 import { withRepGuidance, repSuggestion } from '../lib/legacy/rep-guidance.js';
 import { navSetDisplay } from '../lib/legacy/nav-set-display.js';
-import { cableStackMultiplier } from '../lib/legacy/cable-stack.js';
 import { applySuggestedLoad } from '../lib/legacy/load-guidance.js';
 
 const block = createTrainingBlock('2026-09-06', 'rep-run', '2026-09-05');
@@ -222,7 +221,7 @@ function loadComponent(path, dependencies) {
 
 const reps = loadComponent('../components/session/RepStrip.jsx');
 const { SetCard } = loadComponent('../components/session/SetCard.jsx', {
-  '@/lib/legacy/cable-stack': { cableStackMultiplier }, '@/lib/legacy/session-utils': { fmtSetDuration: () => '' },
+  '@/lib/legacy/cable-stack': {}, '@/lib/legacy/session-utils': { fmtSetDuration: () => '' },
 });
 const { SetChip } = loadComponent('../components/session/NavChip.jsx', {
   '@/lib/legacy/nav-set-display': { navSetDisplay },
@@ -233,9 +232,9 @@ const { ActiveSetBlock } = loadComponent('../components/session/ActiveSetBlock.j
   './RirSelector': { RirSelector: empty },
   './LoadProgression': loadProgression,
   './Stepper': { GripSelector: empty, BandsGrid: empty }, './StageSelector': { StageSelector: empty }, './RepStrip': reps,
-  './BarbellVisualizer': { BarbellVisualizer: empty }, './CableStackVisualizer': { CableStackVisualizer: empty },
+  './BarbellVisualizer': { BarbellVisualizer: empty }, './CableWeightPicker': { CableWeightPicker: empty },
   './WeightSelection': { EquipmentWeightSelector: empty }, './BeltPlateVisualizer': { BeltPlateVisualizer: empty },
-  '@/lib/legacy/cable-stack': { isCableStackExercise: () => false },
+  '@/lib/legacy/cable-stack': { isCableExercise: () => false },
 });
 
 test('navigation buttons show each previous set’s reps alongside the target range', () => {
@@ -266,10 +265,8 @@ test('navigation last-rep labels never mistake template defaults for logged hist
   const display = navSetDisplay(guided.sets[0], guided);
   assert.equal(display.lastReps, null);
   assert.equal(display.reps, '15–20');
-  assert.equal(display.weightMultiplier, 2);
   const html = renderToStaticMarkup(React.createElement(SetChip, { d: display, k: 0 }));
   assert.doesNotMatch(html, /Last|last workout/);
-  assert.match(html, /×2/);
 });
 
 test('set cards and the rep picker render distinct previous, target and suggested values without logging anything', () => {

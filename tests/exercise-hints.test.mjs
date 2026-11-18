@@ -29,7 +29,8 @@ test("an exercise with no normal history bootstraps from the latest deload", () 
     session({ id: "normal", is_deload: 0, sets: [set("Barbell Bench Press", 1, 155, 4)] }),
   ]);
 
-  assert.equal(hints["Lat Pulldown|working|1"].weight_lb, 70);
+  // 70 per stack is 140 lb of pulldown.
+  assert.equal(hints["Lat Pulldown|working|1"].weight_lb, 140);
   assert.equal(hints["Lat Pulldown|working|1"].reps, "10");
 });
 
@@ -39,7 +40,7 @@ test("the first normal attempt permanently replaces the deload bootstrap", () =>
     session({ id: "deload", is_deload: 1, sets: [set("Lat Pulldown", 1, 70, 10), set("Lat Pulldown", 2, 70, 10)] }),
   ]);
 
-  assert.equal(hints["Lat Pulldown|working|1"].weight_lb, 80);
+  assert.equal(hints["Lat Pulldown|working|1"].weight_lb, 160);
   assert.equal(hints["Lat Pulldown|working|2"], undefined);
 });
 
@@ -49,7 +50,7 @@ test("bootstrap sets come from one deload session instead of mixing dates", () =
     session({ id: "older-deload", is_deload: 1, sets: [set("Lat Pulldown", 1, 65, 10), set("Lat Pulldown", 2, 65, 10)] }),
   ]);
 
-  assert.equal(hints["Lat Pulldown|working|1"].weight_lb, 70);
+  assert.equal(hints["Lat Pulldown|working|1"].weight_lb, 140);
   assert.equal(hints["Lat Pulldown|working|2"], undefined);
 });
 
@@ -63,12 +64,12 @@ test("normal hints for established exercises remain unchanged", () => {
   assert.equal(hints["Barbell Bench Press|working|1"].weight_lb, 165);
 });
 
-test("legacy total-load cable hints are converted to per-stack values", () => {
+test("legacy total-load cable hints stay the total they were", () => {
   const hints = exerciseHintsWithDeloadBootstrap([
     { id: "legacy", date: "2026-07-10", is_deload: 0, sets: [set("Lat Pulldown", 1, 95, 1)] },
   ]);
 
-  assert.equal(hints["Lat Pulldown|working|1"].weight_lb, 47.5);
+  assert.equal(hints["Lat Pulldown|working|1"].weight_lb, 95);
 });
 
 test("belt load comes from the latest workout containing the exercise", () => {

@@ -16,7 +16,6 @@ import {
 } from "@/lib/legacy/shared";
 import { EXERCISE_MUSCLES } from "@/lib/legacy/standards";
 import { loadSkippedExercises } from "@/lib/legacy/session-persistence";
-import { cableStackMultiplier } from "@/lib/legacy/cable-stack";
 import { legacyNamesFor } from "@/lib/legacy/exercise-renames";
 import { state } from "./state";
 import { renderCalendar } from "./calendar";
@@ -80,7 +79,7 @@ function renderWorkoutCard(w, isSuggested, isOngoing, logged, expected, pct, bad
     const last = [ex.name, ...legacyNamesFor(ex.name)]
       .flatMap(n => [1, 2, 3].map(i => state.lastSession[`${n}|working|${i}`])).find(Boolean);
     const weight = last?.weight_lb ?? '—', reps = last?.reps ?? '—';
-    const value = !last ? '—' : ex.repsOnly ? `${reps} reps` : `${weight}${cableStackMultiplier(ex.name) === 2 ? '×2' : ''} × ${reps}`;
+    const value = !last ? '—' : ex.repsOnly ? `${reps} reps` : `${weight} × ${reps}`;
     return `<div class="home-exercise"><span title="${escapeHtml(ex.name)}">${escapeHtml(ex.name)}</span><span class="home-value">${escapeHtml(value)}</span></div>`;
   };
   const rows = w.exercises.map(ex => ex.supersetExercises

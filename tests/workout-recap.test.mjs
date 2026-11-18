@@ -53,7 +53,7 @@ test('load labels distinguish bodyweight, belt, cable stacks, bands and progress
   assert.equal(label({ repsOnly: true }, logged(165, 10)), 'BW');
   assert.equal(label({ assist: true }, logged(165, 5, { bodyweight: 165, bands: [20, 10] })), 'BW · 30 lb assistance');
   assert.equal(label({ assist: true }, logged(165, 5)), 'BW');
-  assert.equal(label({ name: 'Low Row' }, logged(62.5, 12)), '62.5 lb / stack × 2');
+  assert.equal(label({ name: 'Low Row' }, logged(62.5, 12)), '62.5 lb');
   assert.equal(label({ isBandsOnly: true }, logged(0, 10, { bands: [15, 10] })), '25 lb band');
   assert.equal(label({ bandAddon: true }, logged(45, 10, { bands: [20] })), '45 lb + 20 lb band');
   assert.equal(label({ assist: true, stages: [{ id: 'tuck', label: 'Tuck' }] }, logged(165, 5, { grip: 'tuck' })), 'Tuck');
@@ -102,7 +102,7 @@ test('persisted recap uses saved rows, not suggested values in the session map',
   assert.equal(result.warmupSets, 1);
   assert.equal(result.reps, 33);
   assert.deepEqual(result.exercises.map(ex => ex.groups), [
-    [{ load: '135 lb', reps: [8, 7] }], [{ load: 'BW + 15 lb', reps: [6] }], [{ load: '60 lb / stack × 2', reps: [12] }],
+    [{ load: '135 lb', reps: [8, 7] }], [{ load: 'BW + 15 lb', reps: [6] }], [{ load: '120 lb', reps: [12] }],
   ]);
   assert.equal(JSON.stringify(session), before);
 });
@@ -117,7 +117,7 @@ test('historical load conversion preserves old cable totals, bodyweight, assista
     { exercise: 'Dead Hang + Scap Pulls', weight_lb: 165, bands_json: 'broken', reps: '8' },
   ] };
   assert.deepEqual(recap.buildStoredWorkoutRecap(session).exercises.map(ex => ex.groups.map(group => group.load)), [
-    ['60 lb / stack × 2'], ['BW', 'BW · 30 lb assistance'], ['45 lb + 20 lb band'], ['30 lb band'], ['BW'],
+    ['120 lb'], ['BW', 'BW · 30 lb assistance'], ['45 lb + 20 lb band'], ['30 lb band'], ['BW'],
   ]);
 });
 
